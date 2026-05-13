@@ -84,7 +84,7 @@ I `package.json`, endre `"name": "bgio-tutorial"` til
 
 Notat: Oppdaterte også `name`-felt i `package-lock.json` (2 steder) for konsistens.
 
-### [ ] 0.4 Verifiser Vercel- og Render-deploys etter rename
+### [x] 0.4 Verifiser Vercel- og Render-deploys etter rename
 
 - Vercel: trigger en redeploy og bekreft at GitHub-koblingen følger automatisk.
 - Render: samme verifisering.
@@ -93,12 +93,21 @@ Notat: Oppdaterte også `name`-felt i `package-lock.json` (2 steder) for konsist
 - Hvis project-navnene i Vercel/Render fortsatt sier `bgio-tutorial` er det
   bare kosmetisk, kan endres manuelt i deres dashboards hvis ønsket.
 
-### [ ] 0.5 Sjekk worktree etter rename
+### [x] 0.5 Sjekk worktree etter rename
 
 Hvis hovedmappa lokalt også omdøpes (`bgio-tutorial/` til
 `tic-tac-total-annihilation/`), kjør `git worktree list` og verifiser at
 eventuelle aktive worktrees fortsatt fungerer. Reparér med
 `git worktree repair` hvis nødvendig.
+
+Notat: Lokal mappe ble ikke omdøpt (Windows nektet pga. låste filer), så
+ingen `git worktree repair` nødvendig. Hovedworktree fungerer som før.
+Prunable worktree under `.claude/worktrees/` ble fjernet med
+`git worktree prune`.
+
+TODO (oppfølging): Når hovedmappa faktisk omdøpes lokalt fra
+`bgio-tutorial/` til `tic-tac-total-annihilation/`, kjør
+`git worktree list` på nytt og `git worktree repair` ved behov.
 
 ## Fase 1: Kode-rydding
 
