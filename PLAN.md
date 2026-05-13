@@ -61,13 +61,13 @@ markeres ferdig.
 
 ## Fase 0: Repo-rename
 
-### [ ] 0.1 Endre repo-navnet på GitHub
+### [x] 0.1 Endre repo-navnet på GitHub
 
 - Gå til repo Settings og endre navn fra `bgio-tutorial` til
   `tic-tac-total-annihilation`.
 - GitHub setter automatisk opp redirect fra gammel URL.
 
-### [ ] 0.2 Oppdater lokal git remote
+### [x] 0.2 Oppdater lokal git remote
 
 I hovedmappa lokalt (ikke i worktree):
 
@@ -77,10 +77,12 @@ git remote set-url origin https://github.com/<user>/tic-tac-total-annihilation.g
 
 Verifiser med `git remote -v` og `git fetch`.
 
-### [ ] 0.3 Oppdater package.json
+### [x] 0.3 Oppdater package.json
 
 I `package.json`, endre `"name": "bgio-tutorial"` til
 `"name": "tic-tac-total-annihilation"`.
+
+Notat: Oppdaterte også `name`-felt i `package-lock.json` (2 steder) for konsistens.
 
 ### [ ] 0.4 Verifiser Vercel- og Render-deploys etter rename
 
