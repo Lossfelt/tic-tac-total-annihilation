@@ -111,13 +111,15 @@ TODO (oppfølging): Når hovedmappa faktisk omdøpes lokalt fra
 
 ## Fase 1: Kode-rydding
 
-### [ ] 1.1 Døp om App2.js til App.js
+### [x] 1.1 Døp om App2.js til App.js
 
 - Endre filnavn `src/App2.js` til `src/App.js`.
 - Oppdater importen i `src/index.js`.
 - Verifiser at `npm start` fortsatt fungerer.
 
-### [ ] 1.2 Rydd opp i boardgame.io-imports
+Notat: Brukte `git mv` så historikken bevares.
+
+### [!] 1.2 Rydd opp i boardgame.io-imports
 
 Erstatt CJS-stier med offisielle entry points:
 
@@ -131,7 +133,14 @@ Erstatt CJS-stier med offisielle entry points:
 
 Verifiser at både klient og server starter uten feil etter endring.
 
-### [ ] 1.3 Oppdater README
+Notat (blokkert, utsatt til Fase 2): De offisielle entry points er
+proxy-directories som kun fungerer med CommonJS dir-resolution. Dagens
+setup har `"type": "module"` i `package.json`, som tvinger strict ESM
+fully-specified paths både i webpack (CRA) og Node ESM (server.mjs).
+Begge feiler med `boardgame.io/core` etc. Vite (Fase 2) håndterer disse
+proxy-stiene korrekt, så stegget tas der.
+
+### [x] 1.3 Oppdater README
 
 - Skriv en kort README som beskriver:
   - Hva spillet er (1 til 2 setninger), inkludert nytt navn
