@@ -11,16 +11,26 @@ egen multiplayer-server.
 
 ```sh
 npm install
-npm run serve   # starter backend på port 8000
-npm start       # starter frontend på port 3000 i ny terminal
+npm run dev     # starter backend (port 8000) og frontend (port 3000) samtidig
 ```
+
+Hvis du vil ha dem i hver sin terminal i stedet:
+
+```sh
+npm run serve    # backend på port 8000
+npm run client   # frontend på port 3000
+```
+
+Andre nyttige kommandoer: `npm run build` (prod-bygg av frontend),
+`npm run preview` (kjør prod-bygget lokalt), `npm test`
+(Vitest), `npm run lint` (ESLint).
 
 ## Deploy
 
 - Frontend: Vercel (planlegges flyttet til Netlify, se PLAN.md Fase 2)
 - Backend: Render
 
-Frontend leser backend-URL fra `REACT_APP_BACKEND_URL`. Sett denne i
+Frontend leser backend-URL fra `VITE_BACKEND_URL`. Sett denne i
 hosting-plattformens env-vars.
 
 ## Status og videre arbeid

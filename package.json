@@ -10,21 +10,25 @@
     "react-dom": "^18.2.0"
   },
   "scripts": {
-    "start": "vite",
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm:serve\" \"npm:client\"",
+    "client": "vite",
+    "serve": "nodemon src/server.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "serve": "nodemon src/server.mjs",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "vitest"
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-prettier": "^5.2.3",
     "nodemon": "^3.1.9",
     "prettier": "^3.4.2",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vitest": "^3.2.4"
   }
 }

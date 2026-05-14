@@ -44,7 +44,7 @@ const positions = [
 ];
 
 // Check if `cells` is in a winning configuration
-function IsVictory(cells) {
+export function IsVictory(cells) {
   const isRowComplete = (row, cells) => {
     const symbols = row.map((i) => cells[i]);
     return symbols.every((i) => i !== null && i === symbols[0]);
@@ -53,7 +53,7 @@ function IsVictory(cells) {
 }
 
 // funksjon for å teste om celler er på rad, enten horisontalt, vertikalt eller diagonalt, ved Air Strike
-function IsRow(input) {
+export function IsRow(input) {
   if (input.length !== 3) return false; // Air Strike krever nøyaktig 3 ID-er
 
   const sortedInput = [...input].sort((a, b) => a - b); // Sorter ID-ene for enkel sjekk
@@ -78,7 +78,7 @@ function IsRow(input) {
 }
 
 // Helper function to get neighbors for Artillery
-function GetNeighbors(id, boardSize = 4) {
+export function GetNeighbors(id, boardSize = 4) {
   const neighbors = [];
   const row = Math.floor(id / boardSize);
   const col = id % boardSize;
@@ -92,7 +92,7 @@ function GetNeighbors(id, boardSize = 4) {
 }
 
 // Definere alle naboer for en celle, brukt til Biological Warfare
-function GetSurroundingCells(id, boardSize = 4) {
+export function GetSurroundingCells(id, boardSize = 4) {
   const neighbors = [];
   const row = Math.floor(id / boardSize);
   const col = id % boardSize;

@@ -194,11 +194,14 @@ fjernet (kun arv fra CRA-warning-fix). `.gitignore` utvidet med `/dist`.
   mot lokal server.
 - Sjekk at favicon, bilder under `public/` og manifest fortsatt lastes.
 
-Notat: `npm install`, `npm run build`, `npm run preview` og `npm start`
-kjører rent. Preview serverer `index.html`, `/favicon.png`,
+Notat: `npm install`, `npm run build`, `npm run preview` og `npm run dev`
+kjører rent (sistnevnte starter både backend og frontend via
+`concurrently`). Preview serverer `index.html`, `/favicon.png`,
 `/manifest.json` og fraksjonsbildene med status 200. `npm run lint`
 passerer. Full multiplayer-flyt og About-popup verifisert manuelt i
-nettleser av eier.
+nettleser av eier. Scripts senere ryddet til Vite-konvensjon:
+`dev` (kombinert), `client` (kun frontend), `serve` (kun backend);
+gammel `start` fjernet.
 
 ### [~] 2.4 Migrer frontend fra Vercel til Netlify
 
@@ -224,13 +227,18 @@ kjører Vercel uforstyrret på gammel CRA-versjon fra `origin/main`.
 
 ## Fase 3: Tester
 
-### [ ] 3.1 Sett opp Vitest
+### [x] 3.1 Sett opp Vitest
 
 - Installer `vitest` og evt. `@testing-library/react` hvis du vil teste
   komponenter senere.
 - Legg til `"test": "vitest"` i package.json scripts.
 
-### [ ] 3.2 Skriv tester for ren spillogikk
+Notat: `vitest@^3` installert (ikke v4, fordi v4 drar inn Vite 8 internt
+og gir deprecation-warnings mot esbuild-konfigen vår i `vite.config.js`).
+`@testing-library/react` ikke installert enda - vente til vi faktisk skal
+teste komponenter. `"test": "vitest"` lagt til i scripts.
+
+### [x] 3.2 Skriv tester for ren spillogikk
 
 Test funksjonene i `src/Game.js`:
 
@@ -243,6 +251,13 @@ Test funksjonene i `src/Game.js`:
 Disse er rene funksjoner uten state, ideelt utgangspunkt.
 
 Merk: Dette krever at du eksporterer hjelpefunksjonene fra `Game.js`.
+
+Notat: 70 tester i `src/Game.test.js`, alle passerer. Funksjonene
+`IsVictory`, `IsRow`, `GetNeighbors`, `GetSurroundingCells` eksportert
+fra `Game.js`. Bruker `it.each` for å holde testene kompakte. Dekker
+alle vinnerlinjer (4 horisontale + 4 vertikale + 2 diagonale), partial
+rows, blandede spillere, usortert input til `IsRow`, og alle posisjons-
+kategorier (hjørner, kanter, midtceller) for nabofunksjonene.
 
 ## Fase 4: Refaktor
 
