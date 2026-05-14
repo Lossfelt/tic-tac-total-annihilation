@@ -100,14 +100,11 @@ Hvis hovedmappa lokalt også omdøpes (`bgio-tutorial/` til
 eventuelle aktive worktrees fortsatt fungerer. Reparér med
 `git worktree repair` hvis nødvendig.
 
-Notat: Lokal mappe ble ikke omdøpt (Windows nektet pga. låste filer), så
-ingen `git worktree repair` nødvendig. Hovedworktree fungerer som før.
-Prunable worktree under `.claude/worktrees/` ble fjernet med
-`git worktree prune`.
-
-TODO (oppfølging): Når hovedmappa faktisk omdøpes lokalt fra
-`bgio-tutorial/` til `tic-tac-total-annihilation/`, kjør
-`git worktree list` på nytt og `git worktree repair` ved behov.
+Notat: Lokal mappe ble først ikke omdøpt (Windows nektet pga. låste
+filer). Prunable worktree under `.claude/worktrees/` ble fjernet med
+`git worktree prune`. Mappa ble senere omdøpt fra `bgio-tutorial/` til
+`tic-tac-total-annihilation/`; `git worktree list` viser at hovedworktree
+peker korrekt på den nye stien, ingen `git worktree repair` nødvendig.
 
 ## Fase 1: Kode-rydding
 
@@ -155,7 +152,7 @@ Disse to henger sammen fordi Vite endrer build-output og env-var-prefix,
 og vi vil bare oppdatere hosting-config én gang. Frontend flyttes fra
 Vercel til Netlify samtidig.
 
-### [ ] 2.1 Sett opp Vite-prosjekt parallelt
+### [x] 2.1 Sett opp Vite-prosjekt parallelt
 
 - Installer Vite og `@vitejs/plugin-react`.
 - Lag `vite.config.js` med React-plugin og evt. dev-proxy mot
@@ -166,7 +163,15 @@ Vercel til Netlify samtidig.
 - Erstatt `process.env.PUBLIC_URL` med tom string eller bruk `/` direkte
   (Vite serverer `public/` som rot).
 
-### [ ] 2.2 Oppdater package.json
+Notat: Lagt opp slik at JSX i `.js`-filer tolkes via `plugin-react`-include
+og esbuild-loader (slipper å rename filer). Ingen dev-proxy konfigurert,
+fordi `import.meta.env.VITE_BACKEND_URL` og `window.location.hostname`-fallbacken
+allerede dekker både dev og prod. `public/index.html` slettet, ny
+`index.html` ligger i prosjektrot med `<script type="module" src="/src/index.js">`.
+`PUBLIC_URL`-prefiksene i `AboutPopup.js` byttet til rotrelative stier
+(`/Mexican_Queendom.jpg` osv.).
+
+### [x] 2.2 Oppdater package.json
 
 - Endre scripts:
   - `start` til `vite`
@@ -176,13 +181,26 @@ Vercel til Netlify samtidig.
 - Fjern eslintConfig (`react-app`) og evt. browserslist-felt som ikke trengs lenger.
 - Behold `nodemon` og `eslint`/`prettier`-oppsettet.
 
-### [ ] 2.3 Test og verifiser
+Notat: `react-scripts`, `eslintConfig` og `browserslist` fjernet. La
+til `vite` og `@vitejs/plugin-react` som devDeps. Beholdt
+`@babel/plugin-proposal-private-property-in-object` fordi
+`.eslintrc.json` fortsatt extender `react-app` og preset-pipelinen
+krever den (transient avhengighet). `@babel/plugin-transform-private-property-in-object`
+fjernet (kun arv fra CRA-warning-fix). `.gitignore` utvidet med `/dist`.
+
+### [x] 2.3 Test og verifiser
 
 - Kjør `npm run build` og `npm run preview`. Sjekk at multiplayer fungerer
   mot lokal server.
 - Sjekk at favicon, bilder under `public/` og manifest fortsatt lastes.
 
-### [ ] 2.4 Migrer frontend fra Vercel til Netlify
+Notat: `npm install`, `npm run build`, `npm run preview` og `npm start`
+kjører rent. Preview serverer `index.html`, `/favicon.png`,
+`/manifest.json` og fraksjonsbildene med status 200. `npm run lint`
+passerer. Full multiplayer-flyt og About-popup verifisert manuelt i
+nettleser av eier.
+
+### [~] 2.4 Migrer frontend fra Vercel til Netlify
 
 - Opprett ny Netlify-site og koble til GitHub-repoet.
 - Sett byggeinnstillinger:
@@ -194,6 +212,15 @@ Vercel til Netlify samtidig.
   Netlify-versjonen er bekreftet å fungere.
 - Slett (eller "pause") Vercel-prosjektet etter at Netlify er bekreftet
   stabil i noen dager.
+
+Notat: `netlify.toml` lagt til med `command = "npm run build"`,
+`publish = "dist"` og en SPA-fallback-redirect (`/* -> /index.html 200`).
+**Parkert til etter omskrivningen** (eiers ønske): vi committer endringene
+lokalt men holder igjen `git push` til hele omskrivningen er ferdig. Først
+da settes Netlify opp manuelt (opprette site, koble GitHub, sette
+`VITE_BACKEND_URL`-env til samme backend-URL som ligger i Vercel i dag,
+verifisere deploy, evt. DNS-flytt, pause/slette Vercel). Frem til push
+kjører Vercel uforstyrret på gammel CRA-versjon fra `origin/main`.
 
 ## Fase 3: Tester
 

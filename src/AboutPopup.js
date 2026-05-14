@@ -20,12 +20,12 @@ const AboutPopup = ({ onClose }) => {
         <h2>The Mexican Queendom</h2>
         <img
           style={{ width: '50%' }}
-          src={process.env.PUBLIC_URL + '/Mexican_Queendom.jpg'}
+          src="/Mexican_Queendom.jpg"
           alt="Mexican Queendom flag"
         />
         <img
           style={{ width: '20%' }}
-          src={process.env.PUBLIC_URL + '/Queendom_icon.png'}
+          src="/Queendom_icon.png"
           alt="Mexican Queendom icon"
         />
         <p>
@@ -40,12 +40,12 @@ const AboutPopup = ({ onClose }) => {
         <h2>The Pan-Canadia Inuit Alliance</h2>
         <img
           style={{ width: '50%' }}
-          src={process.env.PUBLIC_URL + '/Pan-Canadia.jpg'}
+          src="/Pan-Canadia.jpg"
           alt="Pan-Canadia Inuit Alliance flag"
         />
         <img
           style={{ width: '20%' }}
-          src={process.env.PUBLIC_URL + '/Pan-Canadia_icon.png'}
+          src="/Pan-Canadia_icon.png"
           alt="Pan-Canadia Inuit Alliance icon"
         />
         <p>

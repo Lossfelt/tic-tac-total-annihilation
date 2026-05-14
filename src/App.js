@@ -12,14 +12,14 @@ const TicTacToeClient = Client({
   board: TicTacToeBoard,
   multiplayer: SocketIO({
     server:
-      process.env.REACT_APP_BACKEND_URL || `${window.location.hostname}:8000`,
+      import.meta.env.VITE_BACKEND_URL || `${window.location.hostname}:8000`,
   }),
   debug: false,
 });
 
 const lobbyClient = new LobbyClient({
   server:
-    process.env.REACT_APP_BACKEND_URL ||
+    import.meta.env.VITE_BACKEND_URL ||
     `${window.location.protocol}//${window.location.hostname}:8000`,
 });
 
