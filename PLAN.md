@@ -601,5 +601,4 @@ Notat: Koden er klar. **Manuelle steg som gjenstår for eier ved push:**
 - Spectator-modus.
 - Legg til Tactical Nuke, et spesialvåpen som helt ødelegger en gitt celle på brettet? (Dvs man kan ikke bruke den cellen resten av spillet.)
 - Legg til noe som knytter brettet visuelt til navnet på territoriene?
-
-
+- Gjør det mulig å recycle når man får et MWD man ikke vil ha.

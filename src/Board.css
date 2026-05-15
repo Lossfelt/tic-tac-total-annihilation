@@ -695,7 +695,9 @@
 .factions-preview {
   display: flex;
   gap: 1.5rem;
-  align-items: center;
+  /* Stretch slik at begge kortene faar samme hoeyde uansett tekstlengde -
+     flaggene over havner da paa lik vertikal posisjon. */
+  align-items: stretch;
   justify-content: center;
 }
 
@@ -737,6 +739,13 @@
   font-family: var(--font-heading);
   font-size: 0.85rem;
   text-align: center;
+  /* Tar resten av kort-hoeyden og sentrerer tittelen vertikalt, slik at en
+     kort tittel (2 linjer) ser balansert ut naar nabokortet har lengre
+     tittel (3 linjer) og draar opp felles kort-hoeyde. */
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .faction-card.queendom span {
@@ -758,11 +767,28 @@
 .match-bar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.4rem 0.8rem;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
+  width: 100%;
+  max-width: 440px;
+}
+
+.match-bar h3 {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+}
+
+.match-bar-button {
+  flex: 0 0 auto;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  background: var(--color-bg-deep);
+  border: 1px solid var(--color-border-strong);
 }
 
 .match-bar h3 {
@@ -1005,6 +1031,7 @@
     min-width: 0;
     width: 100%;
   }
+
 }
 
 @media (orientation: landscape) and (max-height: 520px) {

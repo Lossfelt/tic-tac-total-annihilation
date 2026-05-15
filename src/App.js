@@ -171,8 +171,21 @@ const App = () => {
       ) : (
         <div className="match-shell">
           <div className="match-bar">
+            <button
+              type="button"
+              className="match-bar-button"
+              onClick={handleLeave}
+            >
+              Leave
+            </button>
             <h3>Match ID: {matchID}</h3>
-            <button onClick={handleLeave}>Leave</button>
+            <button
+              type="button"
+              className="match-bar-button"
+              onClick={handleAbout}
+            >
+              About
+            </button>
           </div>
           <TicTacToeClient
             playerID={playerID}
@@ -183,9 +196,11 @@ const App = () => {
         </div>
       )}
 
-      <button className="about-button" onClick={handleAbout}>
-        About
-      </button>
+      {!joined && (
+        <button className="about-button" onClick={handleAbout}>
+          About
+        </button>
+      )}
       {showAbout && <AboutPopup onClose={handleAbout} />}
     </div>
   );
