@@ -580,6 +580,7 @@ Netlify-preview-deploys + main).
 - Test full multiplayer-flyt mot prod en siste gang.
 
 Notat: Koden er klar. **Manuelle steg som gjenstår for eier ved push:**
+
 1. Push alle commits til `origin/main`.
 2. Sett opp Netlify-site (se notat under 2.4): koble GitHub-repo, sett
    `VITE_BACKEND_URL` env-variabel til Render-backend-URL.
@@ -599,5 +600,6 @@ Notat: Koden er klar. **Manuelle steg som gjenstår for eier ved push:**
 - Animasjon når et våpen utløses.
 - Spectator-modus.
 - Legg til Tactical Nuke, et spesialvåpen som helt ødelegger en gitt celle på brettet? (Dvs man kan ikke bruke den cellen resten av spillet.)
+- Legg til noe som knytter brettet visuelt til navnet på territoriene?
 
 
