@@ -261,7 +261,7 @@ kategorier (hjørner, kanter, midtceller) for nabofunksjonene.
 
 ## Fase 4: Refaktor
 
-### [ ] 4.1 Trekk ut konstanter
+### [x] 4.1 Trekk ut konstanter
 
 I `src/Game.js`, opprett navngitte konstanter øverst:
 
@@ -274,14 +274,37 @@ I `src/Game.js`, opprett navngitte konstanter øverst:
 
 Bruk dem i stedet for magic numbers.
 
-### [ ] 4.2 Fjern duplikat blink-state i Board.js
+Notat: Alle konstanter eksportert. La også til `NUM_PLAYERS = 2` for
+`Array(NUM_PLAYERS).fill(...)` og `minPlayers`/`maxPlayers`. `IsRow`
+bruker nå `BOARD_SIZE` i alle aritmetiske uttrykk (`BOARD_SIZE + 1`,
+`BOARD_SIZE - 1`) slik at koden tåler endring av brettstørrelse.
+
+### [x] 4.2 Fjern duplikat blink-state i Board.js
 
 - Fjern `useState(G.blink)`, `useEffect`, `deepEqual` og `previousGRef`.
 - Les `G.blink[id]` direkte i render. boardgame.io rerendrer ved state-endring uansett.
 - Behold `onAnimationEnd`-callback bare hvis det faktisk trengs (vurder å la
   CSS-animasjonen kjøre seg ferdig basert kun på G.blink-flagget).
 
-### [ ] 4.3 Kollaps spesialvåpen-handlere
+Notat: Hele blink-mirror-laget fjernet. Render leser `G.blink[id]`
+direkte. `onAnimationEnd` og `handleAnimationEnd` fjernet.
+
+Etter første runde med manuell testing oppdaget eier en
+re-trigger-bug: en celle som nettopp hadde blinket, blinket ikke ved
+neste hendelse (claim/invasjon/opprør) fordi React batchet
+`G.blink[id]` false→true i samme commit, DOM beholdt klassen `.blink`,
+og CSS-animasjonen var allerede ferdig (én iterasjon, ingen restart).
+Fikset ved å legge til `G.blinkVersion` (monotonisk counter,
+inkrementeres i `clickCell`, `useStrategicWeapon`, og i `onEnd` ved
+opprør). Board.js inkluderer denne i React `key` for blinkende celler
+(`cell-${id}-blink-${blinkVersion}`), som tvinger remount og restarter
+animasjonen.
+
+Samtidig forsterket `.blink`-animasjonen i `Board.css` for bedre
+synlighet ved opprør (og generelt): legger til skalering (1.05x),
+oransje bakgrunnsfarge-puls og box-shadow-glow, to iterasjoner à 0.45s.
+
+### [x] 4.3 Kollaps spesialvåpen-handlere
 
 I `src/Board.js`, erstatt de tre nesten identiske `useEffect`-blokkene med
 en konfig:
@@ -296,14 +319,21 @@ const WEAPON_TARGET_COUNT = {
 
 Og en useEffect som leser fra denne tabellen.
 
-### [ ] 4.4 Rename MWD til strategicWeapon
+Notat: Implementert. Én `useEffect` leser `WEAPON_TARGET_COUNT` og kaller
+`moves.useStrategicWeapon` når riktig antall mål er valgt. Air Strike får
+hele arrayen som argument, de andre får første element (server forventer
+ulik signatur per våpen).
+
+### [x] 4.4 Rename MWD til strategicWeapon
 
 - I `src/Game.js`: `G.MWD` til `G.strategicWeapon`, move `MWD` til
   `useStrategicWeapon`.
 - Oppdater alle referanser i `src/Board.js`.
 - Behold `strategic_weapons`-arrayen, men gi den camelCase: `strategicWeapons`.
 
-### [ ] 4.5 Server slår opp spillernavn
+Notat: Gjort. Alle tre rename gjennomført konsistent.
+
+### [x] 4.5 Server slår opp spillernavn
 
 I dag sender klienten `matchData` som move-argument, så klienten kan lyve.
 
@@ -315,10 +345,30 @@ I dag sender klienten `matchData` som move-argument, så klienten kan lyve.
 Hvis dette viser seg å være tungt, kan vi nøye oss med å dokumentere det
 som kjent svakhet og hoppe over.
 
-### [ ] 4.6 Kommentar-rydd
+Notat: Løst ved placeholder-tokens i stedet for klient-sendt navneliste:
+- Moves tar ikke lenger imot `matchData`. Server skriver `__P0__` / `__P1__`
+  i loggoppføringer.
+- Ny eksport `formatLogEntry(entry, matchData)` i Game.js substituerer
+  tokens med navn fra `matchData` (som boardgame.io selv synker fra
+  server-side metadata satt ved `lobbyClient.joinMatch`).
+- Board.js render kjører hver loggoppføring gjennom `formatLogEntry`.
+- Resultat: serveren stoler aldri på klient-sendt navneliste, og spoofing
+  via move-argumenter er ikke lenger mulig. Fallback til "Player N" hvis
+  matchData mangler/uventet shape.
+- 5 nye tester for `formatLogEntry` i `Game.test.js`.
+**Bør testes manuelt:** at navn vises korrekt i loggen for begge spillere,
+inkludert opprør-meldinger (som ikke inneholder placeholder).
+
+### [x] 4.6 Kommentar-rydd
 
 Fjern kommentarer som beskriver hva neste linje gjør (eks. `// Lokal state for å lagre G.blink`).
 Behold kommentarer som forklarer hvorfor noe er gjort på en uventet måte.
+
+Notat: Gjort underveis i 4.1-4.5. Fjernet WHAT-kommentarer som
+"Lokal state for å lagre G.blink", "Funksjon for å håndtere ...",
+"Destroy targeted cells" osv. Beholdt WHY-kommentarer (f.eks. om Air
+Strike-validering, placeholder-token-strategien) og strukturmarkører i
+`positions`-arrayen.
 
 ## Fase 5: Visuelt løft
 

@@ -4,6 +4,7 @@ import {
   IsRow,
   GetNeighbors,
   GetSurroundingCells,
+  formatLogEntry,
 } from './Game.js';
 
 // Brettet er 4x4, indeksert slik:
@@ -103,54 +104,45 @@ describe('IsRow', () => {
     expect(IsRow([3, 4, 5])).toBe(false);
   });
 
-  it.each([
-    [[0, 4, 8]],
-    [[4, 8, 12]],
-    [[3, 7, 11]],
-    [[7, 11, 15]],
-  ])('godkjenner vertikal rad %j', (input) => {
-    expect(IsRow(input)).toBe(true);
-  });
+  it.each([[[0, 4, 8]], [[4, 8, 12]], [[3, 7, 11]], [[7, 11, 15]]])(
+    'godkjenner vertikal rad %j',
+    (input) => {
+      expect(IsRow(input)).toBe(true);
+    },
+  );
 
-  it.each([
-    [[0, 5, 10]],
-    [[5, 10, 15]],
-    [[1, 6, 11]],
-  ])('godkjenner økende diagonal %j', (input) => {
-    expect(IsRow(input)).toBe(true);
-  });
+  it.each([[[0, 5, 10]], [[5, 10, 15]], [[1, 6, 11]]])(
+    'godkjenner økende diagonal %j',
+    (input) => {
+      expect(IsRow(input)).toBe(true);
+    },
+  );
 
-  it.each([
-    [[3, 6, 9]],
-    [[6, 9, 12]],
-    [[7, 10, 13]],
-    [[2, 5, 8]],
-  ])('godkjenner synkende diagonal %j', (input) => {
-    expect(IsRow(input)).toBe(true);
-  });
+  it.each([[[3, 6, 9]], [[6, 9, 12]], [[7, 10, 13]], [[2, 5, 8]]])(
+    'godkjenner synkende diagonal %j',
+    (input) => {
+      expect(IsRow(input)).toBe(true);
+    },
+  );
 
   it('aksepterer usortert input som faktisk er en gyldig rad', () => {
     expect(IsRow([2, 0, 1])).toBe(true);
     expect(IsRow([10, 0, 5])).toBe(true);
   });
 
-  it.each([
-    [[]],
-    [[0]],
-    [[0, 1]],
-    [[0, 1, 2, 3]],
-  ])('avviser feil lengde %j', (input) => {
-    expect(IsRow(input)).toBe(false);
-  });
+  it.each([[[]], [[0]], [[0, 1]], [[0, 1, 2, 3]]])(
+    'avviser feil lengde %j',
+    (input) => {
+      expect(IsRow(input)).toBe(false);
+    },
+  );
 
-  it.each([
-    [[0, 1, 3]],
-    [[0, 2, 5]],
-    [[0, 5, 11]],
-    [[0, 1, 4]],
-  ])('avviser celler som ikke er på rad %j', (input) => {
-    expect(IsRow(input)).toBe(false);
-  });
+  it.each([[[0, 1, 3]], [[0, 2, 5]], [[0, 5, 11]], [[0, 1, 4]]])(
+    'avviser celler som ikke er på rad %j',
+    (input) => {
+      expect(IsRow(input)).toBe(false);
+    },
+  );
 });
 
 describe('GetNeighbors', () => {
@@ -213,5 +205,43 @@ describe('GetSurroundingCells', () => {
     [10, [5, 6, 7, 9, 10, 11, 13, 14, 15]],
   ])('midtcellen %i dekker %j (9 celler)', (id, expected) => {
     expect(GetSurroundingCells(id).sort((a, b) => a - b)).toEqual(expected);
+  });
+});
+
+describe('formatLogEntry', () => {
+  const matchData = [
+    { id: 0, name: 'Levin' },
+    { id: 1, name: 'Eva' },
+  ];
+
+  it('erstatter __P0__ og __P1__ med navn fra matchData', () => {
+    expect(formatLogEntry('__P0__ conquers Port Orchard', matchData)).toBe(
+      'Levin conquers Port Orchard',
+    );
+    expect(formatLogEntry('__P1__ claims the Salt Marches', matchData)).toBe(
+      'Eva claims the Salt Marches',
+    );
+  });
+
+  it('erstatter flere placeholders i samme streng', () => {
+    expect(formatLogEntry('__P0__ defeats __P1__ in battle', matchData)).toBe(
+      'Levin defeats Eva in battle',
+    );
+  });
+
+  it('returnerer strengen uendret hvis det ikke finnes placeholders', () => {
+    expect(formatLogEntry('The people of Port Crater revolt', matchData)).toBe(
+      'The people of Port Crater revolt',
+    );
+  });
+
+  it('faller tilbake til "Player N" hvis matchData mangler navn', () => {
+    expect(formatLogEntry('__P0__ claims it', [{}, {}])).toBe(
+      'Player 0 claims it',
+    );
+  });
+
+  it('faller tilbake til "Player N" hvis matchData er undefined', () => {
+    expect(formatLogEntry('__P1__ acts', undefined)).toBe('Player 1 acts');
   });
 });

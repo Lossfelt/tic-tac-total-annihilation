@@ -1,8 +1,12 @@
 import './Board.css';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { formatLogEntry } from './Game.js';
 
-// Funksjon for å sjekke om to objekter er like
-const deepEqual = (obj1, obj2) => JSON.stringify(obj1) === JSON.stringify(obj2);
+const WEAPON_TARGET_COUNT = {
+  'Air Strike': 3,
+  Artillery: 1,
+  'Biological Warfare': 1,
+};
 
 export function TicTacToeBoard({
   ctx,
@@ -12,82 +16,40 @@ export function TicTacToeBoard({
   playerID,
   isActive,
 }) {
-  // Lokal state for å lagre G.blink
-  const [blinking, setBlinking] = useState(G.blink);
-  // Lagre en referanse til forrige G for å sammenligne
-  const previousGRef = useRef(G);
-  // Oppdater lokal state når G.blink endres, men bare hvis G faktisk har blitt oppdatert
-  useEffect(() => {
-    const previousG = previousGRef.current;
-
-    if (!deepEqual(G.blink, previousG.blink)) {
-      // G har blitt oppdatert
-      setBlinking(G.blink);
-      previousGRef.current = G; // Oppdater referansen
-    }
-  }, [G]);
-  // Funksjon for å håndtere slutten av animasjonen og fjerne blink
-  const handleAnimationEnd = (id) => {
-    setBlinking((blinking) => {
-      const newBlinking = [...blinking];
-      newBlinking[id] = false;
-      return newBlinking;
-    });
-  };
-
-  //lokal state for å håndtere bruk av strategiske våpen
   const [specialMoveActive, setSpecialMoveActive] = useState(false);
   const [targetsOfSpecialMove, setTargetsOfSpecialMove] = useState([]);
-  //funksjon for når en spiller aktiverer et strategisk våpen
+
   const handleSpecialMoveClick = () => {
     if (!specialMoveActive) {
-      setSpecialMoveActive(G.MWD[playerID]);
+      setSpecialMoveActive(G.strategicWeapon[playerID]);
     } else {
       setSpecialMoveActive(false);
       setTargetsOfSpecialMove([]);
     }
   };
-  //Legg til en ID som mål for strategisk våpen
-  const specialAttack = (id) => {
-    setTargetsOfSpecialMove((targetsOfSpecialMove) => {
-      const newTargets = [...targetsOfSpecialMove, id];
-      return newTargets;
-    });
-  };
-  //Bruk av strategisk våpen
-  useEffect(() => {
-    if (
-      specialMoveActive === 'Air Strike' &&
-      targetsOfSpecialMove.length === 3
-    ) {
-      moves.MWD(targetsOfSpecialMove, matchData);
-      setTargetsOfSpecialMove([]);
-      setSpecialMoveActive(false);
-    }
-    if (
-      specialMoveActive === 'Artillery' &&
-      targetsOfSpecialMove.length === 1
-    ) {
-      moves.MWD(targetsOfSpecialMove[0], matchData);
-      setTargetsOfSpecialMove([]);
-      setSpecialMoveActive(false);
-    }
-    if (
-      specialMoveActive === 'Biological Warfare' &&
-      targetsOfSpecialMove.length === 1
-    ) {
-      moves.MWD(targetsOfSpecialMove[0], matchData);
-      setTargetsOfSpecialMove([]);
-      setSpecialMoveActive(false);
-    }
-  }, [targetsOfSpecialMove, specialMoveActive, moves, matchData]);
 
-  //funksjon for å klikke på de vanlige cellene
+  const specialAttack = (id) => {
+    setTargetsOfSpecialMove((targets) => [...targets, id]);
+  };
+
+  useEffect(() => {
+    const requiredCount = WEAPON_TARGET_COUNT[specialMoveActive];
+    if (!requiredCount || targetsOfSpecialMove.length !== requiredCount) {
+      return;
+    }
+    // Air Strike vil ha hele array-en som mål; de andre tar en enkelt celle.
+    const arg =
+      requiredCount === 1 ? targetsOfSpecialMove[0] : targetsOfSpecialMove;
+    moves.useStrategicWeapon(arg);
+    setTargetsOfSpecialMove([]);
+    setSpecialMoveActive(false);
+  }, [targetsOfSpecialMove, specialMoveActive, moves]);
+
   const clickCell = (id) => {
     if (specialMoveActive) {
       specialAttack(id);
     } else {
-      moves.clickCell(id, matchData);
+      moves.clickCell(id);
     }
   };
 
@@ -124,17 +86,25 @@ export function TicTacToeBoard({
     let cells = [];
     for (let j = 0; j < 4; j++) {
       const id = 4 * i + j;
-      const isSelected = targetsOfSpecialMove.includes(id); // Sjekk om knappen er valgt til strategisk våpen
+      const isSelected = targetsOfSpecialMove.includes(id);
+      const className = `${G.blink[id] ? 'knapp blink' : 'knapp'} ${
+        isSelected ? 'selected' : ''
+      }`;
+      // Når en celle blinker, inkluderer vi blinkVersion i React `key` slik
+      // at to blink-hendelser etter hverandre faktisk remounter elementet
+      // og restarter CSS-animasjonen. Uten det vil DOM beholde den gamle,
+      // ferdigkjørte animasjonen og cellen virker statisk.
+      const buttonKey = G.blink[id]
+        ? `cell-${id}-blink-${G.blinkVersion}`
+        : `cell-${id}`;
       cells.push(
         <td key={id}>
           {G.cells[id] ? (
             <button
-              className={`${blinking[id] ? 'knapp blink' : 'knapp'} ${
-                isSelected ? 'selected' : ''
-              }`}
+              key={buttonKey}
+              className={className}
               type="button"
               onClick={() => clickCell(id)}
-              onAnimationEnd={() => handleAnimationEnd(id)}
             >
               <img
                 src={
@@ -148,12 +118,10 @@ export function TicTacToeBoard({
             </button>
           ) : (
             <button
-              className={`${blinking[id] ? 'knapp blink' : 'knapp'} ${
-                isSelected ? 'selected' : ''
-              }`}
+              key={buttonKey}
+              className={className}
               type="button"
               onClick={() => clickCell(id)}
-              onAnimationEnd={() => handleAnimationEnd(id)}
             />
           )}
         </td>,
@@ -206,7 +174,7 @@ export function TicTacToeBoard({
           onClick={() => handleSpecialMoveClick()}
           disabled={!isActive}
         >
-          {G.MWD[playerID]}
+          {G.strategicWeapon[playerID]}
         </button>
         <div>Rareium: {G.Rareium[playerID]} </div>
         <div className="text">{winner}</div>
@@ -214,7 +182,7 @@ export function TicTacToeBoard({
           <h2>Game Log</h2>
           <ul>
             {G.log.map((entry, index) => (
-              <li key={index}>{entry}</li>
+              <li key={index}>{formatLogEntry(entry, matchData)}</li>
             ))}
           </ul>
         </div>
