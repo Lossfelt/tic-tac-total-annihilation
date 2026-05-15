@@ -7,7 +7,12 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git mv *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(curl -s http://localhost:4173/)",
+      "Bash(curl -s -o /dev/null -w \"Status: %{http_code}\\\\n\" http://localhost:4173/favicon.png)",
+      "Bash(curl -s -o /dev/null -w \"Status: %{http_code}\\\\n\" http://localhost:4173/manifest.json)",
+      "Bash(curl -s -o /dev/null -w \"Status: %{http_code}\\\\n\" http://localhost:4173/Mexican_Queendom.jpg)",
+      "Bash(npx vitest *)"
     ]
   }
 }
