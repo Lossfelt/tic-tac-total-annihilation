@@ -537,13 +537,19 @@ og må dele match-ID med motspilleren manuelt.
 
 ## Fase 6: Hosting og sikkerhet
 
-### [ ] 6.1 Match-ID-kollisjoner
+### [x] 6.1 Match-ID-kollisjoner
 
 I `src/server.mjs`: 4-sifret ID gir bare 9000 mulige verdier og ingen
 kollisjonsjekk. Endre til 6-sifret, eller bruk nanoid med en alfa-numerisk
 shortform (f.eks. `nanoid(6)`).
 
-### [ ] 6.2 Lås CORS til frontend-domenet
+Notat: Endret til 6-sifret (900 000 verdier, fra 9 000). Valgte numerisk
+fremfor nanoid-alfanumerisk fordi 6 sifre er enklere å dele verbalt og
+fungerer godt på mobil-keypad. Boardgame.io har fortsatt ingen
+innebygd kollisjonssjekk, men sannsynligheten er nå akseptabel for
+hobbybruk.
+
+### [x] 6.2 Lås CORS til frontend-domenet
 
 I `src/server.mjs`, konfigurer cors slik:
 
@@ -555,11 +561,34 @@ server.app.middleware.unshift(
 
 Sett `FRONTEND_URL` på Render til Netlify-URL-en.
 
-### [ ] 6.3 Verifiser env-vars og deploys
+Notat: Gjort, men byttet til boardgame.io sin innebygde `origins`-opsjon
+i stedet for den manuelle Koa-cors-middlewaren. Server-konfigen mottar
+nå `origins: [Origins.LOCALHOST, ...(FRONTEND_URL?.split(','))]`.
+Boardgame.io setter `apiOrigins = origins` automatisk, så samme liste
+gjelder både Socket.IO-multiplayer og HTTP-API (lobby). Localhost er
+alltid tillatt (for dev), FRONTEND_URL legges til når den er satt. Den
+gamle "Server `origins` option is not set"-warningen i konsollen er nå
+borte. `@koa/cors` fjernet fra dependencies som ubrukt.
+
+FRONTEND_URL kan være komma-separert for å tillate flere origins (f.eks.
+Netlify-preview-deploys + main).
+
+### [~] 6.3 Verifiser env-vars og deploys
 
 - Netlify: `VITE_BACKEND_URL` peker på Render-URL.
 - Render: `FRONTEND_URL` peker på Netlify-URL.
 - Test full multiplayer-flyt mot prod en siste gang.
+
+Notat: Koden er klar. **Manuelle steg som gjenstår for eier ved push:**
+1. Push alle commits til `origin/main`.
+2. Sett opp Netlify-site (se notat under 2.4): koble GitHub-repo, sett
+   `VITE_BACKEND_URL` env-variabel til Render-backend-URL.
+3. På Render: legg til `FRONTEND_URL` env-variabel med Netlify-URL-en
+   (uten trailing slash). Trigger redeploy så den blir lest inn.
+4. Test full flyt: lobby → opprett match → spiller 2 joiner via match-ID
+   → trekk fra begge sider → Play Again etter seier.
+5. Hvis multiplayer ikke kobler til, sjekk Render-logger for
+   "CORS låst til ..."-linjen og verifiser at den nevner riktig URL.
 
 ## Backlog (lavere prioritet, ta etter hvert)
 
