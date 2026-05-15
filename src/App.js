@@ -3,7 +3,7 @@ import { TicTacToeBoard } from './Board.js';
 import { Client } from 'boardgame.io/dist/cjs/react.js';
 import { SocketIO } from 'boardgame.io/dist/cjs/multiplayer.js';
 import { LobbyClient } from 'boardgame.io/dist/cjs/client.js';
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import './Board.css';
 import AboutPopup from './AboutPopup.js';
 

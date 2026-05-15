@@ -1,5 +1,5 @@
 import './Board.css';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { formatLogEntry, territories } from './Game.js';
 
 const WEAPON_TARGET_COUNT = {

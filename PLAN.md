@@ -137,6 +137,12 @@ fully-specified paths både i webpack (CRA) og Node ESM (server.mjs).
 Begge feiler med `boardgame.io/core` etc. Vite (Fase 2) håndterer disse
 proxy-stiene korrekt, så stegget tas der.
 
+Oppdatering etter Fase 2: Selv med Vite kan ikke `Game.js` og
+`server.mjs` bruke rene entry-points fordi `server.mjs` kjører i Node
+ESM som krever fully-specified paths. Bare `App.js` kan ryddes uten å
+brekke noe, men det gir inkonsistens i kodebasen. Detaljer i
+[todo.md](todo.md).
+
 ### [x] 1.3 Oppdater README
 
 - Skriv en kort README som beskriver:
@@ -591,14 +597,6 @@ Notat: Koden er klar. **Manuelle steg som gjenstår for eier ved push:**
 5. Hvis multiplayer ikke kobler til, sjekk Render-logger for
    "CORS låst til ..."-linjen og verifiser at den nevner riktig URL.
 
-## Backlog (lavere prioritet, ta etter hvert)
+## Backlog
 
-- TypeScript-rewrite (kun ved en større refaktor i fremtiden).
-- Persistens av matcher (databaseintegrasjon med boardgame.io DB-adapter).
-- AI-motspiller (det finnes allerede en stub i `Game.js` under `ai.enumerate`).
-- Lyd-effekter for trekk og våpen.
-- Animasjon når et våpen utløses.
-- Spectator-modus.
-- Legg til Tactical Nuke, et spesialvåpen som helt ødelegger en gitt celle på brettet? (Dvs man kan ikke bruke den cellen resten av spillet.)
-- Legg til noe som knytter brettet visuelt til navnet på territoriene?
-- Gjør det mulig å recycle når man får et MWD man ikke vil ha.
+Flyttet til [todo.md](todo.md).
