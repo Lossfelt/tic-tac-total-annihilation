@@ -81,30 +81,37 @@ const App = () => {
     setJoined(false);
   };
 
-  // Play Again forlater den ferdige matchen og oppretter en ny. Spilleren
-  // ender opp i lobbyen som vertskap for en ny match-ID, og deler den med
-  // motspilleren.
+  // Play Again bruker boardgame.io sin innebygde `playAgain`-API. Serveren
+  // oppretter en delt ny match for begge spillerne: første spiller som
+  // kaller, lager den; andre spiller får samme `nextMatchID` tilbake. Begge
+  // forlater den ferdige matchen og kobler seg til den nye.
   const handlePlayAgain = async () => {
     try {
-      await lobbyClient.leaveMatch('TicTacToe', matchID, {
-        playerID,
-        credentials,
+      const { nextMatchID } = await lobbyClient.playAgain(
+        'TicTacToe',
+        matchID,
+        { playerID, credentials },
+      );
+
+      try {
+        await lobbyClient.leaveMatch('TicTacToe', matchID, {
+          playerID,
+          credentials,
+        });
+      } catch (leaveError) {
+        // Den andre spilleren kan ha trigget playAgain først og ryddet
+        // matchen. Det er greit å ignorere.
+        console.warn('Could not leave old match:', leaveError);
+      }
+
+      const next = await lobbyClient.joinMatch('TicTacToe', nextMatchID, {
+        playerName: name,
       });
+      setMatchID(nextMatchID);
+      setCredentials(next.playerCredentials);
+      setPlayerID(next.playerID);
     } catch (error) {
-      console.error('Error leaving match:', error);
-    }
-    setMatchID('');
-    setCredentials('');
-    setPlayerID('');
-    setJoined(false);
-    try {
-      const match = await lobbyClient.createMatch('TicTacToe', {
-        numPlayers: 2,
-      });
-      setMatchID(match.matchID);
-      handleJoin(match.matchID);
-    } catch (error) {
-      console.error('Error creating match:', error);
+      console.error('Error during play again:', error);
     }
   };
 

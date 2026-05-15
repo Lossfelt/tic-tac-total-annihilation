@@ -952,8 +952,7 @@
   display: block;
   width: 100%;
   height: auto;
-  max-height: 240px;
-  object-fit: cover;
+  /* Bevarer hele bildet med naturlig sideforhold - ingen cropping. */
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   margin-bottom: 0.6rem;
