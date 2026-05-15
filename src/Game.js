@@ -49,12 +49,21 @@ const positions = [
   [3, 6, 9, 12],
 ];
 
-export function IsVictory(cells) {
-  const isRowComplete = (row) => {
+// Returnerer cellene som utgjør den vinnende linjen, eller null hvis det
+// ikke finnes noen. Brukes både til seier-sjekk og til å fremheve vinneren
+// sine celler på brettet.
+export function GetWinningLine(cells) {
+  for (const row of positions) {
     const symbols = row.map((i) => cells[i]);
-    return symbols.every((i) => i !== null && i === symbols[0]);
-  };
-  return positions.some((row) => isRowComplete(row));
+    if (symbols.every((i) => i !== null && i === symbols[0])) {
+      return row;
+    }
+  }
+  return null;
+}
+
+export function IsVictory(cells) {
+  return GetWinningLine(cells) !== null;
 }
 
 // Sjekker om tre celle-IDer ligger på rad (horisontalt, vertikalt eller
@@ -266,8 +275,9 @@ export const TicTacToe = {
   maxPlayers: NUM_PLAYERS,
 
   endIf: ({ G, ctx }) => {
-    if (IsVictory(G.cells)) {
-      return { winner: ctx.currentPlayer };
+    const winningLine = GetWinningLine(G.cells);
+    if (winningLine) {
+      return { winner: ctx.currentPlayer, winningLine };
     }
   },
 

@@ -65,6 +65,7 @@ export function TicTacToeBoard({
   matchData,
   playerID,
   isActive,
+  onPlayAgain,
 }) {
   const [specialMoveActive, setSpecialMoveActive] = useState(false);
   const [targetsOfSpecialMove, setTargetsOfSpecialMove] = useState([]);
@@ -114,25 +115,18 @@ export function TicTacToeBoard({
     ? WEAPON_TARGET_COUNT[specialMoveActive]
     : 0;
 
-  let winner = null;
-  if (ctx.gameover) {
-    const winnerID = ctx.gameover.winner;
-    const winnerName = matchData[winnerID]?.name || FACTION_NAME[winnerID];
-    winner = (
-      <div className={`winner-banner winner-${winnerID}`}>
-        <span className="winner-label">Victorious general:</span>
-        <span className="winner-name">
-          {winnerName} <FactionMark playerID={winnerID} size="1.2em" />
-        </span>
-      </div>
-    );
-  }
+  const gameover = ctx.gameover;
+  const winnerID = gameover?.winner;
+  const winnerName =
+    gameover && (matchData[winnerID]?.name || FACTION_NAME[winnerID]);
+  const winningCells = new Set(gameover?.winningLine ?? []);
 
   const cells = [];
   for (let id = 0; id < 16; id++) {
     const owner = G.cells[id];
     const isSelected = targetsOfSpecialMove.includes(id);
     const isBlinking = G.blink[id];
+    const isWinning = winningCells.has(id);
 
     const classes = ['cell'];
     if (owner === '0') classes.push('cell-queendom');
@@ -140,6 +134,7 @@ export function TicTacToeBoard({
     if (isBlinking) classes.push('blink');
     if (isSelected) classes.push('selected');
     if (specialMoveActive) classes.push('targetable');
+    if (isWinning) classes.push('winning');
 
     const buttonKey = isBlinking
       ? `cell-${id}-blink-${G.blinkVersion}`
@@ -187,75 +182,99 @@ export function TicTacToeBoard({
           </span>
         </h1>
 
-        <table className="board">
-          <tbody>{tbody}</tbody>
-        </table>
-
-        <div className="turn-indicator">
-          <span className="turn-label">Current turn:</span>
-          <span
-            className={`turn-name ${
-              ctx.currentPlayer === '0' ? 'queendom' : 'canadia'
-            }`}
-          >
-            {matchData[ctx.currentPlayer]?.name ||
-              FACTION_NAME[ctx.currentPlayer]}{' '}
-            <FactionMark playerID={ctx.currentPlayer} />
-          </span>
-        </div>
-
-        <div className="weapon-panel">
-          <button
-            className={`weapon-button ${specialMoveActive ? 'active' : ''} ${
-              myWeapon ? 'armed' : 'unarmed'
-            }`}
-            onClick={handleSpecialMoveClick}
-            disabled={!isActive || !myWeapon}
-            title={
-              myWeapon
-                ? WEAPON_META[myWeapon].description
-                : 'No strategic weapon available'
-            }
-          >
-            {myWeapon ? (
-              <>
-                <span className="weapon-icon">
-                  {WEAPON_META[myWeapon].icon}
-                </span>
-                <span className="weapon-name">{myWeapon}</span>
-              </>
-            ) : (
-              <span className="weapon-name weapon-empty">No weapon armed</span>
-            )}
-          </button>
-
-          {activeWeaponMeta && (
-            <div className="weapon-instruction">
-              <div className="weapon-instruction-text">
-                {activeWeaponMeta.instruction}
-              </div>
-              <div className="weapon-instruction-count">
-                {targetsOfSpecialMove.length} / {targetCount} selected
-              </div>
+        <div className="board-wrapper">
+          <table className="board">
+            <tbody>{tbody}</tbody>
+          </table>
+          {gameover && (
+            <div className={`winner-overlay winner-overlay-${winnerID}`}>
+              <div className="winner-overlay-name">{winnerName}</div>
+              <div className="winner-overlay-label">Wins</div>
             </div>
           )}
         </div>
 
-        <div
-          className="rareium-bar"
-          title="Rareium is the chance (%) to receive a strategic weapon at the start of your turn."
-        >
-          <div
-            className="rareium-fill"
-            style={{ width: `${rareiumPercent}%` }}
-          />
-          <div className="rareium-label">
-            <span>Rareium</span>
-            <span className="rareium-value">{myRareium}%</span>
-          </div>
-        </div>
+        {gameover && (
+          <button
+            className="play-again-button"
+            type="button"
+            onClick={onPlayAgain}
+          >
+            Play again
+          </button>
+        )}
 
-        {winner}
+        {!gameover && (
+          <div className="turn-indicator">
+            <span className="turn-label">Current turn:</span>
+            <span
+              className={`turn-name ${
+                ctx.currentPlayer === '0' ? 'queendom' : 'canadia'
+              }`}
+            >
+              {matchData[ctx.currentPlayer]?.name ||
+                FACTION_NAME[ctx.currentPlayer]}{' '}
+              <FactionMark playerID={ctx.currentPlayer} />
+            </span>
+          </div>
+        )}
+
+        {!gameover && (
+          <div className="weapon-panel">
+            <button
+              className={`weapon-button ${specialMoveActive ? 'active' : ''} ${
+                myWeapon ? 'armed' : 'unarmed'
+              }`}
+              onClick={handleSpecialMoveClick}
+              disabled={!isActive || !myWeapon}
+              title={
+                myWeapon
+                  ? WEAPON_META[myWeapon].description
+                  : 'No strategic weapon available'
+              }
+            >
+              {myWeapon ? (
+                <>
+                  <span className="weapon-icon">
+                    {WEAPON_META[myWeapon].icon}
+                  </span>
+                  <span className="weapon-name">{myWeapon}</span>
+                </>
+              ) : (
+                <span className="weapon-name weapon-empty">
+                  No weapon armed
+                </span>
+              )}
+            </button>
+
+            {activeWeaponMeta && (
+              <div className="weapon-instruction">
+                <div className="weapon-instruction-text">
+                  {activeWeaponMeta.instruction}
+                </div>
+                <div className="weapon-instruction-count">
+                  {targetsOfSpecialMove.length} / {targetCount} selected
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!gameover && (
+          <div
+            className="rareium-bar"
+            title="Rareium is the chance (%) to receive a strategic weapon at the start of your turn."
+          >
+            <div
+              className="rareium-fill"
+              style={{ width: `${rareiumPercent}%` }}
+            />
+            <div className="rareium-label">
+              <span>Rareium</span>
+              <span className="rareium-value">{myRareium}%</span>
+            </div>
+          </div>
+        )}
 
         <div className="game-log">
           <h2>Game Log</h2>

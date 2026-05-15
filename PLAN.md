@@ -346,6 +346,7 @@ Hvis dette viser seg å være tungt, kan vi nøye oss med å dokumentere det
 som kjent svakhet og hoppe over.
 
 Notat: Løst ved placeholder-tokens i stedet for klient-sendt navneliste:
+
 - Moves tar ikke lenger imot `matchData`. Server skriver `__P0__` / `__P1__`
   i loggoppføringer.
 - Ny eksport `formatLogEntry(entry, matchData)` i Game.js substituerer
@@ -356,8 +357,8 @@ Notat: Løst ved placeholder-tokens i stedet for klient-sendt navneliste:
   via move-argumenter er ikke lenger mulig. Fallback til "Player N" hvis
   matchData mangler/uventet shape.
 - 5 nye tester for `formatLogEntry` i `Game.test.js`.
-**Bør testes manuelt:** at navn vises korrekt i loggen for begge spillere,
-inkludert opprør-meldinger (som ikke inneholder placeholder).
+  **Bør testes manuelt:** at navn vises korrekt i loggen for begge spillere,
+  inkludert opprør-meldinger (som ikke inneholder placeholder).
 
 ### [x] 4.6 Kommentar-rydd
 
@@ -480,6 +481,60 @@ loggvindu) og `orientation: landscape and max-height: 520px` (enda
 mindre celler, mer kompakt layout). About-popup bruker `width: min(90%, 640px)`
 og `max-height: 90vh` med scroll for lesbarhet på små skjermer.
 
+## Tillegg etter Fase 5 (utenfor opprinnelig plan)
+
+### [x] Stil-justeringer nærmere mockup
+
+Etter at eier delte en ChatGPT-generert mockup (mørkt grunge-brett med
+sprukne stenfliser og "ANNIHILATION" i ildgul-oransje), gjorde vi seks
+CSS-bare justeringer for å treffe nærmere:
+
+1. Heading-font byttet fra Special Elite (typewriter) til Black Ops One
+   (bold militær display). Special Elite beholdt som `--font-stencil`
+   for evt. senere bruk.
+2. Lobby-tittelen splittet: "Tic Tac Total" (sand) + "Annihilation"
+   (rust-oransje med glow).
+3. Rust-palett justert mot ildgul: `--color-rust` `#c75d3a` → `#dd6a35`,
+   `--color-rust-bright` `#e07a4f` → `#f5934d`.
+4. Paneler (brett, våpenknapp, log, lobby-paneler, faction-cards) fikk
+   gradient (elevated → deep), inset highlight på toppen og dypere drop
+   shadows.
+5. Subtil grunge-overlay via inline SVG `feTurbulence`-noise på body,
+   `opacity: 0.07`, `mix-blend-mode: overlay`.
+6. Brettet ble innfelt med inset shadow (`inset 0 6px 14px rgba(0,0,0,0.75)`),
+   cellene fikk topp-highlight og gradient så de føles fysiske.
+
+### [x] About-popup forbedret
+
+- Lukkes ved Escape-tasten og klikk på backdrop, ikke bare "Close"-knappen.
+- X-ikon i øvre høyre hjørne i stedet for "Close"-tekst.
+- Backdrop får mørk radial gradient og fade-in.
+- Innholdet restrukturert i `<section>`-blokker. Fraksjons-flaggene er
+  egne `.faction-flag`-bilder med ikon + heading over. Våpenliste fikk
+  ikoner og strukturerte rader.
+- ARIA: `role="dialog"`, `aria-modal`, `aria-labelledby`.
+
+### [x] Play Again-knapp
+
+Når `ctx.gameover` er satt, vises en "Play Again"-knapp rett under
+brettet. Knappen kaller `onPlayAgain`-prop som forlater matchen og
+oppretter en ny via `lobbyClient`. Spilleren ender opp i en ny match
+og må dele match-ID med motspilleren manuelt.
+
+### [x] Vinneroverlay og fremhevede vinnerceller
+
+- `GetWinningLine(cells)`-funksjon eksportert fra Game.js. Returnerer
+  array med de fire cellene som dannet vinnerlinjen, eller null.
+  7 nye tester. `IsVictory` er nå en thin wrapper.
+- `endIf` lagrer `winningLine` i `ctx.gameover` ved seier.
+- Board.js: brettet wrappet i `.board-wrapper` med posisjonert
+  `.winner-overlay` på toppen som viser "NAME / WINS" i stor skrift
+  med fraksjonsfarge. Bakgrunnen er en mørk radial vignett.
+- Vinnercellene får `.winning`-klassen: glow, inset border i
+  rust-bright og pulserende animasjon (`winning-pulse`).
+- Turn-indicator, våpenpanel og rareium-bar skjules når
+  `ctx.gameover` er satt, for å gi visuell ro rundt overlayen.
+
 ## Fase 6: Hosting og sikkerhet
 
 ### [ ] 6.1 Match-ID-kollisjoner
@@ -514,3 +569,6 @@ Sett `FRONTEND_URL` på Render til Netlify-URL-en.
 - Lyd-effekter for trekk og våpen.
 - Animasjon når et våpen utløses.
 - Spectator-modus.
+- Legg til Tactical Nuke, et spesialvåpen som helt ødelegger en gitt celle på brettet? (Dvs man kan ikke bruke den cellen resten av spillet.)
+
+

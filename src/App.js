@@ -81,12 +81,42 @@ const App = () => {
     setJoined(false);
   };
 
+  // Play Again forlater den ferdige matchen og oppretter en ny. Spilleren
+  // ender opp i lobbyen som vertskap for en ny match-ID, og deler den med
+  // motspilleren.
+  const handlePlayAgain = async () => {
+    try {
+      await lobbyClient.leaveMatch('TicTacToe', matchID, {
+        playerID,
+        credentials,
+      });
+    } catch (error) {
+      console.error('Error leaving match:', error);
+    }
+    setMatchID('');
+    setCredentials('');
+    setPlayerID('');
+    setJoined(false);
+    try {
+      const match = await lobbyClient.createMatch('TicTacToe', {
+        numPlayers: 2,
+      });
+      setMatchID(match.matchID);
+      handleJoin(match.matchID);
+    } catch (error) {
+      console.error('Error creating match:', error);
+    }
+  };
+
   return (
     <div>
       {!joined ? (
         <div className="lobby">
           <div className="lobby-title">
-            <h1>Tic Tac Total Annihilation</h1>
+            <h1 className="game-title">
+              <span className="game-title-main">Tic Tac Total</span>
+              <span className="game-title-accent">Annihilation</span>
+            </h1>
             <div className="lobby-subtitle">Post-collapse territory war</div>
           </div>
 
@@ -141,6 +171,7 @@ const App = () => {
             playerID={playerID}
             credentials={credentials}
             matchID={matchID}
+            onPlayAgain={handlePlayAgain}
           />
         </div>
       )}

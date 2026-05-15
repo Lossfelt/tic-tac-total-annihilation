@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   IsVictory,
+  GetWinningLine,
   IsRow,
   GetNeighbors,
   GetSurroundingCells,
@@ -82,6 +83,55 @@ describe('IsVictory', () => {
       [3, '0'],
     ]);
     expect(IsVictory(cells)).toBe(false);
+  });
+});
+
+describe('GetWinningLine', () => {
+  it('returnerer null for tomt brett', () => {
+    expect(GetWinningLine(emptyBoard())).toBeNull();
+  });
+
+  it.each([
+    [
+      [0, 1, 2, 3],
+      [0, 1, 2, 3],
+    ],
+    [
+      [8, 9, 10, 11],
+      [8, 9, 10, 11],
+    ],
+  ])('returnerer horisontal linje %j', (winningCells, expected) => {
+    const cells = boardWith(winningCells.map((i) => [i, '0']));
+    expect(GetWinningLine(cells)).toEqual(expected);
+  });
+
+  it('returnerer vertikal linje', () => {
+    const cells = boardWith([1, 5, 9, 13].map((i) => [i, '1']));
+    expect(GetWinningLine(cells)).toEqual([1, 5, 9, 13]);
+  });
+
+  it.each([
+    [
+      [0, 5, 10, 15],
+      [0, 5, 10, 15],
+    ],
+    [
+      [3, 6, 9, 12],
+      [3, 6, 9, 12],
+    ],
+  ])('returnerer diagonal linje %j', (winningCells, expected) => {
+    const cells = boardWith(winningCells.map((i) => [i, '0']));
+    expect(GetWinningLine(cells)).toEqual(expected);
+  });
+
+  it('returnerer null naar linjen inneholder begge spillere', () => {
+    const cells = boardWith([
+      [0, '0'],
+      [1, '0'],
+      [2, '1'],
+      [3, '0'],
+    ]);
+    expect(GetWinningLine(cells)).toBeNull();
   });
 });
 

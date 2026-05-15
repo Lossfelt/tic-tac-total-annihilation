@@ -6,9 +6,9 @@
   --color-text-muted: #8b8170;
   --color-text-dim: #5a5448;
 
-  --color-rust: #c75d3a;
-  --color-rust-dim: #8b3e26;
-  --color-rust-bright: #e07a4f;
+  --color-rust: #dd6a35;
+  --color-rust-dim: #8b3e1e;
+  --color-rust-bright: #f5934d;
   --color-sand: #d9c9a3;
   --color-military: #6b7340;
   --color-danger: #8b1e26;
@@ -21,7 +21,8 @@
   --color-border: #3a3530;
   --color-border-strong: #5a5048;
 
-  --font-heading: 'Special Elite', 'Courier New', monospace;
+  --font-heading: 'Black Ops One', 'Impact', sans-serif;
+  --font-stencil: 'Special Elite', 'Courier New', monospace;
   --font-body: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
 
@@ -57,15 +58,34 @@ body {
   background-image:
     radial-gradient(
       ellipse at top,
-      rgba(199, 93, 58, 0.06),
+      rgba(221, 106, 53, 0.08),
       transparent 60%
     ),
     radial-gradient(
       ellipse at bottom,
-      rgba(91, 138, 163, 0.04),
+      rgba(91, 138, 163, 0.05),
       transparent 60%
     );
   background-attachment: fixed;
+  position: relative;
+}
+
+/* Subtil grunge / noise overlay over hele siden. Ligger som ::before slik at
+   den ikke fanger pointer-events og er enkel å skru av per side hvis behov. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.78 0 0 0 0 0.64 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 h1,
