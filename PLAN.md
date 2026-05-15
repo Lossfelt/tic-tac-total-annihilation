@@ -372,7 +372,10 @@ Strike-validering, placeholder-token-strategien) og strukturmarkører i
 
 ## Fase 5: Visuelt løft
 
-### [ ] 5.1 Tematisk palett og fonter
+Valgt stilretning: **Brutalist post-apocalypse** (mørk varm bakgrunn,
+sand-tekst, rust og militærgrønn som aksenter, stencil-headings).
+
+### [x] 5.1 Tematisk palett og fonter
 
 - Definer CSS-variabler (`--color-bg`, `--color-rust`, `--color-sand`,
   `--color-military-green`, `--color-text`) i `Board.css` eller en ny
@@ -382,14 +385,26 @@ Strike-validering, placeholder-token-strategien) og strukturmarkører i
   Inter eller IBM Plex Sans for body).
 - Sett font og bakgrunn globalt.
 
-### [ ] 5.2 Vis territorienavn på brettet
+Notat: `src/theme.css` lagt til med full variabel-palett (bg, sand, rust,
+militærgrønn, fraksjonsfarger, danger, borders), font-stack (Special
+Elite for headings, IBM Plex Sans for body, IBM Plex Mono for tall/ID),
+globale resets, samt grunnstil for `button` og `input`. Google Fonts
+preconnect og link lagt til i `index.html`. `theme.css` importeres
+øverst i `src/index.js`. CSS-variabel `--cell-size: clamp(60px, 12vmin, 110px)`
+brukes som basis for responsivitet.
+
+### [x] 5.2 Vis territorienavn på brettet
 
 - Vis territorienavnet under eller over hver celle, eller som tooltip ved
   hover.
 - Gjør at `territories`-arrayen i `Game.js` deles med Board.js (flytt til
   egen modul `src/territories.js` eller eksporter fra Game.js).
 
-### [ ] 5.3 Bedre cellefeedback
+Notat: `territories` eksportert fra `Game.js`. Hver celle har
+`title={territories[id]}` for native browser-tooltip ved hover, som er
+det reneste med tanke på visuell støy på et tett 4x4-brett.
+
+### [x] 5.3 Bedre cellefeedback
 
 - Hover-effekt på ledige celler.
 - Tydeligere `selected`-tilstand for spesialvåpen-mål (glød/pulserende
@@ -397,20 +412,36 @@ Strike-validering, placeholder-token-strategien) og strukturmarkører i
 - Vis hvilken fraksjon som eier en celle med en bakgrunnsfarge i tillegg
   til ikonet.
 
-### [ ] 5.4 Strategisk våpen-UI
+Notat: Hover på ledige celler gir rust-tonet bakgrunn og rust-farget
+border. `.selected` har nå box-shadow-glow + pulserende `target-pulse`-
+animasjon i rust-tonen. Eide celler har subtil tint-bakgrunn
+(`--color-queendom-tint` / `--color-canadia-tint`) i tillegg til ikonet.
+
+### [x] 5.4 Strategisk våpen-UI
 
 - Bruk ikon eller emoji per våpen i stedet for kun tekst.
 - Tooltip eller liten boks som forklarer hva våpenet gjør.
 - Når aktivt: vis instruksjon ("Velg 1 målcelle" / "Velg 3 celler på rad").
 - Vis antall valgte mål så langt (eks. "1 / 3 valgt").
 
-### [ ] 5.5 Rareium som progress bar
+Notat: `WEAPON_META`-tabell i Board.js kobler hvert våpen til emoji
+(💥 Artillery, ✈️ Air Strike, ☣️ Biological Warfare), beskrivelse
+(`title`-tooltip på knappen) og instruksjon. Aktiv knapp får
+`.weapon-button.active`-style. Instruksjonsboks under knappen viser
+"Select X target(s)" og "N / X selected"-teller.
+
+### [x] 5.5 Rareium som progress bar
 
 - Erstatt `Rareium: {n}` tekstvisning med en progress bar fra 0 til 100.
 - Tooltip eller liten tekst som forklarer at Rareium er sjansen for våpen
   ved tur-start.
 
-### [ ] 5.6 Forbedret game log
+Notat: Progress bar med gradient (militærgrønn → rust) over mørk
+bakgrunn. Tooltip på containeren forklarer at Rareium er prosent-sjansen
+for å få våpen ved tur-start. Visningen capper på 100% (Math.min)
+selv om underliggende verdi kan gå høyere.
+
+### [x] 5.6 Forbedret game log
 
 - Fast høyde med scroll på loggen.
 - Litt mindre skriftstørrelse.
@@ -418,18 +449,36 @@ Strike-validering, placeholder-token-strategien) og strukturmarkører i
   erobring, knyttneve for opprør, eksplosjon for våpen).
 - Subtil fade-in animasjon for nye loggoppføringer.
 
-### [ ] 5.7 Lobby-skjerm
+Notat: `max-height: 180px` med overflow-scroll og custom scrollbar.
+Skriftstørrelse 0.85rem. Ikoner via `logIcon()`-keyword-matching:
+⚔️ conquers, 🚩 claims, ✊ revolt, 💥 Artillery, ✈️ Air Strike,
+☣️ Biological Weapon, 🛡️ failed invasion. `@keyframes log-fade-in`
+gir 0.35s slide-in fra venstre.
+
+### [x] 5.7 Lobby-skjerm
 
 - Bakgrunnsbilde eller flagg fra begge fraksjoner.
 - Bedre styling på input-felter og knapper.
 - Liten tekst som forklarer at match-ID deles med motspiller.
 
-### [ ] 5.8 Responsivitet
+Notat: Ny lobby-struktur i App.js med `.lobby`-wrapper, faction-cards
+ved siden av hverandre som viser Mexican Queendom og Pan-Canadia,
+tematisk-styled `lobby-form` / `lobby-actions` med radial gradient i
+bakgrunnen, og forklarende hint om match-ID-deling. About-knappen
+ble flyttet til samme posisjon men fikk konsistent stil.
+
+### [x] 5.8 Responsivitet
 
 - Erstatt `10vh` celle-størrelse med `clamp(60px, 10vmin, 120px)` eller
   tilsvarende.
 - Sjekk at brettet ikke blir kuttet i landskapsmodus på mobil.
 - Sjekk at popupen er lesbar på små skjermer.
+
+Notat: `--cell-size: clamp(60px, 12vmin, 110px)` globalt. Media queries
+for `max-width: 480px` (mindre celler, smal våpenknapp, kortere
+loggvindu) og `orientation: landscape and max-height: 520px` (enda
+mindre celler, mer kompakt layout). About-popup bruker `width: min(90%, 640px)`
+og `max-height: 90vh` med scroll for lesbarhet på små skjermer.
 
 ## Fase 6: Hosting og sikkerhet
 

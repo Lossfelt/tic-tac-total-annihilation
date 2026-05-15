@@ -8,7 +8,7 @@ export const INVASION_SUCCESS_CHANCE = 0.2;
 export const BIO_DESTROY_CHANCE = 0.5;
 export const RAREIUM_WEAPON_CHANCE_DIVISOR = 100;
 
-const territories = [
+export const territories = [
   'the Salt Marches',
   'the Corn Belt Desert',
   "Hudson's Pit",

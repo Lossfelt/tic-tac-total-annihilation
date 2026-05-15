@@ -82,38 +82,60 @@ const App = () => {
   };
 
   return (
-    <div className="center-content">
-      {name && !joined ? (
-        <h1>Welcome, general {name}!</h1>
-      ) : !name ? (
-        <h1>Who will lead the troops?</h1>
-      ) : null}
-      {!name ? (
-        <form onSubmit={handleNameChange}>
-          <input ref={nameInput} type="text" placeholder="Enter your name" />
-          <button className="submit" type="submit">
-            Submit
-          </button>
-        </form>
-      ) : !joined ? (
-        <div>
-          <div className="create-game">
-            <button onClick={handleCreate}>Create Game</button>
+    <div>
+      {!joined ? (
+        <div className="lobby">
+          <div className="lobby-title">
+            <h1>Tic Tac Total Annihilation</h1>
+            <div className="lobby-subtitle">Post-collapse territory war</div>
           </div>
-          <div className="create-game">
-            <input
-              ref={matchInput}
-              type="number"
-              placeholder="Enter match ID"
-            />
-            <button onClick={() => handleJoin()}>Join Game</button>
+
+          <div className="factions-preview">
+            <div className="faction-card queendom">
+              <img src="/Queendom_icon.png" alt="Mexican Queendom" />
+              <span>Mexican Queendom</span>
+            </div>
+            <div className="faction-card canadia">
+              <img
+                src="/Pan-Canadia_icon.png"
+                alt="Pan-Canadia Inuit Alliance"
+              />
+              <span>Pan-Canadia Inuit Alliance</span>
+            </div>
           </div>
+
+          {!name ? (
+            <form className="lobby-form" onSubmit={handleNameChange}>
+              <h2>Who will lead the troops?</h2>
+              <input
+                ref={nameInput}
+                type="text"
+                placeholder="Enter your name"
+                maxLength={32}
+              />
+              <button type="submit">Submit</button>
+            </form>
+          ) : (
+            <div className="lobby-actions">
+              <h2>Welcome, general {name}</h2>
+              <button onClick={handleCreate}>Create new match</button>
+              <div className="lobby-divider">or join existing</div>
+              <div className="lobby-row">
+                <input ref={matchInput} type="number" placeholder="Match ID" />
+                <button onClick={() => handleJoin()}>Join</button>
+              </div>
+              <div className="lobby-hint">
+                Match ID is shared with your opponent so they can join the same
+                battle.
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        <div>
-          <div className="match-ID-and-leave-button">
+        <div className="match-shell">
+          <div className="match-bar">
             <h3>Match ID: {matchID}</h3>
-            <button onClick={handleLeave}>Leave Game</button>
+            <button onClick={handleLeave}>Leave</button>
           </div>
           <TicTacToeClient
             playerID={playerID}
@@ -122,16 +144,8 @@ const App = () => {
           />
         </div>
       )}
-      <button
-        style={{
-          position: 'fixed',
-          top: '10px',
-          right: '10px',
-          backgroundColor: 'grey',
-          padding: 5,
-        }}
-        onClick={handleAbout}
-      >
+
+      <button className="about-button" onClick={handleAbout}>
         About
       </button>
       {showAbout && <AboutPopup onClose={handleAbout} />}

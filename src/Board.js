@@ -1,12 +1,62 @@
 import './Board.css';
 import React, { useState, useEffect } from 'react';
-import { formatLogEntry } from './Game.js';
+import { formatLogEntry, territories } from './Game.js';
 
 const WEAPON_TARGET_COUNT = {
   'Air Strike': 3,
   Artillery: 1,
   'Biological Warfare': 1,
 };
+
+const WEAPON_META = {
+  Artillery: {
+    icon: '💥',
+    description: 'Destroys 1 target and its 4 orthogonal neighbours.',
+    instruction: 'Select 1 target cell',
+  },
+  'Air Strike': {
+    icon: '✈️',
+    description:
+      'Destroys 3 cells in a row (horizontal, vertical or diagonal).',
+    instruction: 'Select 3 cells in a row',
+  },
+  'Biological Warfare': {
+    icon: '☣️',
+    description: 'Each cell in a 3x3 area has a 50% chance to be destroyed.',
+    instruction: 'Select 1 target cell (3x3 area)',
+  },
+};
+
+// Velger ikon for en loggoppføring basert på keyword. Holdt enkelt: loggen
+// er strenger, og typene er gjenkjennelige fra unike fraser i Game.js.
+const logIcon = (entry) => {
+  if (entry.includes('Artillery Strike')) return '💥';
+  if (entry.includes('Air Strike')) return '✈️';
+  if (entry.includes('Biological Weapon')) return '☣️';
+  if (entry.includes('revolt')) return '✊';
+  if (entry.includes('conquers')) return '⚔️';
+  if (entry.includes('fails')) return '🛡️';
+  if (entry.includes('claims')) return '🚩';
+  return '•';
+};
+
+const FACTION_NAME = {
+  0: 'Mexican Queendom',
+  1: 'Pan-Canadia Inuit Alliance',
+};
+
+const FACTION_ICON = {
+  0: '/Queendom_icon.png',
+  1: '/Pan-Canadia_icon.png',
+};
+
+const FactionMark = ({ playerID, size = '1em' }) => (
+  <img
+    src={FACTION_ICON[playerID]}
+    alt={FACTION_NAME[playerID]}
+    style={{ height: size, width: 'auto', verticalAlign: 'middle' }}
+  />
+);
 
 export function TicTacToeBoard({
   ctx,
@@ -19,9 +69,13 @@ export function TicTacToeBoard({
   const [specialMoveActive, setSpecialMoveActive] = useState(false);
   const [targetsOfSpecialMove, setTargetsOfSpecialMove] = useState([]);
 
+  const myWeapon = G.strategicWeapon[playerID];
+  const myRareium = G.Rareium[playerID];
+  const rareiumPercent = Math.min(myRareium, 100);
+
   const handleSpecialMoveClick = () => {
     if (!specialMoveActive) {
-      setSpecialMoveActive(G.strategicWeapon[playerID]);
+      if (myWeapon) setSpecialMoveActive(myWeapon);
     } else {
       setSpecialMoveActive(false);
       setTargetsOfSpecialMove([]);
@@ -53,136 +107,169 @@ export function TicTacToeBoard({
     }
   };
 
-  let winner = '';
+  const activeWeaponMeta = specialMoveActive
+    ? WEAPON_META[specialMoveActive]
+    : null;
+  const targetCount = specialMoveActive
+    ? WEAPON_TARGET_COUNT[specialMoveActive]
+    : 0;
+
+  let winner = null;
   if (ctx.gameover) {
+    const winnerID = ctx.gameover.winner;
+    const winnerName = matchData[winnerID]?.name || FACTION_NAME[winnerID];
     winner = (
-      <div id="winner">
-        Winner:{' '}
-        {ctx.gameover.winner === '0' ? (
-          <>
-            {matchData[0]?.name || 'Queendom'}
-            <img
-              src="/Queendom_icon.png"
-              alt="Queendom"
-              style={{ height: '1em', verticalAlign: 'middle' }}
-            />
-          </>
-        ) : (
-          <>
-            {matchData[1]?.name || 'Pan-Canadia'}
-            <img
-              src="/Pan-Canadia_icon.png"
-              alt="Pan-Canadia"
-              style={{ height: '1em', verticalAlign: 'middle' }}
-            />
-          </>
-        )}
+      <div className={`winner-banner winner-${winnerID}`}>
+        <span className="winner-label">Victorious general:</span>
+        <span className="winner-name">
+          {winnerName} <FactionMark playerID={winnerID} size="1.2em" />
+        </span>
       </div>
     );
   }
 
-  let tbody = [];
-  for (let i = 0; i < 4; i++) {
-    let cells = [];
-    for (let j = 0; j < 4; j++) {
-      const id = 4 * i + j;
-      const isSelected = targetsOfSpecialMove.includes(id);
-      const className = `${G.blink[id] ? 'knapp blink' : 'knapp'} ${
-        isSelected ? 'selected' : ''
-      }`;
-      // Når en celle blinker, inkluderer vi blinkVersion i React `key` slik
-      // at to blink-hendelser etter hverandre faktisk remounter elementet
-      // og restarter CSS-animasjonen. Uten det vil DOM beholde den gamle,
-      // ferdigkjørte animasjonen og cellen virker statisk.
-      const buttonKey = G.blink[id]
-        ? `cell-${id}-blink-${G.blinkVersion}`
-        : `cell-${id}`;
-      cells.push(
-        <td key={id}>
-          {G.cells[id] ? (
-            <button
-              key={buttonKey}
-              className={className}
-              type="button"
-              onClick={() => clickCell(id)}
-            >
-              <img
-                src={
-                  G.cells[id] === '0'
-                    ? '/Queendom_icon.png'
-                    : '/Pan-Canadia_icon.png'
-                }
-                alt={G.cells[id] === '0' ? 'Queendom' : 'Pan-Canadia'}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </button>
-          ) : (
-            <button
-              key={buttonKey}
-              className={className}
-              type="button"
-              onClick={() => clickCell(id)}
+  const cells = [];
+  for (let id = 0; id < 16; id++) {
+    const owner = G.cells[id];
+    const isSelected = targetsOfSpecialMove.includes(id);
+    const isBlinking = G.blink[id];
+
+    const classes = ['cell'];
+    if (owner === '0') classes.push('cell-queendom');
+    if (owner === '1') classes.push('cell-canadia');
+    if (isBlinking) classes.push('blink');
+    if (isSelected) classes.push('selected');
+    if (specialMoveActive) classes.push('targetable');
+
+    const buttonKey = isBlinking
+      ? `cell-${id}-blink-${G.blinkVersion}`
+      : `cell-${id}`;
+
+    cells.push(
+      <td key={id}>
+        <button
+          key={buttonKey}
+          className={classes.join(' ')}
+          type="button"
+          title={territories[id]}
+          onClick={() => clickCell(id)}
+          disabled={!isActive && !specialMoveActive}
+        >
+          {owner !== null && (
+            <img
+              src={FACTION_ICON[owner]}
+              alt={FACTION_NAME[owner]}
+              className="cell-icon"
             />
           )}
-        </td>,
-      );
-    }
-    tbody.push(<tr key={i}>{cells}</tr>);
+        </button>
+      </td>,
+    );
+  }
+
+  const tbody = [];
+  for (let row = 0; row < 4; row++) {
+    tbody.push(<tr key={row}>{cells.slice(row * 4, row * 4 + 4)}</tr>);
   }
 
   return (
-    <div className="container">
-      <div className="center-content">
-        <h1>
-          {matchData[0].name} &nbsp;
-          <img
-            src="/Queendom_icon.png"
-            alt="Queendom"
-            style={{ height: '1em', verticalAlign: 'middle' }}
-          />
-          &nbsp;vs&nbsp;
-          {matchData[1].name} &nbsp;
-          <img
-            src="/Pan-Canadia_icon.png"
-            alt="Pan-Canadia"
-            style={{ height: '1em', verticalAlign: 'middle' }}
-          />
+    <div className="board-container">
+      <div className="board-content">
+        <h1 className="vs-banner">
+          <span className="vs-side vs-queendom">
+            <FactionMark playerID="0" size="1.2em" />
+            {matchData[0]?.name || FACTION_NAME[0]}
+          </span>
+          <span className="vs-divider">vs</span>
+          <span className="vs-side vs-canadia">
+            {matchData[1]?.name || FACTION_NAME[1]}
+            <FactionMark playerID="1" size="1.2em" />
+          </span>
         </h1>
-        <table>
+
+        <table className="board">
           <tbody>{tbody}</tbody>
         </table>
-        <h3>
-          Current turn:{' '}
-          {matchData[ctx.currentPlayer]?.name ||
-            (ctx.currentPlayer === '0' ? (
-              <img
-                src="/Queendom_icon.png"
-                alt="Queendom"
-                style={{ height: '1em', verticalAlign: 'middle' }}
-              />
+
+        <div className="turn-indicator">
+          <span className="turn-label">Current turn:</span>
+          <span
+            className={`turn-name ${
+              ctx.currentPlayer === '0' ? 'queendom' : 'canadia'
+            }`}
+          >
+            {matchData[ctx.currentPlayer]?.name ||
+              FACTION_NAME[ctx.currentPlayer]}{' '}
+            <FactionMark playerID={ctx.currentPlayer} />
+          </span>
+        </div>
+
+        <div className="weapon-panel">
+          <button
+            className={`weapon-button ${specialMoveActive ? 'active' : ''} ${
+              myWeapon ? 'armed' : 'unarmed'
+            }`}
+            onClick={handleSpecialMoveClick}
+            disabled={!isActive || !myWeapon}
+            title={
+              myWeapon
+                ? WEAPON_META[myWeapon].description
+                : 'No strategic weapon available'
+            }
+          >
+            {myWeapon ? (
+              <>
+                <span className="weapon-icon">
+                  {WEAPON_META[myWeapon].icon}
+                </span>
+                <span className="weapon-name">{myWeapon}</span>
+              </>
             ) : (
-              <img
-                src="/Pan-Canadia_icon.png"
-                alt="Pan-Canadia"
-                style={{ height: '1em', verticalAlign: 'middle' }}
-              />
-            ))}
-        </h3>
-        <button
-          className="strategic_weapons"
-          style={specialMoveActive ? { backgroundColor: 'red' } : {}}
-          onClick={() => handleSpecialMoveClick()}
-          disabled={!isActive}
+              <span className="weapon-name weapon-empty">No weapon armed</span>
+            )}
+          </button>
+
+          {activeWeaponMeta && (
+            <div className="weapon-instruction">
+              <div className="weapon-instruction-text">
+                {activeWeaponMeta.instruction}
+              </div>
+              <div className="weapon-instruction-count">
+                {targetsOfSpecialMove.length} / {targetCount} selected
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div
+          className="rareium-bar"
+          title="Rareium is the chance (%) to receive a strategic weapon at the start of your turn."
         >
-          {G.strategicWeapon[playerID]}
-        </button>
-        <div>Rareium: {G.Rareium[playerID]} </div>
-        <div className="text">{winner}</div>
-        <div className="gameLog">
+          <div
+            className="rareium-fill"
+            style={{ width: `${rareiumPercent}%` }}
+          />
+          <div className="rareium-label">
+            <span>Rareium</span>
+            <span className="rareium-value">{myRareium}%</span>
+          </div>
+        </div>
+
+        {winner}
+
+        <div className="game-log">
           <h2>Game Log</h2>
           <ul>
             {G.log.map((entry, index) => (
-              <li key={index}>{formatLogEntry(entry, matchData)}</li>
+              <li
+                key={`${G.log.length - index}-${entry}`}
+                className="log-entry"
+              >
+                <span className="log-icon">{logIcon(entry)}</span>
+                <span className="log-text">
+                  {formatLogEntry(entry, matchData)}
+                </span>
+              </li>
             ))}
           </ul>
         </div>
