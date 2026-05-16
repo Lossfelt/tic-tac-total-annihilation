@@ -6,7 +6,12 @@ import {
   GetNeighbors,
   GetSurroundingCells,
   formatLogEntry,
+  TicTacToe,
+  NUM_PLAYERS,
+  TOTAL_CELLS,
+  RECYCLE_REFUND_RATIO,
 } from './Game.js';
+import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js';
 
 // Brettet er 4x4, indeksert slik:
 //   0  1  2  3
@@ -255,6 +260,97 @@ describe('GetSurroundingCells', () => {
     [10, [5, 6, 7, 9, 10, 11, 13, 14, 15]],
   ])('midtcellen %i dekker %j (9 celler)', (id, expected) => {
     expect(GetSurroundingCells(id).sort((a, b) => a - b)).toEqual(expected);
+  });
+});
+
+describe('recycleStrategicWeapon', () => {
+  const recycle = TicTacToe.moves.recycleStrategicWeapon.move;
+
+  const baseG = () => ({
+    cells: Array(TOTAL_CELLS).fill(null),
+    log: [],
+    blink: Array(TOTAL_CELLS).fill(false),
+    blinkVersion: 0,
+    lastCellAttacked: null,
+    strategicWeapon: Array(NUM_PLAYERS).fill(null),
+    Rareium: Array(NUM_PLAYERS).fill(0),
+    rareiumAtWeapon: Array(NUM_PLAYERS).fill(0),
+  });
+
+  it('er konfigurert som noLimit slik at turen ikke avsluttes', () => {
+    expect(TicTacToe.moves.recycleStrategicWeapon.noLimit).toBe(true);
+  });
+
+  it('refunderer 70% av rareium-nivået da våpenet ble tildelt', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Artillery';
+    G.rareiumAtWeapon[0] = 80;
+    G.Rareium[0] = 0;
+
+    recycle({ G, playerID: '0' });
+
+    expect(G.strategicWeapon[0]).toBeNull();
+    expect(G.Rareium[0]).toBe(Math.round(80 * RECYCLE_REFUND_RATIO));
+    expect(G.rareiumAtWeapon[0]).toBe(0);
+  });
+
+  it('legger refusjonen på toppen av rareium akkumulert siden våpenet ble tildelt', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Artillery';
+    G.rareiumAtWeapon[0] = 80;
+    G.Rareium[0] = 30;
+
+    recycle({ G, playerID: '0' });
+
+    // 30 (akkumulert) + 56 (refund) = 86
+    expect(G.Rareium[0]).toBe(30 + Math.round(80 * RECYCLE_REFUND_RATIO));
+  });
+
+  it('runder refusjonen', () => {
+    const G = baseG();
+    G.strategicWeapon[1] = 'Air Strike';
+    // 55 * 0.7 = 38.5 -> 39
+    G.rareiumAtWeapon[1] = 55;
+
+    recycle({ G, playerID: '1' });
+
+    expect(G.Rareium[1]).toBe(39);
+  });
+
+  it('logger handlingen med spillerens placeholder', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Biological Warfare';
+    G.rareiumAtWeapon[0] = 100;
+
+    recycle({ G, playerID: '0' });
+
+    expect(G.log[0]).toBe(
+      '__P0__ recycles Biological Warfare and recovers 70% Rareium',
+    );
+  });
+
+  it('returnerer INVALID_MOVE hvis spilleren ikke har et våpen', () => {
+    const G = baseG();
+
+    const result = recycle({ G, playerID: '0' });
+
+    expect(result).toBe(INVALID_MOVE);
+    expect(G.Rareium[0]).toBe(0);
+  });
+
+  it('rører ikke motstanderens våpen eller rareium', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Artillery';
+    G.rareiumAtWeapon[0] = 50;
+    G.strategicWeapon[1] = 'Air Strike';
+    G.rareiumAtWeapon[1] = 90;
+    G.Rareium[1] = 12;
+
+    recycle({ G, playerID: '0' });
+
+    expect(G.strategicWeapon[1]).toBe('Air Strike');
+    expect(G.rareiumAtWeapon[1]).toBe(90);
+    expect(G.Rareium[1]).toBe(12);
   });
 });
 

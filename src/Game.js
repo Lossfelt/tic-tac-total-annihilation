@@ -7,6 +7,7 @@ export const REVOLT_CHANCE = 0.05;
 export const INVASION_SUCCESS_CHANCE = 0.2;
 export const BIO_DESTROY_CHANCE = 0.5;
 export const RAREIUM_WEAPON_CHANCE_DIVISOR = 100;
+export const RECYCLE_REFUND_RATIO = 0.7;
 
 export const territories = [
   'the Salt Marches',
@@ -149,6 +150,9 @@ export const TicTacToe = {
     lastCellAttacked: null,
     strategicWeapon: Array(NUM_PLAYERS).fill(null),
     Rareium: Array(NUM_PLAYERS).fill(0),
+    // Rareium-nivået i det øyeblikket gjeldende våpen ble tildelt. Brukes
+    // til å beregne refusjon ved recycle. Resettes når våpenet brukes opp.
+    rareiumAtWeapon: Array(NUM_PLAYERS).fill(0),
   }),
 
   turn: {
@@ -169,6 +173,7 @@ export const TicTacToe = {
         ) {
           G.strategicWeapon[ctx.currentPlayer] =
             strategicWeapons[random.Die(strategicWeapons.length) - 1];
+          G.rareiumAtWeapon[ctx.currentPlayer] = G.Rareium[ctx.currentPlayer];
           G.Rareium[ctx.currentPlayer] = 0;
         }
       }
@@ -217,6 +222,27 @@ export const TicTacToe = {
         G.blink[id] = true;
         G.lastCellAttacked = id;
       }
+    },
+    recycleStrategicWeapon: {
+      // noLimit gjør at recycle ikke teller mot turens maxMoves: 1. Spilleren
+      // skal fortsatt få lov til å gjøre et vanlig trekk etter resirkulering.
+      noLimit: true,
+      move: ({ G, playerID }) => {
+        const weapon = G.strategicWeapon[playerID];
+        if (!weapon) return INVALID_MOVE;
+        G.blink.fill(false);
+        G.blinkVersion++;
+        const refund = Math.round(
+          G.rareiumAtWeapon[playerID] * RECYCLE_REFUND_RATIO,
+        );
+        G.Rareium[playerID] += refund;
+        G.strategicWeapon[playerID] = null;
+        G.rareiumAtWeapon[playerID] = 0;
+        const name = playerToken(playerID);
+        G.log.unshift(
+          `${name} recycles ${weapon} and recovers ${refund}% Rareium`,
+        );
+      },
     },
     useStrategicWeapon: ({ G, playerID, random }, input) => {
       G.blink.fill(false);

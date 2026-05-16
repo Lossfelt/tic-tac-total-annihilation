@@ -1,6 +1,6 @@
 import './Board.css';
 import { useState, useEffect } from 'react';
-import { formatLogEntry, territories } from './Game.js';
+import { RECYCLE_REFUND_RATIO, formatLogEntry, territories } from './Game.js';
 
 const WEAPON_TARGET_COUNT = {
   'Air Strike': 3,
@@ -69,10 +69,20 @@ export function TicTacToeBoard({
 }) {
   const [specialMoveActive, setSpecialMoveActive] = useState(false);
   const [targetsOfSpecialMove, setTargetsOfSpecialMove] = useState([]);
+  const [recyclePending, setRecyclePending] = useState(false);
 
   const myWeapon = G.strategicWeapon[playerID];
   const myRareium = G.Rareium[playerID];
   const rareiumPercent = Math.min(myRareium, 100);
+  const refundPreview = Math.round(
+    (G.rareiumAtWeapon?.[playerID] ?? 0) * RECYCLE_REFUND_RATIO,
+  );
+
+  // Lukk recycle-bekreftelsen hvis våpenet forsvinner (brukt opp, recycled
+  // ferdig, eller turen skifter til en spiller uten våpen).
+  useEffect(() => {
+    if (!myWeapon && recyclePending) setRecyclePending(false);
+  }, [myWeapon, recyclePending]);
 
   const handleSpecialMoveClick = () => {
     if (!specialMoveActive) {
@@ -81,6 +91,19 @@ export function TicTacToeBoard({
       setSpecialMoveActive(false);
       setTargetsOfSpecialMove([]);
     }
+  };
+
+  const handleRecycleClick = () => {
+    setRecyclePending(true);
+  };
+
+  const handleRecycleConfirm = () => {
+    moves.recycleStrategicWeapon();
+    setRecyclePending(false);
+  };
+
+  const handleRecycleCancel = () => {
+    setRecyclePending(false);
   };
 
   const specialAttack = (id) => {
@@ -221,31 +244,72 @@ export function TicTacToeBoard({
 
         {!gameover && (
           <div className="weapon-panel">
-            <button
-              className={`weapon-button ${specialMoveActive ? 'active' : ''} ${
-                myWeapon ? 'armed' : 'unarmed'
-              }`}
-              onClick={handleSpecialMoveClick}
-              disabled={!isActive || !myWeapon}
-              title={
-                myWeapon
-                  ? WEAPON_META[myWeapon].description
-                  : 'No strategic weapon available'
-              }
-            >
-              {myWeapon ? (
-                <>
-                  <span className="weapon-icon">
-                    {WEAPON_META[myWeapon].icon}
+            <div className="weapon-button-row">
+              <button
+                className={`weapon-button ${specialMoveActive ? 'active' : ''} ${
+                  myWeapon ? 'armed' : 'unarmed'
+                }`}
+                onClick={handleSpecialMoveClick}
+                disabled={!isActive || !myWeapon}
+                title={
+                  myWeapon
+                    ? WEAPON_META[myWeapon].description
+                    : 'No strategic weapon available'
+                }
+              >
+                {myWeapon ? (
+                  <>
+                    <span className="weapon-icon">
+                      {WEAPON_META[myWeapon].icon}
+                    </span>
+                    <span className="weapon-name">{myWeapon}</span>
+                  </>
+                ) : (
+                  <span className="weapon-name weapon-empty">
+                    No weapon armed
                   </span>
-                  <span className="weapon-name">{myWeapon}</span>
-                </>
-              ) : (
-                <span className="weapon-name weapon-empty">
-                  No weapon armed
-                </span>
-              )}
-            </button>
+                )}
+              </button>
+              <button
+                type="button"
+                className="recycle-button"
+                onClick={handleRecycleClick}
+                disabled={!isActive || !myWeapon || specialMoveActive}
+                title={
+                  myWeapon
+                    ? `Recycle weapon for ${refundPreview}% Rareium`
+                    : 'No weapon to recycle'
+                }
+                aria-label="Recycle strategic weapon"
+              >
+                ♻
+              </button>
+            </div>
+
+            {recyclePending && myWeapon && (
+              <div className="recycle-confirm" role="alertdialog">
+                <div className="recycle-confirm-text">
+                  Recycle <strong>{myWeapon}</strong> for{' '}
+                  <strong>{refundPreview}%</strong> Rareium?
+                </div>
+                <div className="recycle-confirm-actions">
+                  <button
+                    type="button"
+                    className="recycle-confirm-yes"
+                    onClick={handleRecycleConfirm}
+                  >
+                    Recycle
+                  </button>
+                  <button
+                    type="button"
+                    className="recycle-confirm-no"
+                    onClick={handleRecycleCancel}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {activeWeaponMeta && (
               <div className="weapon-instruction">

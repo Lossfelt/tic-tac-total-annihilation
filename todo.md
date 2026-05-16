@@ -74,4 +74,3 @@ Anbefaling: la det stå inntil videre. Rent estetisk problem.
   celle på brettet? (Dvs. man kan ikke bruke den cellen resten av
   spillet.)
 - Legg til noe som knytter brettet visuelt til navnet på territoriene?
-- Gjør det mulig å recycle når man får et MWD man ikke vil ha.

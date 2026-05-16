@@ -216,6 +216,12 @@
   width: 100%;
 }
 
+.weapon-button-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
 .weapon-button {
   display: inline-flex;
   align-items: center;
@@ -237,6 +243,94 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 220, 180, 0.06),
     0 3px 6px rgba(0, 0, 0, 0.5);
+}
+
+.recycle-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.8rem;
+  padding: 0;
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-bg-elevated) 0%,
+      var(--color-bg-deep) 100%
+    );
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 180, 0.06),
+    0 3px 6px rgba(0, 0, 0, 0.5);
+}
+
+.recycle-button:not(:disabled) {
+  color: var(--color-military, var(--color-sand));
+  border-color: var(--color-military, var(--color-border-strong));
+}
+
+.recycle-button:hover:not(:disabled) {
+  background: rgba(120, 145, 95, 0.18);
+  color: var(--color-sand);
+}
+
+.recycle-button:disabled {
+  opacity: 0.45;
+}
+
+.recycle-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--color-bg-deep);
+  border: 1px dashed var(--color-military, var(--color-rust));
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.recycle-confirm-text {
+  color: var(--color-sand);
+  text-align: center;
+}
+
+.recycle-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.recycle-confirm-yes,
+.recycle-confirm-no {
+  padding: 0.4rem 1rem;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-bg-elevated) 0%,
+      var(--color-bg-deep) 100%
+    );
+}
+
+.recycle-confirm-yes {
+  color: var(--color-sand);
+  border-color: var(--color-military, var(--color-rust));
+}
+
+.recycle-confirm-yes:hover {
+  background: rgba(120, 145, 95, 0.22);
+}
+
+.recycle-confirm-no:hover {
+  background: rgba(199, 93, 58, 0.18);
 }
 
 .weapon-button.armed {
@@ -1027,9 +1121,13 @@
     max-height: 140px;
   }
 
+  .weapon-button-row {
+    width: 100%;
+  }
+
   .weapon-button {
     min-width: 0;
-    width: 100%;
+    flex: 1;
   }
 
 }
