@@ -122,6 +122,13 @@ const AboutPopup = ({ onClose }) => {
                 around the target has a 50% chance to be destroyed.
               </span>
             </li>
+            <li>
+              <span className="weapon-emoji">☢️</span>
+              <span>
+                <strong>Dirty Nuke</strong>: permanently destroys the target
+                cell. The cell cannot be claimed for the rest of the game.
+              </span>
+            </li>
           </ul>
         </section>
       </div>

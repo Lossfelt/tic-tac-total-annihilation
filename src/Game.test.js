@@ -263,19 +263,20 @@ describe('GetSurroundingCells', () => {
   });
 });
 
+const baseG = () => ({
+  cells: Array(TOTAL_CELLS).fill(null),
+  destroyed: Array(TOTAL_CELLS).fill(false),
+  log: [],
+  blink: Array(TOTAL_CELLS).fill(false),
+  blinkVersion: 0,
+  lastCellAttacked: null,
+  strategicWeapon: Array(NUM_PLAYERS).fill(null),
+  Rareium: Array(NUM_PLAYERS).fill(0),
+  rareiumAtWeapon: Array(NUM_PLAYERS).fill(0),
+});
+
 describe('recycleStrategicWeapon', () => {
   const recycle = TicTacToe.moves.recycleStrategicWeapon.move;
-
-  const baseG = () => ({
-    cells: Array(TOTAL_CELLS).fill(null),
-    log: [],
-    blink: Array(TOTAL_CELLS).fill(false),
-    blinkVersion: 0,
-    lastCellAttacked: null,
-    strategicWeapon: Array(NUM_PLAYERS).fill(null),
-    Rareium: Array(NUM_PLAYERS).fill(0),
-    rareiumAtWeapon: Array(NUM_PLAYERS).fill(0),
-  });
 
   it('er konfigurert som noLimit slik at turen ikke avsluttes', () => {
     expect(TicTacToe.moves.recycleStrategicWeapon.noLimit).toBe(true);
@@ -351,6 +352,142 @@ describe('recycleStrategicWeapon', () => {
     expect(G.strategicWeapon[1]).toBe('Air Strike');
     expect(G.rareiumAtWeapon[1]).toBe(90);
     expect(G.Rareium[1]).toBe(12);
+  });
+});
+
+describe('useStrategicWeapon: Dirty Nuke', () => {
+  const useWeapon = TicTacToe.moves.useStrategicWeapon;
+  // Brukes ikke av Dirty Nuke, men kreves av kontrakten til moven.
+  const stubRandom = { Number: () => 0 };
+
+  it('setter destroyed=true og clear-er cells for målet', () => {
+    const G = baseG();
+    G.cells[5] = '1';
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    useWeapon({ G, playerID: '0', random: stubRandom }, 5);
+
+    expect(G.destroyed[5]).toBe(true);
+    expect(G.cells[5]).toBeNull();
+    expect(G.strategicWeapon[0]).toBeNull();
+    expect(G.lastCellAttacked).toBe(5);
+  });
+
+  it('logger handlingen med territorienavnet', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    useWeapon({ G, playerID: '0', random: stubRandom }, 0);
+
+    expect(G.log[0]).toContain('Dirty Nuke');
+    expect(G.log[0]).toContain('the Salt Marches');
+  });
+
+  it('avviser nuke på en allerede destroyed celle', () => {
+    const G = baseG();
+    G.destroyed[7] = true;
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    const result = useWeapon({ G, playerID: '0', random: stubRandom }, 7);
+
+    expect(result).toBe(INVALID_MOVE);
+    // Våpenet skal ikke konsumeres ved avvist trekk.
+    expect(G.strategicWeapon[0]).toBe('Dirty Nuke');
+  });
+
+  it('tillater å nuke egen celle', () => {
+    const G = baseG();
+    G.cells[3] = '0';
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    useWeapon({ G, playerID: '0', random: stubRandom }, 3);
+
+    expect(G.destroyed[3]).toBe(true);
+    expect(G.cells[3]).toBeNull();
+  });
+});
+
+describe('område-våpen mot destroyed celle', () => {
+  const useWeapon = TicTacToe.moves.useStrategicWeapon;
+  // 0 < BIO_DESTROY_CHANCE og < INVASION_SUCCESS_CHANCE -> alltid "treff" der
+  // det er random-roll. For Air Strike/Artillery brukes ikke random.
+  const stubRandom = { Number: () => 0 };
+
+  it('Artillery kan ha destroyed celle som senter og rammer naboene', () => {
+    const G = baseG();
+    G.destroyed[5] = true;
+    G.cells[1] = '1';
+    G.cells[4] = '1';
+    G.cells[6] = '1';
+    G.cells[9] = '1';
+    G.strategicWeapon[0] = 'Artillery';
+
+    useWeapon({ G, playerID: '0', random: stubRandom }, 5);
+
+    // Naboene er nullet ut, og destroyed-flagget på 5 består.
+    expect(G.cells[1]).toBeNull();
+    expect(G.cells[4]).toBeNull();
+    expect(G.cells[6]).toBeNull();
+    expect(G.cells[9]).toBeNull();
+    expect(G.destroyed[5]).toBe(true);
+    expect(G.strategicWeapon[0]).toBeNull();
+  });
+
+  it('Biological Warfare kan sentreres på destroyed celle', () => {
+    const G = baseG();
+    G.destroyed[5] = true;
+    G.cells[0] = '1';
+    G.cells[10] = '1';
+    G.strategicWeapon[0] = 'Biological Warfare';
+
+    useWeapon({ G, playerID: '0', random: stubRandom }, 5);
+
+    expect(G.cells[0]).toBeNull();
+    expect(G.cells[10]).toBeNull();
+    expect(G.destroyed[5]).toBe(true);
+    expect(G.strategicWeapon[0]).toBeNull();
+  });
+
+  it('Air Strike kan inkludere destroyed celle i raden', () => {
+    const G = baseG();
+    G.destroyed[1] = true;
+    G.cells[0] = '1';
+    G.cells[2] = '1';
+    G.strategicWeapon[0] = 'Air Strike';
+
+    useWeapon({ G, playerID: '0', random: stubRandom }, [0, 1, 2]);
+
+    expect(G.cells[0]).toBeNull();
+    expect(G.cells[2]).toBeNull();
+    expect(G.destroyed[1]).toBe(true);
+    expect(G.strategicWeapon[0]).toBeNull();
+  });
+});
+
+describe('clickCell på destroyed celle', () => {
+  const clickCell = TicTacToe.moves.clickCell;
+  const stubRandom = { Number: () => 1 };
+
+  it('avvises som INVALID_MOVE', () => {
+    const G = baseG();
+    G.destroyed[8] = true;
+
+    const result = clickCell({ G, playerID: '0', random: stubRandom }, 8);
+
+    expect(result).toBe(INVALID_MOVE);
+    expect(G.cells[8]).toBeNull();
+    expect(G.destroyed[8]).toBe(true);
+  });
+});
+
+describe('GetWinningLine med destroyed celle', () => {
+  it('returnerer null hvis en celle i en ellers full linje er destroyed', () => {
+    // Linjen [0,1,2,3] er eid av spiller 0 på 0,1,3 og destroyed (null) på 2.
+    const cells = Array(TOTAL_CELLS).fill(null);
+    cells[0] = '0';
+    cells[1] = '0';
+    cells[3] = '0';
+    expect(GetWinningLine(cells)).toBeNull();
   });
 });
 

@@ -70,7 +70,17 @@ Anbefaling: la det stå inntil videre. Rent estetisk problem.
 - Lyd-effekter for trekk og våpen.
 - Animasjon når et våpen utløses.
 - Spectator-modus.
-- Legg til Tactical Nuke, et spesialvåpen som helt ødelegger en gitt
-  celle på brettet? (Dvs. man kan ikke bruke den cellen resten av
-  spillet.)
+- Legg til noe slikt som "Waiting for server" når man trykker på Create Game og venter på svar fra serveren. Render bruker noen ganger 30-60 sekunder hvis den må spinne opp en service.
 - Legg til noe som knytter brettet visuelt til navnet på territoriene?
+- Gi de strategiske våpnene ulik sannsynlighet. I dag plukkes ett av
+  våpnene med lik sjanse via `random.Die(strategicWeapons.length)` i
+  `Game.js`. Vekting bør gjøre kraftigere våpen sjeldnere (f.eks. Dirty
+  Nuke sjelden, Artillery vanlig).
+- Håndter teoretisk uavgjort etter at Dirty Nuke ble innført. Hvis nok
+  celler ødelegges permanent kan ingen vinnerlinje være mulig lenger.
+  To alternative win-conditions å vurdere:
+  1. Sjekk om noen vinnerlinje fortsatt er mulig (alle 4 celler i en
+     linje er enten tomme, eide av samme spiller, eller eide av ingen
+     men ikke ødelagt). Hvis ingen linje er mulig, uavgjort.
+  2. Hvis én spiller eier samtlige gjenværende (ikke-ødelagte) celler
+     og motstanderen ikke eier noen, vinner den spilleren.

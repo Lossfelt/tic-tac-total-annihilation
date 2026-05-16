@@ -6,6 +6,7 @@ const WEAPON_TARGET_COUNT = {
   'Air Strike': 3,
   Artillery: 1,
   'Biological Warfare': 1,
+  'Dirty Nuke': 1,
 };
 
 const WEAPON_META = {
@@ -25,6 +26,12 @@ const WEAPON_META = {
     description: 'Each cell in a 3x3 area has a 50% chance to be destroyed.',
     instruction: 'Select 1 target cell (3x3 area)',
   },
+  'Dirty Nuke': {
+    icon: '☢️',
+    description:
+      'Permanently destroys 1 target cell. The cell cannot be claimed again.',
+    instruction: 'Select 1 target cell',
+  },
 };
 
 // Velger ikon for en loggoppføring basert på keyword. Holdt enkelt: loggen
@@ -33,6 +40,8 @@ const logIcon = (entry) => {
   if (entry.includes('Artillery Strike')) return '💥';
   if (entry.includes('Air Strike')) return '✈️';
   if (entry.includes('Biological Weapon')) return '☣️';
+  if (entry.includes('Dirty Nuke')) return '☢️';
+  if (entry.includes('recycles')) return '♻';
   if (entry.includes('revolt')) return '✊';
   if (entry.includes('conquers')) return '⚔️';
   if (entry.includes('fails')) return '🛡️';
@@ -147,16 +156,24 @@ export function TicTacToeBoard({
   const cells = [];
   for (let id = 0; id < 16; id++) {
     const owner = G.cells[id];
+    const isDestroyed = G.destroyed?.[id] ?? false;
     const isSelected = targetsOfSpecialMove.includes(id);
     const isBlinking = G.blink[id];
     const isWinning = winningCells.has(id);
 
+    // En destroyed celle kan ikke nuke-es på nytt, men kan brukes som
+    // sentrum for område-våpen (Artillery / Air Strike / Bio Warfare) for å
+    // ramme cellene rundt.
+    const blockedForSpecial = isDestroyed && specialMoveActive === 'Dirty Nuke';
+    const isTargetable = specialMoveActive && !blockedForSpecial;
+
     const classes = ['cell'];
     if (owner === '0') classes.push('cell-queendom');
     if (owner === '1') classes.push('cell-canadia');
+    if (isDestroyed) classes.push('cell-destroyed');
     if (isBlinking) classes.push('blink');
     if (isSelected) classes.push('selected');
-    if (specialMoveActive) classes.push('targetable');
+    if (isTargetable) classes.push('targetable');
     if (isWinning) classes.push('winning');
 
     const buttonKey = isBlinking
@@ -169,16 +186,27 @@ export function TicTacToeBoard({
           key={buttonKey}
           className={classes.join(' ')}
           type="button"
-          title={territories[id]}
+          title={
+            isDestroyed ? `${territories[id]} (destroyed)` : territories[id]
+          }
           onClick={() => clickCell(id)}
-          disabled={!isActive && !specialMoveActive}
+          disabled={
+            (isDestroyed && (!specialMoveActive || blockedForSpecial)) ||
+            (!isActive && !specialMoveActive)
+          }
         >
-          {owner !== null && (
-            <img
-              src={FACTION_ICON[owner]}
-              alt={FACTION_NAME[owner]}
-              className="cell-icon"
-            />
+          {isDestroyed ? (
+            <span className="cell-destroyed-icon" aria-hidden="true">
+              ☢
+            </span>
+          ) : (
+            owner !== null && (
+              <img
+                src={FACTION_ICON[owner]}
+                alt={FACTION_NAME[owner]}
+                className="cell-icon"
+              />
+            )
           )}
         </button>
       </td>,
@@ -283,6 +311,19 @@ export function TicTacToeBoard({
                 aria-label="Recycle strategic weapon"
               >
                 ♻
+              </button>
+              {/* MIDLERTIDIG test-knapp: gir spilleren Dirty Nuke umiddelbart.
+                  Fjern denne (og cheatGiveDirtyNuke i Game.js) når
+                  Dirty Nuke er ferdig testet. */}
+              <button
+                type="button"
+                className="cheat-button"
+                onClick={() => moves.cheatGiveDirtyNuke()}
+                disabled={!isActive || specialMoveActive}
+                title="Cheat: arm Dirty Nuke"
+                aria-label="Cheat: arm Dirty Nuke"
+              >
+                ☢
               </button>
             </div>
 

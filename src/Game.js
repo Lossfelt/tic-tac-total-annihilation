@@ -32,6 +32,7 @@ export const strategicWeapons = [
   'Artillery',
   'Air Strike',
   'Biological Warfare',
+  'Dirty Nuke',
 ];
 
 const positions = [
@@ -140,6 +141,10 @@ export const TicTacToe = {
 
   setup: () => ({
     cells: Array(TOTAL_CELLS).fill(null),
+    // Permanent ødelagte celler (etter Dirty Nuke). Holdes adskilt fra
+    // cells slik at win-, revolt- og invasjonslogikken ser dem som
+    // tomme (null) uten ekstra spesialtilfeller.
+    destroyed: Array(TOTAL_CELLS).fill(false),
     log: [],
     blink: Array(TOTAL_CELLS).fill(false),
     // Inkrementeres ved hver blink-hendelse. Klienten bruker dette i React
@@ -203,7 +208,9 @@ export const TicTacToe = {
       G.blink.fill(false);
       G.blinkVersion++;
       const name = playerToken(playerID);
-      if (G.cells[id] === playerID) {
+      if (G.destroyed[id]) {
+        return INVALID_MOVE;
+      } else if (G.cells[id] === playerID) {
         return INVALID_MOVE;
       } else if (G.cells[id] !== null) {
         if (random.Number() < INVASION_SUCCESS_CHANCE) {
@@ -222,6 +229,17 @@ export const TicTacToe = {
         G.blink[id] = true;
         G.lastCellAttacked = id;
       }
+    },
+    // MIDLERTIDIG: gir spilleren et Dirty Nuke umiddelbart, for testing.
+    // Slett denne moven (og knappen i Board.js) når Dirty Nuke er ferdig
+    // testet.
+    cheatGiveDirtyNuke: {
+      noLimit: true,
+      move: ({ G, playerID }) => {
+        G.rareiumAtWeapon[playerID] = G.Rareium[playerID];
+        G.Rareium[playerID] = 0;
+        G.strategicWeapon[playerID] = 'Dirty Nuke';
+      },
     },
     recycleStrategicWeapon: {
       // noLimit gjør at recycle ikke teller mot turens maxMoves: 1. Spilleren
@@ -290,6 +308,19 @@ export const TicTacToe = {
         });
         G.log.unshift(
           `${name} releases a Biological Weapon at ${territories[input]} and its surroundings!`,
+        );
+        G.lastCellAttacked = input;
+        G.strategicWeapon[playerID] = null;
+      } else if (weapon === 'Dirty Nuke') {
+        if (G.destroyed[input]) {
+          G.blink.fill(false);
+          return INVALID_MOVE;
+        }
+        G.cells[input] = null;
+        G.destroyed[input] = true;
+        G.blink[input] = true;
+        G.log.unshift(
+          `${name} detonates a Dirty Nuke at ${territories[input]}, leaving it uninhabitable`,
         );
         G.lastCellAttacked = input;
         G.strategicWeapon[playerID] = null;
