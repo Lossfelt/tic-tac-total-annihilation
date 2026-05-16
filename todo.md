@@ -70,7 +70,6 @@ Anbefaling: la det stå inntil videre. Rent estetisk problem.
 - Lyd-effekter for trekk og våpen.
 - Animasjon når et våpen utløses.
 - Spectator-modus.
-- Legg til noe slikt som "Waiting for server" når man trykker på Create Game og venter på svar fra serveren. Render bruker noen ganger 30-60 sekunder hvis den må spinne opp en service.
 - Legg til noe som knytter brettet visuelt til navnet på territoriene?
 - Gi de strategiske våpnene ulik sannsynlighet. I dag plukkes ett av
   våpnene med lik sjanse via `random.Die(strategicWeapons.length)` i

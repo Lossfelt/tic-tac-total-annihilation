@@ -30,6 +30,11 @@ const App = () => {
   const [playerID, setPlayerID] = useState('');
   const [joined, setJoined] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  // Hvis ikke null: backend-kall er underveis. Brukes til å disable knapper og
+  // vise en "Waiting for server"-indikator. Hovedmotivasjon: Render kan bruke
+  // 30-60s på å spinne opp en kald instans, så uten dette virker UI dødt.
+  const [pendingAction, setPendingAction] = useState(null);
+  const [lobbyError, setLobbyError] = useState('');
   const nameInput = useRef();
   const matchInput = useRef();
 
@@ -50,23 +55,37 @@ const App = () => {
     if (!matchID) {
       setMatchID(id);
     }
-    const playerCredentials = await lobbyClient.joinMatch('TicTacToe', id, {
-      playerName: name,
-    });
-    setCredentials(playerCredentials.playerCredentials);
-    setPlayerID(playerCredentials.playerID);
-    setJoined(true);
+    setLobbyError('');
+    setPendingAction('join');
+    try {
+      const playerCredentials = await lobbyClient.joinMatch('TicTacToe', id, {
+        playerName: name,
+      });
+      setCredentials(playerCredentials.playerCredentials);
+      setPlayerID(playerCredentials.playerID);
+      setJoined(true);
+    } catch (error) {
+      console.error('Error joining match:', error);
+      setLobbyError('Could not join match. Check the Match ID and try again.');
+    } finally {
+      setPendingAction(null);
+    }
   };
 
   const handleCreate = async () => {
+    setLobbyError('');
+    setPendingAction('create');
     try {
       const match = await lobbyClient.createMatch('TicTacToe', {
         numPlayers: 2,
       });
       setMatchID(match.matchID);
-      handleJoin(match.matchID);
+      // handleJoin håndterer sin egen pendingAction; ikke clear her.
+      await handleJoin(match.matchID);
     } catch (error) {
       console.error('Error creating match:', error);
+      setLobbyError('Could not reach the server. Please try again.');
+      setPendingAction(null);
     }
   };
 
@@ -155,16 +174,51 @@ const App = () => {
           ) : (
             <div className="lobby-actions">
               <h2>Welcome, general {name}</h2>
-              <button onClick={handleCreate}>Create new match</button>
+              <button onClick={handleCreate} disabled={pendingAction !== null}>
+                Create new match
+              </button>
               <div className="lobby-divider">or join existing</div>
               <div className="lobby-row">
-                <input ref={matchInput} type="number" placeholder="Match ID" />
-                <button onClick={() => handleJoin()}>Join</button>
+                <input
+                  ref={matchInput}
+                  type="number"
+                  placeholder="Match ID"
+                  disabled={pendingAction !== null}
+                />
+                <button
+                  onClick={() => handleJoin()}
+                  disabled={pendingAction !== null}
+                >
+                  Join
+                </button>
               </div>
-              <div className="lobby-hint">
-                Match ID is shared with your opponent so they can join the same
-                battle.
-              </div>
+              {pendingAction ? (
+                <div className="lobby-pending" role="status" aria-live="polite">
+                  <span className="lobby-pending-dot" aria-hidden="true" />
+                  <span className="lobby-pending-text">
+                    Waiting for server
+                    <span className="lobby-pending-ellipsis" aria-hidden="true">
+                      <span>.</span>
+                      <span>.</span>
+                      <span>.</span>
+                    </span>
+                  </span>
+                  <span className="lobby-pending-hint">
+                    First connect can take 30-60 seconds while the backend wakes
+                    up.
+                  </span>
+                </div>
+              ) : (
+                <div className="lobby-hint">
+                  Match ID is shared with your opponent so they can join the
+                  same battle.
+                </div>
+              )}
+              {lobbyError && (
+                <div className="lobby-error" role="alert">
+                  {lobbyError}
+                </div>
+              )}
             </div>
           )}
         </div>
