@@ -76,11 +76,3 @@ Anbefaling: la det stå inntil videre. Rent estetisk problem.
   våpnene med lik sjanse via `random.Die(strategicWeapons.length)` i
   `Game.js`. Vekting bør gjøre kraftigere våpen sjeldnere (f.eks. Dirty
   Nuke sjelden, Artillery vanlig).
-- Håndter teoretisk uavgjort etter at Dirty Nuke ble innført. Hvis nok
-  celler ødelegges permanent kan ingen vinnerlinje være mulig lenger.
-  To alternative win-conditions å vurdere:
-  1. Sjekk om noen vinnerlinje fortsatt er mulig (alle 4 celler i en
-     linje er enten tomme, eide av samme spiller, eller eide av ingen
-     men ikke ødelagt). Hvis ingen linje er mulig, uavgjort.
-  2. Hvis én spiller eier samtlige gjenværende (ikke-ødelagte) celler
-     og motstanderen ikke eier noen, vinner den spilleren.

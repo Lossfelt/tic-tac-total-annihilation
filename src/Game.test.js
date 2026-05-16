@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   IsVictory,
   GetWinningLine,
+  GetDominator,
   IsRow,
   GetNeighbors,
   GetSurroundingCells,
@@ -488,6 +489,90 @@ describe('GetWinningLine med destroyed celle', () => {
     cells[1] = '0';
     cells[3] = '0';
     expect(GetWinningLine(cells)).toBeNull();
+  });
+});
+
+describe('GetDominator', () => {
+  it('returnerer null på tomt brett (begge eier 0)', () => {
+    const G = baseG();
+    expect(GetDominator(G)).toBeNull();
+  });
+
+  it('returnerer null hvis det finnes en tom, ikke-destroyed celle', () => {
+    const G = baseG();
+    // Spiller 0 eier alt unntatt celle 7 som er tom og ikke destroyed.
+    for (let i = 0; i < TOTAL_CELLS; i++) {
+      if (i !== 7) G.cells[i] = '0';
+    }
+    expect(GetDominator(G)).toBeNull();
+  });
+
+  it('returnerer null hvis begge spillere eier celler', () => {
+    const G = baseG();
+    for (let i = 0; i < TOTAL_CELLS; i++) G.cells[i] = '0';
+    G.cells[5] = '1';
+    expect(GetDominator(G)).toBeNull();
+  });
+
+  it('returnerer dominator når alle ikke-destroyed er eid av samme spiller', () => {
+    const G = baseG();
+    // Destroyed: 0, 5, 10, 15. Resten eies av spiller 1.
+    [0, 5, 10, 15].forEach((i) => {
+      G.destroyed[i] = true;
+    });
+    for (let i = 0; i < TOTAL_CELLS; i++) {
+      if (!G.destroyed[i]) G.cells[i] = '1';
+    }
+    expect(GetDominator(G)).toBe('1');
+  });
+
+  it('returnerer null hvis kun destroyed celler er igjen (ingen eier noe)', () => {
+    const G = baseG();
+    for (let i = 0; i < TOTAL_CELLS; i++) G.destroyed[i] = true;
+    expect(GetDominator(G)).toBeNull();
+  });
+});
+
+describe('endIf: domination', () => {
+  const { endIf } = TicTacToe;
+  const stubCtx = { currentPlayer: '0' };
+
+  it('returnerer winner uten winningLine når en spiller dominerer', () => {
+    const G = baseG();
+    // 4 nukes som dreper alle linjer: {3, 5, 10, 12}. Spiller 0 eier resten.
+    [3, 5, 10, 12].forEach((i) => {
+      G.destroyed[i] = true;
+    });
+    for (let i = 0; i < TOTAL_CELLS; i++) {
+      if (!G.destroyed[i]) G.cells[i] = '0';
+    }
+
+    const result = endIf({ G, ctx: stubCtx });
+
+    expect(result).toEqual({ winner: '0' });
+    expect(result.winningLine).toBeUndefined();
+  });
+
+  it('foretrekker winningLine-seier hvis begge betingelser er sanne', () => {
+    const G = baseG();
+    // Spiller 0 har en vinnende rad og dominerer (alt annet destroyed).
+    [0, 1, 2, 3].forEach((i) => {
+      G.cells[i] = '0';
+    });
+    for (let i = 4; i < TOTAL_CELLS; i++) G.destroyed[i] = true;
+
+    const result = endIf({ G, ctx: stubCtx });
+
+    expect(result.winner).toBe('0');
+    expect(result.winningLine).toEqual([0, 1, 2, 3]);
+  });
+
+  it('avslutter ikke spillet hvis det fortsatt finnes tomme celler', () => {
+    const G = baseG();
+    // Spiller 0 eier én celle, motstander eier 0, men resten er tomme.
+    G.cells[0] = '0';
+
+    expect(endIf({ G, ctx: stubCtx })).toBeUndefined();
   });
 });
 

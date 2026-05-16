@@ -312,19 +312,6 @@ export function TicTacToeBoard({
               >
                 ♻
               </button>
-              {/* MIDLERTIDIG test-knapp: gir spilleren Dirty Nuke umiddelbart.
-                  Fjern denne (og cheatGiveDirtyNuke i Game.js) når
-                  Dirty Nuke er ferdig testet. */}
-              <button
-                type="button"
-                className="cheat-button"
-                onClick={() => moves.cheatGiveDirtyNuke()}
-                disabled={!isActive || specialMoveActive}
-                title="Cheat: arm Dirty Nuke"
-                aria-label="Cheat: arm Dirty Nuke"
-              >
-                ☢
-              </button>
             </div>
 
             {recyclePending && myWeapon && (

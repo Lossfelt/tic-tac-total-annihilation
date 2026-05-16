@@ -68,6 +68,23 @@ export function IsVictory(cells) {
   return GetWinningLine(cells) !== null;
 }
 
+// Returnerer playerID hvis én spiller eier samtlige ikke-destroyed celler
+// (og minst én celle er eid). Returnerer null ellers - inkludert hvis det
+// fortsatt finnes tomme, ikke-destroyed celler.
+export function GetDominator(G) {
+  let dominator = null;
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    if (G.destroyed[i]) continue;
+    if (G.cells[i] === null) return null;
+    if (dominator === null) {
+      dominator = G.cells[i];
+    } else if (dominator !== G.cells[i]) {
+      return null;
+    }
+  }
+  return dominator;
+}
+
 // Sjekker om tre celle-IDer ligger på rad (horisontalt, vertikalt eller
 // diagonalt) - brukes til Air Strike-validering.
 export function IsRow(input) {
@@ -230,17 +247,6 @@ export const TicTacToe = {
         G.lastCellAttacked = id;
       }
     },
-    // MIDLERTIDIG: gir spilleren et Dirty Nuke umiddelbart, for testing.
-    // Slett denne moven (og knappen i Board.js) når Dirty Nuke er ferdig
-    // testet.
-    cheatGiveDirtyNuke: {
-      noLimit: true,
-      move: ({ G, playerID }) => {
-        G.rareiumAtWeapon[playerID] = G.Rareium[playerID];
-        G.Rareium[playerID] = 0;
-        G.strategicWeapon[playerID] = 'Dirty Nuke';
-      },
-    },
     recycleStrategicWeapon: {
       // noLimit gjør at recycle ikke teller mot turens maxMoves: 1. Spilleren
       // skal fortsatt få lov til å gjøre et vanlig trekk etter resirkulering.
@@ -335,6 +341,13 @@ export const TicTacToe = {
     const winningLine = GetWinningLine(G.cells);
     if (winningLine) {
       return { winner: ctx.currentPlayer, winningLine };
+    }
+    // Domination: hvis alle ikke-destroyed celler er eid av samme spiller, og
+    // ingen tomme celler er igjen, vinner den spilleren. Dekker edge-casen
+    // der nok celler er nuket til at ingen 4-på-rad er mulig.
+    const dominator = GetDominator(G);
+    if (dominator !== null) {
+      return { winner: dominator };
     }
   },
 
