@@ -1154,17 +1154,6 @@
   text-align: left;
 }
 
-.popup-tagline {
-  font-family: var(--font-heading);
-  font-size: 1.05rem;
-  color: var(--color-sand);
-  letter-spacing: 0.03em;
-  margin-bottom: 1.2rem;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 0.7rem;
-}
-
 .popup-section {
   margin-bottom: 1.2rem;
 }

@@ -31,9 +31,6 @@ const AboutPopup = ({ onClose }) => {
         <h2 id="about-title" className="popup-title">
           About
         </h2>
-        <div className="popup-tagline">
-          Tic Tac Total Annihilation is not just three in a row.
-        </div>
 
         <section className="popup-section">
           <h3>Background</h3>
