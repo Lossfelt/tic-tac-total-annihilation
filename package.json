@@ -17,8 +17,17 @@
     "lint": "eslint src",
     "test": "vitest"
   },
+  "overrides": {
+    "socket.io": "^4.8.3",
+    "socket.io-parser": "^4.2.7",
+    "@koa/cors": "^5.0.0",
+    "ws": "^8.21.3",
+    "react-cookies": {
+      "cookie": "^0.7.2"
+    }
+  },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^5.2.0",
     "concurrently": "^9.2.4",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.0.1",
@@ -27,7 +36,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "nodemon": "^3.1.9",
     "prettier": "^3.4.2",
-    "vite": "^5.4.10",
-    "vitest": "^3.2.4"
+    "vite": "^7.3.6",
+    "vitest": "^3.2.7"
   }
 }

@@ -33,6 +33,25 @@ Andre nyttige kommandoer: `npm run build` (prod-bygg av frontend),
 Frontend leser backend-URL fra `VITE_BACKEND_URL`. Sett denne i
 hosting-plattformens env-vars.
 
+## Avhengigheter og sikkerhet
+
+`boardgame.io` 0.50.2 låser flere transitive pakker på gamle, sårbare
+versjoner. Vi løser dette med `overrides` i `package.json` i stedet for å bytte
+ut selve rammeverket:
+
+- `socket.io` / `socket.io-parser` / `ws`: `koa-socket-2` drar med seg
+  `socket.io@3.1.2` med utdatert `engine.io`, `ws` og `cookie`. Vi tvinger
+  `socket.io@4`, som `boardgame.io` uansett bruker for klienten. Verifisert med
+  en manuell røyktest (opprett match, join, socket-sync).
+- `@koa/cors@5`: fjerner varselet om for åpen origin-policy. `boardgame.io`
+  setter uansett `origin` eksplisitt, så oppførselen er uendret.
+- `cookie@0.7` under `react-cookies`.
+
+`svelte@3` (via `boardgame.io`) har åpne varsler vi bevisst lar stå: de gjelder
+XSS ved server-side rendering, og Svelte-koden brukes kun av boardgame.io sitt
+debug-panel, som er slått av (`debug: false` i `src/App.js`). Å tvinge
+`svelte@5` vil bryte den forhåndskompilerte koden.
+
 ## Status og videre arbeid
 
 Se [PLAN.md](PLAN.md) for prosjektets utviklingsplan og pågående
