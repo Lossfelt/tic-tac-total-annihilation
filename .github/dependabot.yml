@@ -8,6 +8,17 @@
 # og skal ikke kunne bli med som blindpassasjer i en samle-PR.
 version: 2
 updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Oslo
+    groups:
+      github-actions:
+        patterns: ["*"]
+
   - package-ecosystem: npm
     directory: "/"
     schedule:

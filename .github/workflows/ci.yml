@@ -1,0 +1,38 @@
+# Kjører lint, tester og build på hver push til main og på alle PR-er.
+#
+# Poenget er særlig Dependabot-PR-ene: uten dette er en grønn PR fra
+# Dependabot bare et løfte om at versjonsnummeret er nyere, ikke at
+# oppdateringen faktisk virker.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Avbryt et pågående løp hvis det kommer en ny push på samme gren.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # Samme major som netlify.toml pinner, så CI og deploy bygger likt.
+          node-version: "22"
+          cache: npm
+
+      # npm ci installerer fra package-lock.json og feiler hvis lockfilen er
+      # ute av synk med package.json.
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm test -- --run
+
+      - run: npm run build

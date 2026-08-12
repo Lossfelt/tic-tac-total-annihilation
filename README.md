@@ -25,6 +25,17 @@ Andre nyttige kommandoer: `npm run build` (prod-bygg av frontend),
 `npm run preview` (kjør prod-bygget lokalt), `npm test`
 (Vitest), `npm run lint` (ESLint).
 
+## Tester
+
+- `Game.test.js` dekker spillreglene. Ren logikk, kjører i node-miljø.
+- `Board.component.test.js` dekker interaksjonslogikken i brettet, altså
+  målvalget for strategiske våpen og recycle-bekreftelsen. Kjører i jsdom via
+  en `@vitest-environment`-docblock øverst i fila. Her er `moves` mocket, så
+  testene sier hva brettet ber serveren om, ikke hva serveren gjør med det.
+
+Presentasjon og layout er bevisst ikke testet. GitHub Actions kjører lint,
+tester og build på hver push og PR, se `.github/workflows/ci.yml`.
+
 ## Deploy
 
 - Frontend: Vercel (planlegges flyttet til Netlify, se PLAN.md Fase 2)
