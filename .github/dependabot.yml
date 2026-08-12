@@ -55,4 +55,9 @@ updates:
       # plugin-en følger etter. Fjern denne da.
       - dependency-name: eslint
         update-types: ["version-update:semver-major"]
+      # @eslint/js må følge samme major som eslint selv. Installeres 10.x mot
+      # eslint 9 blir treet ugyldig og lint slutter å kjøre. Oppheves sammen
+      # med eslint over.
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
 
