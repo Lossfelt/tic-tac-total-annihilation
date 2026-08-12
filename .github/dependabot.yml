@@ -28,4 +28,20 @@ updates:
         applies-to: version-updates
         dependency-type: production
         update-types: ["minor", "patch"]
+    ignore:
+      # boardgame.io 0.50.2 støtter ikke React 19, og vedlikeholderen har sagt
+      # at det ikke er planlagt (boardgameio/boardgame.io#1215). React 18 har
+      # ingen åpne sikkerhetsvarsler, så vi blir der til rammeverket følger
+      # etter. Fjern denne når boardgame.io slipper en React 19-kompatibel
+      # versjon. Merk at security-updates fortsatt slipper gjennom.
+      - dependency-name: react
+        update-types: ["version-update:semver-major"]
+      - dependency-name: react-dom
+        update-types: ["version-update:semver-major"]
+      # ESLint 10 er blokkert av eslint-plugin-react, som per august 2026 kun
+      # støtter eslint opptil ^9.7 og sist ble publisert i april 2025. Vi kjører
+      # eslint 9 med flat config, så hoppet til 10 blir udramatisk den dagen
+      # plugin-en følger etter. Fjern denne da.
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
 
