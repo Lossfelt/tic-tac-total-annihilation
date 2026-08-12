@@ -89,7 +89,15 @@ export function TicTacToeBoard({
 
   // Lukk recycle-bekreftelsen hvis våpenet forsvinner (brukt opp, recycled
   // ferdig, eller turen skifter til en spiller uten våpen).
+  //
+  // Selve dialogen sjekker `recyclePending && myWeapon`, så denne effekten
+  // påvirker ikke visningen. Den nullstiller flagget slik at dialogen ikke
+  // popper opp igjen av seg selv når spilleren senere får et nytt våpen. Å
+  // utlede tilstanden i stedet fungerer ikke: i lokal modus deler begge
+  // spillerne komponenten, så `myWeapon` forsvinner og kommer tilbake hver
+  // gang turen skifter.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!myWeapon && recyclePending) setRecyclePending(false);
   }, [myWeapon, recyclePending]);
 
@@ -115,22 +123,23 @@ export function TicTacToeBoard({
     setRecyclePending(false);
   };
 
+  // Avfyrer våpenet i samme klikk som fullfører målutvalget. Dette lå
+  // tidligere i en useEffect som reagerte på at listen ble full, men å sende
+  // et trekk som bieffekt av en render er skjørt: kjører effekten på nytt,
+  // sendes trekket to ganger.
   const specialAttack = (id) => {
-    setTargetsOfSpecialMove((targets) => [...targets, id]);
-  };
-
-  useEffect(() => {
     const requiredCount = WEAPON_TARGET_COUNT[specialMoveActive];
-    if (!requiredCount || targetsOfSpecialMove.length !== requiredCount) {
+    const targets = [...targetsOfSpecialMove, id];
+    if (!requiredCount || targets.length < requiredCount) {
+      setTargetsOfSpecialMove(targets);
       return;
     }
     // Air Strike vil ha hele array-en som mål; de andre tar en enkelt celle.
-    const arg =
-      requiredCount === 1 ? targetsOfSpecialMove[0] : targetsOfSpecialMove;
+    const arg = requiredCount === 1 ? targets[0] : targets;
     moves.useStrategicWeapon(arg);
     setTargetsOfSpecialMove([]);
     setSpecialMoveActive(false);
-  }, [targetsOfSpecialMove, specialMoveActive, moves]);
+  };
 
   const clickCell = (id) => {
     if (specialMoveActive) {
