@@ -10,7 +10,7 @@ egen multiplayer-server.
 ## Kjøre lokalt
 
 Krever **Node 22 eller nyere**. Kravet kommer fra utviklingsverktøyene
-(`concurrently` 10 og Vite 7), ikke fra serveren, så det er ikke satt som
+(`concurrently` 10 og Vite 8), ikke fra serveren, så det er ikke satt som
 `engines` i package.json. CI og Netlify er pinnet til Node 22.
 
 ```sh
@@ -45,11 +45,26 @@ tester og build på hver push og PR, se `.github/workflows/ci.yml`.
 
 ## Deploy
 
-- Frontend: Vercel (planlegges flyttet til Netlify, se PLAN.md Fase 2)
-- Backend: Render
+- Frontend: **Netlify**, bygget med `netlify.toml` (`npm run build` til `dist/`)
+- Backend: **Render**, kjører `src/server.mjs`
 
 Frontend leser backend-URL fra `VITE_BACKEND_URL`. Sett denne i
-hosting-plattformens env-vars.
+hosting-plattformens env-vars. Serveren leser `FRONTEND_URL` for å låse CORS,
+se kommentaren i `src/server.mjs`.
+
+### Om «Deployments» som rødt i GitHub
+
+Sidepanelet i GitHub viser Production-miljøet som feilet. Det er et levn fra
+Vercel, som hostet frontenden før flyttingen til Netlify. De tre røde postene
+er fra 13. til 16. mai 2026, og Vercel har ikke forsøkt en deploy siden. Det er
+altså historikk, ikke en pågående feil.
+
+Netlify og Render rapporterer ikke til GitHub sitt Deployments-API, så de reelle
+miljøene vises ikke der. Statusen du kan stole på er CI-sjekken på hver commit,
+pluss dashbordene til Netlify og Render.
+
+Merket forsvinner først når Vercel-integrasjonen kobles fra repoet og de gamle
+deployment-postene slettes.
 
 ## Avhengigheter og sikkerhet
 

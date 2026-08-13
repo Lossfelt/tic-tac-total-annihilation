@@ -60,6 +60,22 @@ kodebasen (noen filer bruker rene paths, andre dypstier).
 
 Anbefaling: la det stå inntil videre. Rent estetisk problem.
 
+**Oppdatering 13. august 2026: delvis avvist, ikke bare utsatt.**
+
+Konklusjonen over var at `App.js` trygt kunne ryddes til ren variant siden den
+bare kjører i Vite. Det stemmer ikke lenger. `App.jsx` importerer nå bevisst
+`boardgame.io/dist/esm/...`, fordi rolldown i Vite 8 ikke klarer å tree-shake
+bort det Svelte-baserte debug-panelet fra CJS-byggene. Med CJS vokser
+produksjonsbundelen med rundt 80 kB.
+
+Proxy-mappene (`boardgame.io/react` osv.) peker `main` til `dist/cjs/`, så å
+bytte til dem ville trekke inn CJS igjen og gjøre bundelen større. Den delen av
+oppgaven bør altså ikke gjøres, selv om boardgame.io skulle legge til et
+`exports`-felt, med mindre det feltet peker på ESM-byggene.
+
+`Game.js` og `server.mjs` er uendret: begge må fortsatt bruke `dist/cjs/`, av
+grunnen beskrevet over. Se README under "Avhengigheter og sikkerhet".
+
 ## Backlog (lavere prioritet, ta etter hvert)
 
 - TypeScript-rewrite (kun ved en større refaktor i fremtiden).

@@ -11,12 +11,20 @@ Spillet heter **Tic Tac Total Annihilation**. Repoet het opprinnelig
 `bgio-tutorial` (etter en boardgame.io-tutorial som utgangspunkt) og
 endres til `tic-tac-total-annihilation` i Fase 0.
 
-**Stack i dag:**
+**Stack i dag** (oppdatert 13. august 2026, etter at Fase 1 til 3 er
+gjennomført. Avsnittet beskrev opprinnelig utgangspunktet med CRA og Vercel):
 
-- Frontend: React 18 + Create React App (`react-scripts`)
+- Frontend: React 18 + Vite 8, JSX i `.jsx`-filer
 - Backend: boardgame.io server med Socket.IO (Node, ESM)
-- Hosting: Frontend på Vercel (planlegges flyttet til Netlify), backend på Render
-- Lint/format: ESLint + Prettier
+- Hosting: Frontend på Netlify, backend på Render. Vercel er utfaset
+- Lint/format: ESLint 9 med flat config, og Prettier
+- Test: Vitest 4, med komponenttester i jsdom
+- CI: GitHub Actions kjører lint, tester og build på hver push og PR
+
+Merk ved lesing: notatene under refererer til `App.js`, `Board.js`, `index.js`
+og `AboutPopup.js`, som filene het da arbeidet ble gjort. De har `.jsx`-endelse
+i dag, se tillegget under 2.1. Referansene er beholdt slik de var, så notatene
+fortsatt stemmer med det som faktisk skjedde.
 
 **Bevisste valg fra eier:**
 
@@ -177,6 +185,11 @@ allerede dekker både dev og prod. `public/index.html` slettet, ny
 `PUBLIC_URL`-prefiksene i `AboutPopup.js` byttet til rotrelative stier
 (`/Mexican_Queendom.jpg` osv.).
 
+Overhalt 13. august 2026: JSX-i-`.js`-løsningen er reversert. Filer med JSX
+har nå `.jsx`-endelse, og esbuild-loaderen er ute av `vite.config.js`. Den
+konfigurasjonen finnes ikke i Vite 8, som bygger på rolldown, så oppgraderingen
+tvang fram opprydding av CRA-arven. `index.html` peker nå på `/src/index.jsx`.
+
 ### [x] 2.2 Oppdater package.json
 
 - Endre scripts:
@@ -209,7 +222,7 @@ nettleser av eier. Scripts senere ryddet til Vite-konvensjon:
 `dev` (kombinert), `client` (kun frontend), `serve` (kun backend);
 gammel `start` fjernet.
 
-### [~] 2.4 Migrer frontend fra Vercel til Netlify
+### [x] 2.4 Migrer frontend fra Vercel til Netlify
 
 - Opprett ny Netlify-site og koble til GitHub-repoet.
 - Sett byggeinnstillinger:
@@ -231,6 +244,16 @@ da settes Netlify opp manuelt (opprette site, koble GitHub, sette
 verifisere deploy, evt. DNS-flytt, pause/slette Vercel). Frem til push
 kjører Vercel uforstyrret på gammel CRA-versjon fra `origin/main`.
 
+Fullført (13. august 2026): Netlify og Render deployer begge grønt, og eier
+har verifisert prod ved å spille et helt spill. Vercel deployer ikke lenger,
+siste forsøk var 16. mai 2026.
+
+Én ting gjenstår, og den må gjøres i GitHub og Vercel, ikke i koden:
+Vercel-integrasjonen er fortsatt koblet til repoet, og de tre siste
+Vercel-deployene står som `failure`. Det gjør at GitHub viser Production-miljøet
+som rødt i sidepanelet, selv om alt fungerer. Koble fra Vercel-appen og slett de
+gamle deployment-postene for å bli kvitt merket. Se README under Deploy.
+
 ## Fase 3: Tester
 
 ### [x] 3.1 Sett opp Vitest
@@ -243,6 +266,11 @@ Notat: `vitest@^3` installert (ikke v4, fordi v4 drar inn Vite 8 internt
 og gir deprecation-warnings mot esbuild-konfigen vår i `vite.config.js`).
 `@testing-library/react` ikke installert enda - vente til vi faktisk skal
 teste komponenter. `"test": "vitest"` lagt til i scripts.
+
+Overhalt 13. august 2026: begge forbeholdene er borte. Vi kjører nå Vitest 4
+på Vite 8, og esbuild-konfigen som blokkerte det er fjernet.
+`@testing-library/react` og `jsdom` er installert, og komponenttestene ligger i
+`Board.component.test.jsx`. Se README under Tester.
 
 ### [x] 3.2 Skriv tester for ren spillogikk
 
