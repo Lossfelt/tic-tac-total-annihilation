@@ -32,10 +32,13 @@ Andre nyttige kommandoer: `npm run build` (prod-bygg av frontend),
 ## Tester
 
 - `Game.test.js` dekker spillreglene. Ren logikk, kjører i node-miljø.
-- `Board.component.test.js` dekker interaksjonslogikken i brettet, altså
+- `Board.component.test.jsx` dekker interaksjonslogikken i brettet, altså
   målvalget for strategiske våpen og recycle-bekreftelsen. Kjører i jsdom via
   en `@vitest-environment`-docblock øverst i fila. Her er `moves` mocket, så
   testene sier hva brettet ber serveren om, ikke hva serveren gjør med det.
+- `App.smoke.test.jsx` importerer bare `App.jsx` og sjekker at det går. Filen
+  setter opp boardgame.io-klienten på modulnivå, så en ødelagt import slår ut
+  her i stedet for i nettleseren.
 
 Presentasjon og layout er bevisst ikke testet. GitHub Actions kjører lint,
 tester og build på hver push og PR, se `.github/workflows/ci.yml`.
@@ -64,8 +67,24 @@ ut selve rammeverket:
 
 `svelte@3` (via `boardgame.io`) har åpne varsler vi bevisst lar stå: de gjelder
 XSS ved server-side rendering, og Svelte-koden brukes kun av boardgame.io sitt
-debug-panel, som er slått av (`debug: false` i `src/App.js`). Å tvinge
+debug-panel, som er slått av (`debug: false` i `src/App.jsx`). Å tvinge
 `svelte@5` vil bryte den forhåndskompilerte koden.
+
+### Hvorfor App.jsx importerer fra `boardgame.io/dist/esm/`
+
+`App.jsx` importerer `Client`, `SocketIO` og `LobbyClient` fra ESM-byggene,
+ikke CJS. Det er et bevisst valg, ikke en tilfeldighet: rolldown, som Vite 8
+bygger på, klarer ikke å tree-shake bort det Svelte-baserte debug-panelet fra
+CJS-byggene. Med CJS vokser produksjonsbundelen med rundt 80 kB død kode,
+selv med `debug: false`.
+
+`Game.js` importerer fortsatt `dist/cjs/core.js`, og må gjøre det, fordi
+`server.mjs` laster den i Node. ESM-filene i boardgame.io har `.js`-endelse
+uten at pakken er merket som ESM, så Node tolker dem som CommonJS.
+
+`App.smoke.test.jsx` finnes for å fange det hvis noen bytter tilbake:
+`App.jsx` kaller alle tre importene på modulnivå, så testen feiler med én gang
+en import ikke løser seg.
 
 ## Status og videre arbeid
 
