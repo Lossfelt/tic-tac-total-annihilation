@@ -18,6 +18,9 @@ export default [
   // Prettier sist, slik at den slår av formateringsregler fra configene over.
   prettier,
   {
+    // Uten .jsx her hopper `eslint src` stille over alle JSX-filene, og
+    // rapporterer grønt uten å ha sett på dem.
+    files: ['**/*.{js,mjs,jsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

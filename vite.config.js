@@ -1,24 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Kildefilene bruker JSX i .js-filer (arv fra CRA). La plugin-react og esbuild
-// tolke alt under src/ som JSX slik at vi slipper å rename hver fil.
+// Filer med JSX har filendelsen .jsx, så plugin-react finner dem selv. Vi
+// hadde tidligere JSX i .js-filer (arv fra CRA), noe som krevde en egen
+// esbuild-loader her. Det oppsettet finnes ikke i Vite 8, som bygger på
+// rolldown i stedet for esbuild.
 export default defineConfig({
-  plugins: [
-    react({
-      include: '**/*.{js,jsx}',
-    }),
-  ],
-  esbuild: {
-    loader: 'jsx',
-    include: /src\/.*\.jsx?$/,
-    exclude: [],
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: { '.js': 'jsx' },
-    },
-  },
+  plugins: [react()],
   server: {
     port: 3000,
   },
