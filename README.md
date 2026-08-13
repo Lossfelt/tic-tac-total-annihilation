@@ -9,6 +9,10 @@ egen multiplayer-server.
 
 ## Kjøre lokalt
 
+Krever **Node 22 eller nyere**. Kravet kommer fra utviklingsverktøyene
+(`concurrently` 10 og Vite 7), ikke fra serveren, så det er ikke satt som
+`engines` i package.json. CI og Netlify er pinnet til Node 22.
+
 ```sh
 npm install
 npm run dev     # starter backend (port 8000) og frontend (port 3000) samtidig
