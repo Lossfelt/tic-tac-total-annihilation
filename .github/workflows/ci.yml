@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           # Samme major som netlify.toml pinner, så CI og deploy bygger likt.
-          node-version: "22"
+          node-version-file: .nvmrc
           cache: npm
 
       # npm ci installerer fra package-lock.json og feiler hvis lockfilen er
