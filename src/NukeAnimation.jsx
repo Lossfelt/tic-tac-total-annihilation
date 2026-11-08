@@ -1,60 +1,12 @@
 import './NukeAnimation.css';
 import { NUKE_DURATION_MS } from './weaponAnimation.js';
+import Puff from './Puff.jsx';
+import { makeRng } from './rng.js';
 
 // Soppskyen for Dirty Nuke. Tegnet som SVG av lagdelte "puffer" i stedet for
 // ferdige bilder, så den skalerer skarpt, bruker temaets farger og kan
 // animeres lag for lag. Posisjonene genereres med et fast frø, så skyen ser
 // lik ut hver gang.
-
-function makeRng(seed) {
-  let a = seed;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-// Fargetrapp fra varm kjerne (t=0) til kald kant (t=1): [base, lys, høylys].
-function ramp(t) {
-  if (t < 0.3) return ['#fbb630', '#ffe27a', '#fff3b0'];
-  if (t < 0.65) return ['#e8791f', '#fbb630', '#ffd75a'];
-  if (t < 0.88) return ['#b8391a', '#e8791f', '#f59a2b'];
-  return ['#962c14', '#cf5a1c', '#ee8a2a'];
-}
-
-function Puff({ x, y, r, t }) {
-  const [base, light, highlight] = ramp(t);
-  const showCrescent = r > 30 && t < 0.75;
-  const arcR = 0.7 * r;
-  const cx = x - 0.08 * r;
-  const cy = y - 0.1 * r;
-  const point = (angle) =>
-    `${(cx + arcR * Math.cos(angle)).toFixed(1)} ${(cy + arcR * Math.sin(angle)).toFixed(1)}`;
-  return (
-    <g className="nk-pf">
-      <circle cx={x} cy={y} r={r} fill={base} />
-      <circle cx={x - 0.14 * r} cy={y - 0.18 * r} r={0.8 * r} fill={light} />
-      <circle
-        cx={x - 0.3 * r}
-        cy={y - 0.36 * r}
-        r={0.46 * r}
-        fill={highlight}
-      />
-      {showCrescent && (
-        <path
-          d={`M${point(3.5)} A${arcR.toFixed(1)} ${arcR.toFixed(1)} 0 0 1 ${point(4.7)}`}
-          fill="none"
-          stroke="#fff6c8"
-          strokeWidth="3"
-          strokeLinecap="round"
-          opacity="0.65"
-        />
-      )}
-    </g>
-  );
-}
 
 function buildCloud() {
   const rand = makeRng(11);
@@ -147,7 +99,9 @@ function buildCloud() {
 const CLOUD = buildCloud();
 
 const renderPuffs = (puffs) =>
-  puffs.map((p, i) => <Puff key={i} x={p.x} y={p.y} r={p.r} t={p.t} />);
+  puffs.map((p, i) => (
+    <Puff key={i} className="nk-pf" x={p.x} y={p.y} r={p.r} t={p.t} />
+  ));
 
 // Dekker hele brettet og fanger alle klikk mens animasjonen spilles. Skal
 // bare monteres mens animasjonen går: CSS-animasjonene starter ved montering.

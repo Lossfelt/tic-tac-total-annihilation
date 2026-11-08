@@ -32,6 +32,8 @@
 .as-flash,
 .as-fire,
 .as-ring,
+.as-debris,
+.as-spark,
 .as-smoke {
   opacity: 0;
   animation-delay: var(--d);
@@ -60,9 +62,21 @@
   animation-name: as-ring;
   animation-duration: 700ms;
 }
+.as-ring-late {
+  animation-delay: calc(var(--d) + 120ms);
+  animation-duration: 900ms;
+}
+.as-debris {
+  animation-name: as-debris;
+  animation-duration: 1s;
+}
+.as-spark {
+  animation-name: as-spark;
+  animation-duration: 600ms;
+}
 .as-smoke {
   animation-name: as-smoke;
-  animation-duration: 1.8s;
+  animation-duration: 2.2s;
   animation-delay: calc(var(--d) + var(--x));
 }
 
@@ -170,6 +184,39 @@
   100% {
     opacity: 0;
     transform: scale(1.8);
+  }
+}
+
+/* Skrot kastes ut og faller tilbake. */
+@keyframes as-debris {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0);
+  }
+  8% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate(calc(var(--dx) * 0.9), calc(var(--dy) * 0.9 - 14px))
+      rotate(calc(var(--rot) * 0.7));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), calc(var(--dy) + 10px)) rotate(var(--rot));
+  }
+}
+
+@keyframes as-spark {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy));
   }
 }
 

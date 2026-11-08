@@ -15,7 +15,7 @@ const CELL_UNITS = BOARD_UNITS / 4;
 // Hvor lenge flyet er i luften, fra det går inn til det er ute av bildet.
 const AIR_FLIGHT_MS = 2200;
 // Hele animasjonen, inkludert røyk som sprer seg etter siste treff.
-const AIR_DURATION_MS = 3300;
+const AIR_DURATION_MS = 4000;
 // Hvor langt flyet starter og slutter utenfor første og siste celle.
 const AIR_MARGIN_UNITS = 260;
 // Hvor lenge bomben faller før den treffer.
