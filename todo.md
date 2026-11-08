@@ -51,16 +51,27 @@ oppfølgingspunktet over viser at `exports` peker på ESM-byggene.
 
 ## Backlog (lavere prioritet, ta etter hvert)
 
-- TypeScript-rewrite (kun ved en større refaktor i fremtiden).
-- Persistens av matcher (databaseintegrasjon med boardgame.io
-  DB-adapter).
-- AI-motspiller (det finnes allerede en stub i `Game.js` under
-  `ai.enumerate`).
-- Lyd-effekter for trekk og våpen.
-- Animasjon når et våpen utløses.
-- Spectator-modus.
-- Legg til noe som knytter brettet visuelt til navnet på territoriene?
 - Gi de strategiske våpnene ulik sannsynlighet. I dag plukkes ett av
   våpnene med lik sjanse via `random.Die(strategicWeapons.length)` i
-  `Game.js`. Vekting bør gjøre kraftigere våpen sjeldnere (f.eks. Dirty
-  Nuke sjelden, Artillery vanlig).
+  `Game.js`. Innfør en vekttabell og en liten funksjon som velger med
+  vekter via `random.Number()` (deterministisk i tester). Kraftigere
+  våpen skal være sjeldnere (f.eks. Dirty Nuke sjelden, Artillery vanlig).
+- Knytt brettet tydeligere til territorienavnene. I dag finnes navnet
+  bare som `title`-tooltip, som ikke virker på mobil. Vis navnet i en fast
+  infolinje under brettet ved trykk eller hover, og legg til `aria-label`.
+- AI-motspiller. Det finnes en stub i `Game.js` under `ai.enumerate`, men
+  den foreslår bare `clickCell` på tomme celler og ignorerer invasjon,
+  våpen og recycle. Krever også en lokal modus (uten server) i `App.jsx`.
+  Start med en enkel heuristikk.
+- Animasjon og lyd når et våpen utløses. Designes sammen, tas opp i
+  animasjonsdiskusjonen.
+- Rett loggtekst ved recycling i `Game.js`: `recovers ${refund}% Rareium`
+  er feil, `refund` er et antall og ikke en prosent.
+- TypeScript-rewrite (kun ved en større refaktor i fremtiden, jf.
+  PLAN.md).
+
+## Avvist (backlog)
+
+- Persistens av matcher (databaseintegrasjon). Strider mot det bevisste
+  valget i PLAN.md: ingen database, server-restart kan resette matcher.
+- Spectator-modus. Droppet 8. november 2026, ikke behov.
