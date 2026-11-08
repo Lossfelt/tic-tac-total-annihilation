@@ -153,6 +153,89 @@ export function GetSurroundingCells(id, boardSize = BOARD_SIZE) {
 // aldri trenger en klient-sendt navneliste (som ville vært spoofbar).
 const playerToken = (playerID) => `__P${playerID}__`;
 
+function isCellId(id) {
+  return Number.isInteger(id) && id >= 0 && id < TOTAL_CELLS;
+}
+
+// Server-side validering av målet. UI-et sender alltid gyldige mål, men
+// serveren skal ikke stole på klienten.
+function isValidWeaponTarget(weapon, input) {
+  if (weapon === 'Air Strike') {
+    return (
+      Array.isArray(input) &&
+      input.length === 3 &&
+      input.every(isCellId) &&
+      new Set(input).size === 3 &&
+      IsRow(input)
+    );
+  }
+  return isCellId(input);
+}
+
+// Hendelsen klienten spiller av som animasjon. `before` er brettet slik det
+// så ut før våpenet traff, så alle klienter kan vise det frem til treffpunktet.
+// `version` økes for hver hendelse og er det klienten reagerer på.
+function recordWeaponEvent(G, type, cells, before) {
+  G.weaponEvent = {
+    type,
+    cells,
+    before,
+    version: (G.weaponEvent?.version ?? 0) + 1,
+  };
+}
+
+// Hvert våpen returnerer false hvis trekket er ugyldig.
+const WEAPON_HANDLERS = {
+  Artillery: ({ G, name, input }) => {
+    [input, ...GetNeighbors(input)].forEach((target) => {
+      G.cells[target] = null;
+      G.blink[target] = true;
+    });
+    G.log.unshift(
+      `${name} launches an Artillery Strike at ${territories[input]} and its neighbors!`,
+    );
+    G.lastCellAttacked = input;
+    return true;
+  },
+  'Air Strike': ({ G, name, input }) => {
+    G.log.unshift(
+      `${name} launches an Air Strike at ${input
+        .map((id) => territories[id])
+        .join(', ')}`,
+    );
+    input.forEach((id) => {
+      G.cells[id] = null;
+      G.blink[id] = true;
+    });
+    G.lastCellAttacked = input[2];
+    return true;
+  },
+  'Biological Warfare': ({ G, name, input, random }) => {
+    GetSurroundingCells(input).forEach((target) => {
+      if (random.Number() < BIO_DESTROY_CHANCE) {
+        G.cells[target] = null;
+        G.blink[target] = true;
+      }
+    });
+    G.log.unshift(
+      `${name} releases a Biological Weapon at ${territories[input]} and its surroundings!`,
+    );
+    G.lastCellAttacked = input;
+    return true;
+  },
+  'Dirty Nuke': ({ G, name, input }) => {
+    if (G.destroyed[input]) return false;
+    G.cells[input] = null;
+    G.destroyed[input] = true;
+    G.blink[input] = true;
+    G.log.unshift(
+      `${name} detonates a Dirty Nuke at ${territories[input]}, leaving it uninhabitable`,
+    );
+    G.lastCellAttacked = input;
+    return true;
+  },
+};
+
 export const TicTacToe = {
   name: 'TicTacToe',
 
@@ -175,6 +258,8 @@ export const TicTacToe = {
     // Rareium-nivået i det øyeblikket gjeldende våpen ble tildelt. Brukes
     // til å beregne refusjon ved recycle. Resettes når våpenet brukes opp.
     rareiumAtWeapon: Array(NUM_PLAYERS).fill(0),
+    // Siste våpenhendelse, brukt av klienten til å spille av animasjon.
+    weaponEvent: { type: null, cells: [], before: null, version: 0 },
   }),
 
   turn: {
@@ -222,6 +307,7 @@ export const TicTacToe = {
 
   moves: {
     clickCell: ({ G, playerID, random }, id) => {
+      if (!isCellId(id)) return INVALID_MOVE;
       G.blink.fill(false);
       G.blinkVersion++;
       const name = playerToken(playerID);
@@ -269,68 +355,23 @@ export const TicTacToe = {
       },
     },
     useStrategicWeapon: ({ G, playerID, random }, input) => {
+      const weapon = G.strategicWeapon[playerID];
+      if (!weapon || !isValidWeaponTarget(weapon, input)) return INVALID_MOVE;
+
+      const before = { cells: [...G.cells], destroyed: [...G.destroyed] };
       G.blink.fill(false);
       G.blinkVersion++;
       const name = playerToken(playerID);
-      const weapon = G.strategicWeapon[playerID];
+      const ok = WEAPON_HANDLERS[weapon]({ G, name, input, random });
+      if (!ok) return INVALID_MOVE;
 
-      if (weapon === 'Artillery') {
-        const targets = [input, ...GetNeighbors(input)];
-        targets.forEach((target) => {
-          G.cells[target] = null;
-          G.blink[target] = true;
-        });
-        G.log.unshift(
-          `${name} launches an Artillery Strike at ${territories[input]} and its neighbors!`,
-        );
-        G.lastCellAttacked = input;
-        G.strategicWeapon[playerID] = null;
-      } else if (weapon === 'Air Strike') {
-        if (input.length === 3 && IsRow(input)) {
-          G.log.unshift(
-            `${name} launches an Air Strike at ${input
-              .map((id) => territories[id])
-              .join(', ')}`,
-          );
-          input.forEach((id) => {
-            G.cells[id] = null;
-            G.blink[id] = true;
-          });
-          G.lastCellAttacked = input[2];
-          G.strategicWeapon[playerID] = null;
-        } else {
-          // Forhindre at klient-state henger igjen i ugyldig tilstand etter
-          // et avvist Air Strike-trekk.
-          G.blink.fill(false);
-          return INVALID_MOVE;
-        }
-      } else if (weapon === 'Biological Warfare') {
-        const targets = GetSurroundingCells(input);
-        targets.forEach((target) => {
-          if (random.Number() < BIO_DESTROY_CHANCE) {
-            G.cells[target] = null;
-            G.blink[target] = true;
-          }
-        });
-        G.log.unshift(
-          `${name} releases a Biological Weapon at ${territories[input]} and its surroundings!`,
-        );
-        G.lastCellAttacked = input;
-        G.strategicWeapon[playerID] = null;
-      } else if (weapon === 'Dirty Nuke') {
-        if (G.destroyed[input]) {
-          G.blink.fill(false);
-          return INVALID_MOVE;
-        }
-        G.cells[input] = null;
-        G.destroyed[input] = true;
-        G.blink[input] = true;
-        G.log.unshift(
-          `${name} detonates a Dirty Nuke at ${territories[input]}, leaving it uninhabitable`,
-        );
-        G.lastCellAttacked = input;
-        G.strategicWeapon[playerID] = null;
-      }
+      G.strategicWeapon[playerID] = null;
+      recordWeaponEvent(
+        G,
+        weapon,
+        Array.isArray(input) ? [...input] : [input],
+        before,
+      );
     },
   },
 

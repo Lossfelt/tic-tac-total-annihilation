@@ -1,6 +1,13 @@
 import './Board.css';
 import { useState, useEffect } from 'react';
 import { RECYCLE_REFUND_RATIO, formatLogEntry, territories } from './Game.js';
+import NukeAnimation from './NukeAnimation.jsx';
+import { NUKE_DURATION_MS, NUKE_IMPACT_MS } from './weaponAnimation.js';
+
+const NO_EVENT = { type: null, cells: [], before: null, version: 0 };
+
+const prefersReducedMotion = () =>
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
 const WEAPON_TARGET_COUNT = {
   'Air Strike': 3,
@@ -79,6 +86,38 @@ export function TicTacToeBoard({
   const [specialMoveActive, setSpecialMoveActive] = useState(false);
   const [targetsOfSpecialMove, setTargetsOfSpecialMove] = useState([]);
   const [recyclePending, setRecyclePending] = useState(false);
+
+  // Dirty Nuke-animasjon. Serveren har alt byttet brettet når klienten får
+  // hendelsen, så vi viser brettet fra før treffet (event.before) frem til
+  // lysglimtet, og blokkerer trekk mens animasjonen går.
+  //   idle: ingen animasjon
+  //   before: viser brettet fra før treffet
+  //   after: viser det nye brettet, animasjonen spilles fortsatt
+  // seenVersion starter på gjeldende versjon, så en reload eller en sen
+  // tilkobling spiller ikke av gamle hendelser.
+  const event = G.weaponEvent ?? NO_EVENT;
+  const [seenVersion, setSeenVersion] = useState(event.version);
+  const [nukePhase, setNukePhase] = useState('idle');
+  if (event.version !== seenVersion) {
+    setSeenVersion(event.version);
+    if (
+      event.type === 'Dirty Nuke' &&
+      event.before &&
+      !prefersReducedMotion()
+    ) {
+      setNukePhase('before');
+    }
+  }
+  useEffect(() => {
+    if (nukePhase === 'idle') return undefined;
+    const isBefore = nukePhase === 'before';
+    const next = isBefore ? 'after' : 'idle';
+    const delay = isBefore ? NUKE_IMPACT_MS : NUKE_DURATION_MS - NUKE_IMPACT_MS;
+    const timer = setTimeout(() => setNukePhase(next), delay);
+    return () => clearTimeout(timer);
+  }, [nukePhase]);
+  const animating = nukePhase !== 'idle';
+  const shown = nukePhase === 'before' ? event.before : G;
 
   const myWeapon = G.strategicWeapon[playerID];
   const myRareium = G.Rareium[playerID];
@@ -164,10 +203,10 @@ export function TicTacToeBoard({
 
   const cells = [];
   for (let id = 0; id < 16; id++) {
-    const owner = G.cells[id];
-    const isDestroyed = G.destroyed?.[id] ?? false;
+    const owner = shown.cells[id];
+    const isDestroyed = shown.destroyed?.[id] ?? false;
     const isSelected = targetsOfSpecialMove.includes(id);
-    const isBlinking = G.blink[id];
+    const isBlinking = !animating && G.blink[id];
     const isWinning = winningCells.has(id);
 
     // En destroyed celle kan ikke nuke-es på nytt, men kan brukes som
@@ -200,6 +239,7 @@ export function TicTacToeBoard({
           }
           onClick={() => clickCell(id)}
           disabled={
+            animating ||
             (isDestroyed && (!specialMoveActive || blockedForSpecial)) ||
             (!isActive && !specialMoveActive)
           }
@@ -246,6 +286,7 @@ export function TicTacToeBoard({
           <table className="board">
             <tbody>{tbody}</tbody>
           </table>
+          {animating && <NukeAnimation key={event.version} />}
           {gameover && (
             <div className={`winner-overlay winner-overlay-${winnerID}`}>
               <div className="winner-overlay-name">{winnerName}</div>
@@ -287,7 +328,7 @@ export function TicTacToeBoard({
                   myWeapon ? 'armed' : 'unarmed'
                 }`}
                 onClick={handleSpecialMoveClick}
-                disabled={!isActive || !myWeapon}
+                disabled={animating || !isActive || !myWeapon}
                 title={
                   myWeapon
                     ? WEAPON_META[myWeapon].description
@@ -311,7 +352,9 @@ export function TicTacToeBoard({
                 type="button"
                 className="recycle-button"
                 onClick={handleRecycleClick}
-                disabled={!isActive || !myWeapon || specialMoveActive}
+                disabled={
+                  animating || !isActive || !myWeapon || specialMoveActive
+                }
                 title={
                   myWeapon
                     ? `Recycle weapon for ${refundPreview}% Rareium`

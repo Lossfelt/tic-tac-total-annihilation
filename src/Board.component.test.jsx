@@ -7,9 +7,11 @@
 // Spillreglene testes i Game.test.js. Her er `moves` en mock, så testene sier
 // bare hva brettet ber serveren om, ikke hva serveren gjør med det.
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { act } from 'react';
 import { render, screen, cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TicTacToeBoard } from './Board.jsx';
+import { NUKE_DURATION_MS, NUKE_IMPACT_MS } from './weaponAnimation.js';
 
 afterEach(cleanup);
 
@@ -26,6 +28,7 @@ function makeProps(overrides = {}) {
       Rareium: { 0: 50, 1: 50 },
       rareiumAtWeapon: { 0: 100, 1: 100 },
       strategicWeapon: { 0: null, 1: null },
+      weaponEvent: { type: null, cells: [], before: null, version: 0 },
       ...gOverrides,
     },
     ctx: { currentPlayer: '0', gameover: null, ...ctxOverrides },
@@ -204,5 +207,81 @@ describe('recycle-bekreftelse', () => {
     // Spilleren får et nytt våpen. Dialogen skal ikke komme tilbake av seg selv.
     rerender(<TicTacToeBoard {...props} />);
     expect(confirmDialog()).toBeNull();
+  });
+});
+
+describe('Dirty Nuke-animasjon', () => {
+  const nukeEvent = (version, before) => ({
+    type: 'Dirty Nuke',
+    cells: [5],
+    version,
+    before,
+  });
+  // Brettet etter treffet: celle 5 er ødelagt. Før: eid av spiller 1.
+  const afterG = (version) => ({
+    destroyed: Object.assign(Array(16).fill(false), { 5: true }),
+    weaponEvent: nukeEvent(version, {
+      cells: Object.assign(Array(16).fill(null), { 5: '1' }),
+      destroyed: Array(16).fill(false),
+    }),
+  });
+  const overlay = () => screen.queryByTestId('nuke-animation');
+
+  afterEach(() => vi.useRealTimers());
+
+  it('spiller ikke av en gammel hendelse ved første visning', () => {
+    render(<TicTacToeBoard {...makeProps({ G: afterG(3) })} />);
+
+    expect(overlay()).toBeNull();
+  });
+
+  it('spiller av animasjonen når en ny hendelse kommer', () => {
+    const props = makeProps();
+    const { rerender } = render(<TicTacToeBoard {...props} />);
+
+    rerender(<TicTacToeBoard {...makeProps({ G: afterG(1) })} />);
+
+    expect(overlay()).not.toBeNull();
+  });
+
+  it('viser brettet fra før treffet frem til lysglimtet, så det nye', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<TicTacToeBoard {...makeProps()} />);
+    rerender(<TicTacToeBoard {...makeProps({ G: afterG(1) })} />);
+
+    // Før treffet: cellen er eid, ikke ødelagt.
+    expect(cellButtons()[5].className).toContain('cell-canadia');
+    expect(cellButtons()[5].className).not.toContain('cell-destroyed');
+
+    act(() => vi.advanceTimersByTime(NUKE_IMPACT_MS));
+
+    expect(cellButtons()[5].className).toContain('cell-destroyed');
+    expect(cellButtons()[5].className).not.toContain('cell-canadia');
+    expect(overlay()).not.toBeNull();
+  });
+
+  it('blokkerer trekk mens animasjonen går, og slipper dem etterpå', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<TicTacToeBoard {...makeProps()} />);
+    rerender(<TicTacToeBoard {...makeProps({ G: afterG(1) })} />);
+
+    expect(cellButtons()[0].disabled).toBe(true);
+
+    // Fasene går i to steg, og hvert steg registrerer neste timer etter render.
+    act(() => vi.advanceTimersByTime(NUKE_IMPACT_MS));
+    act(() => vi.advanceTimersByTime(NUKE_DURATION_MS - NUKE_IMPACT_MS));
+
+    expect(overlay()).toBeNull();
+    expect(cellButtons()[0].disabled).toBe(false);
+  });
+
+  it('animerer ikke andre våpen enn Dirty Nuke', () => {
+    const { rerender } = render(<TicTacToeBoard {...makeProps()} />);
+    const G = afterG(1);
+    G.weaponEvent.type = 'Artillery';
+
+    rerender(<TicTacToeBoard {...makeProps({ G })} />);
+
+    expect(overlay()).toBeNull();
   });
 });
