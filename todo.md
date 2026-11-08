@@ -103,19 +103,16 @@ cellevalg ellers tilfeldig). Tallene er andel seiere for spiller 0 mot 1 når
 de to bruker ulike enkle strategier. Dette er enkle bots, ikke optimalt spill.
 
 - Hamstring lønner seg ikke. Å bruke våpen med 95 % sjanse slo å spare dem
-  (5 %) med 63 mot 37, og aldri å bruke våpen tapte 40 mot 60. Rareium kan
-  likevel vokse ubegrenset mens man holder et våpen (opptil 566 i målingen),
-  uten effekt. Rareium bør kappes ved 100 eller slutte å samles mens man
-  holder et våpen, for å unngå forvirrende tall.
+  (5 %) med 63 mot 37. Gjort: Rareium er kappet ved 100 (`RAREIUM_MAX`), så
+  tallet vokser ikke lenger uten grense mens man holder et våpen.
 - Recycle er ikke en for sterk reroll. Å resirkulere 90 % av gangene ga 6,2
   våpen per parti mot 3,5, men tapte 39 mot 61 fordi våpnene sjelden brukes.
   Ingen endring nødvendig.
-- Invasjon (20 %) er for svak. En spiller som angriper fiendeceller i 90 % av
-  trekkene vant 0,5 % mot en som aldri angriper. Ved 50 % angrep mot 5 % ble
-  det 16 mot 84. Ved 40 % suksess ble det 35 mot 66, og ved 50 % suksess ble
-  det 50 mot 49 (jevnt). Anbefaling: heve `INVASION_SUCCESS_CHANCE` mot 40
-  til 50 %, og spille litt for å se om det gjør spillet for aggressivt.
-  Grunnlinjen (begge tilfeldige) går fra 52 til 55 % for spiller 0 ved 50 %.
+- Invasjon var for svak. Med 20 % vant en spiller som angriper i 90 % av
+  trekkene 0,5 % mot en som aldri angriper. Gjort: økt til 50 %. Ny måling
+  (600 partier): aggressiv mot passiv ble 46 mot 53, altså omtrent jevnt, og
+  to tilfeldige spillere gir 52 mot 47. Median ca. 55 trekk. Spill litt for å se
+  om 50 % gjør spillet for aggressivt.
 - Snøballeffekt er moderat. Lederen etter 12 trekk vinner 56 til 60 % av
   partiene. Ingen comeback-bonus nødvendig nå.
 - Første spiller har en liten fordel: 52 mot 47 % (resten uavgjort).
