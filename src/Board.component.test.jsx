@@ -146,6 +146,34 @@ describe('strategiske våpen: målvalg', () => {
     expect(props.moves.useStrategicWeapon).not.toHaveBeenCalled();
     expect(props.moves.clickCell).toHaveBeenCalledWith(3);
   });
+
+  it('lar spilleren fjerne et valgt Air Strike-mål', async () => {
+    const user = userEvent.setup();
+    const props = armed('Air Strike');
+    render(<TicTacToeBoard {...props} />);
+
+    await armWeapon(user);
+    await clickCells(user, [0, 1, 0]);
+
+    expect(screen.getByText('1 / 3 selected')).toBeDefined();
+  });
+
+  it('beholder valget og viser melding når Air Strike ikke er på rad', async () => {
+    const user = userEvent.setup();
+    const props = armed('Air Strike');
+    render(<TicTacToeBoard {...props} />);
+
+    await armWeapon(user);
+    await clickCells(user, [0, 1, 5]);
+
+    expect(props.moves.useStrategicWeapon).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toMatch(/straight line/);
+    expect(screen.getByText('3 / 3 selected')).toBeDefined();
+
+    // Retter valget: fjern 5, velg 2.
+    await clickCells(user, [5, 2]);
+    expect(props.moves.useStrategicWeapon).toHaveBeenCalledWith([0, 1, 2]);
+  });
 });
 
 describe('recycle-bekreftelse', () => {

@@ -1,7 +1,12 @@
 import './Board.css';
 import './Effects.css';
 import { useState, useEffect } from 'react';
-import { RECYCLE_REFUND_RATIO, formatLogEntry, territories } from './Game.js';
+import {
+  IsRow,
+  RECYCLE_REFUND_RATIO,
+  formatLogEntry,
+  territories,
+} from './Game.js';
 import NukeAnimation from './NukeAnimation.jsx';
 import AirStrikeAnimation from './AirStrikeAnimation.jsx';
 import ArtilleryAnimation from './ArtilleryAnimation.jsx';
@@ -95,6 +100,7 @@ export function TicTacToeBoard({
   const [specialMoveActive, setSpecialMoveActive] = useState(false);
   const [targetsOfSpecialMove, setTargetsOfSpecialMove] = useState([]);
   const [recyclePending, setRecyclePending] = useState(false);
+  const [specialError, setSpecialError] = useState('');
 
   const { anim, animating, shown } = useWeaponAnimation(G);
 
@@ -126,6 +132,7 @@ export function TicTacToeBoard({
     } else {
       setSpecialMoveActive(false);
       setTargetsOfSpecialMove([]);
+      setSpecialError('');
     }
   };
 
@@ -148,9 +155,27 @@ export function TicTacToeBoard({
   // sendes trekket to ganger.
   const specialAttack = (id) => {
     const requiredCount = WEAPON_TARGET_COUNT[specialMoveActive];
+    setSpecialError('');
+    // Klikk på et valgt mål fjerner det igjen.
+    if (requiredCount > 1 && targetsOfSpecialMove.includes(id)) {
+      setTargetsOfSpecialMove(targetsOfSpecialMove.filter((t) => t !== id));
+      return;
+    }
+    // Et ugyldig fullt valg står igjen til spilleren fjerner en celle.
+    if (requiredCount > 1 && targetsOfSpecialMove.length >= requiredCount) {
+      setSpecialError('Deselect a cell first, then pick another.');
+      return;
+    }
     const targets = [...targetsOfSpecialMove, id];
     if (!requiredCount || targets.length < requiredCount) {
       setTargetsOfSpecialMove(targets);
+      return;
+    }
+    // Air Strike vil ha tre på rad. Er valget ugyldig beholdes det, så
+    // spilleren kan rette det i stedet for å miste våpenmodusen.
+    if (requiredCount > 1 && !IsRow(targets)) {
+      setTargetsOfSpecialMove(targets);
+      setSpecialError('The three cells must be in a straight line.');
       return;
     }
     // Air Strike vil ha hele array-en som mål; de andre tar en enkelt celle.
@@ -413,6 +438,11 @@ export function TicTacToeBoard({
                 <div className="weapon-instruction-count">
                   {targetsOfSpecialMove.length} / {targetCount} selected
                 </div>
+                {specialError && (
+                  <div className="weapon-instruction-error" role="alert">
+                    {specialError}
+                  </div>
+                )}
               </div>
             )}
           </div>
