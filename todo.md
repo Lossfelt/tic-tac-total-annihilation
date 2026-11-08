@@ -134,11 +134,13 @@ en simulering før noe endres.
 - `--color-text-dim` på bakgrunnen har kontrast på ca. 2,4:1.
 - Emoji-ikoner (våpen, logg) passer dårlig med stilen. Bytt til SVG.
 
-**Flere animasjoner (foreslått)**
+**Flere animasjoner**
 
-- Revolt, invasjon (erobret og mislyktes), seierslinje, våpen mottatt,
-  stempel når et territorium tas, turbytte, og drivende aske i lobbyen.
-  Se status i commit-historikken.
+- Gjort (PR 42): revolt, invasjon (erobret og mislyktes), seierslinje, våpen
+  mottatt og stempel når et territorium tas.
+- Gjenstår: banner ved turbytte og drivende aske i lobbyen.
+- Alle animasjoner er sett som enkeltframes, men ikke prøvd i ekte
+  multiplayer med to klienter.
 
 ## Avvist (backlog)
 
