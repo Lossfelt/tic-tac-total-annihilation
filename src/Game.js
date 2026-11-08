@@ -423,10 +423,28 @@ export const TicTacToe = {
   minPlayers: NUM_PLAYERS,
   maxPlayers: NUM_PLAYERS,
 
-  endIf: ({ G, ctx }) => {
+  // Motstanderens Rareium og våpen sendes ikke til klienten. Uten dette kan
+  // en spiller lese dem i nettverkstrafikken. Uten playerID (lokal modus eller
+  // test) vises alt.
+  playerView: ({ G, playerID }) => {
+    if (playerID === null || playerID === undefined) return G;
+    const mine = (list, hidden) =>
+      list.map((value, id) =>
+        String(id) === String(playerID) ? value : hidden,
+      );
+    return {
+      ...G,
+      Rareium: mine(G.Rareium, 0),
+      rareiumAtWeapon: mine(G.rareiumAtWeapon, 0),
+      strategicWeapon: mine(G.strategicWeapon, null),
+    };
+  },
+
+  endIf: ({ G }) => {
     const winningLine = GetWinningLine(G.cells);
     if (winningLine) {
-      return { winner: ctx.currentPlayer, winningLine };
+      // Vinneren er eieren av linjen, ikke nødvendigvis den som har turen.
+      return { winner: G.cells[winningLine[0]], winningLine };
     }
     // Domination: hvis alle ikke-destroyed celler er eid av samme spiller, og
     // ingen tomme celler er igjen, vinner den spilleren. Dekker edge-casen

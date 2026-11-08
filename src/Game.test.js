@@ -875,3 +875,48 @@ describe('formatLogEntry', () => {
     expect(formatLogEntry('__P1__ acts', undefined)).toBe('Player 1 acts');
   });
 });
+
+describe('endIf: vinner er eieren av linjen', () => {
+  it('velger linjens eier, ikke spilleren som har turen', () => {
+    const G = baseG();
+    [0, 1, 2, 3].forEach((i) => {
+      G.cells[i] = '1';
+    });
+
+    const result = TicTacToe.endIf({ G, ctx: { currentPlayer: '0' } });
+
+    expect(result.winner).toBe('1');
+  });
+});
+
+describe('playerView', () => {
+  const { playerView } = TicTacToe;
+  const makeG = () => {
+    const G = baseG();
+    G.Rareium = [30, 70];
+    G.strategicWeapon = ['Dirty Nuke', 'Artillery'];
+    G.rareiumAtWeapon = [10, 20];
+    return G;
+  };
+
+  it('skjuler motstanderens Rareium og våpen, men viser egne', () => {
+    const view = playerView({ G: makeG(), playerID: '0' });
+
+    expect(view.Rareium).toEqual([30, 0]);
+    expect(view.strategicWeapon).toEqual(['Dirty Nuke', null]);
+    expect(view.rareiumAtWeapon).toEqual([10, 0]);
+  });
+
+  it('endrer ikke selve spilltilstanden', () => {
+    const G = makeG();
+    playerView({ G, playerID: '1' });
+
+    expect(G.Rareium).toEqual([30, 70]);
+  });
+
+  it('viser alt uten playerID', () => {
+    const G = makeG();
+
+    expect(playerView({ G, playerID: null })).toBe(G);
+  });
+});
