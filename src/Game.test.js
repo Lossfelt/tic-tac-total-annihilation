@@ -270,6 +270,7 @@ const baseG = () => ({
   log: [],
   blink: Array(TOTAL_CELLS).fill(false),
   blinkVersion: 0,
+  blinkKind: Array(TOTAL_CELLS).fill(null),
   lastCellAttacked: null,
   strategicWeapon: Array(NUM_PLAYERS).fill(null),
   Rareium: Array(NUM_PLAYERS).fill(0),
@@ -621,6 +622,89 @@ describe('useStrategicWeapon: Biological Warfare, hendelse', () => {
     play(G, 5, []);
 
     expect(G.weaponEvent.affected).toEqual([]);
+  });
+});
+
+describe('clickCell: hva som skjedde med cellen', () => {
+  const clickCell = TicTacToe.moves.clickCell;
+  const play = (G, id, roll) =>
+    clickCell({ G, playerID: '0', random: { Number: () => roll } }, id);
+
+  it("merker en ledig celle som 'claim'", () => {
+    const G = baseG();
+
+    play(G, 3, 1);
+
+    expect(G.cells[3]).toBe('0');
+    expect(G.blink[3]).toBe(true);
+    expect(G.blinkKind[3]).toBe('claim');
+  });
+
+  it("merker en vellykket invasjon som 'conquer'", () => {
+    const G = baseG();
+    G.cells[3] = '1';
+
+    play(G, 3, 0);
+
+    expect(G.cells[3]).toBe('0');
+    expect(G.blinkKind[3]).toBe('conquer');
+  });
+
+  it("merker en mislykket invasjon som 'fail'", () => {
+    const G = baseG();
+    G.cells[3] = '1';
+
+    play(G, 3, 0.99);
+
+    expect(G.cells[3]).toBe('1');
+    expect(G.blinkKind[3]).toBe('fail');
+  });
+
+  it('nullstiller forrige trekks merker ved neste trekk', () => {
+    const G = baseG();
+    play(G, 3, 1);
+    play(G, 4, 1);
+
+    expect(G.blink[3]).toBe(false);
+    expect(G.blinkKind[3]).toBeNull();
+    expect(G.blinkKind[4]).toBe('claim');
+  });
+
+  it('nullstiller merkene også når et våpen brukes', () => {
+    const G = baseG();
+    play(G, 3, 1);
+    G.strategicWeapon[0] = 'Dirty Nuke';
+    TicTacToe.moves.useStrategicWeapon(
+      { G, playerID: '0', random: { Number: () => 0 } },
+      9,
+    );
+
+    expect(G.blinkKind[3]).toBeNull();
+    expect(G.blink[9]).toBe(true);
+    expect(G.blinkKind[9]).toBeNull();
+  });
+});
+
+describe('revolt (onEnd)', () => {
+  it("merker cellen som 'revolt' og tømmer den", () => {
+    const G = baseG();
+    G.cells[2] = '1';
+    G.lastCellAttacked = null;
+
+    TicTacToe.turn.onEnd({ G, random: { Number: () => 0 } });
+
+    expect(G.cells[2]).toBeNull();
+    expect(G.blinkKind[2]).toBe('revolt');
+  });
+
+  it('lar cellen som ble angrepet denne runden i fred', () => {
+    const G = baseG();
+    G.cells[2] = '1';
+    G.lastCellAttacked = 2;
+
+    TicTacToe.turn.onEnd({ G, random: { Number: () => 0 } });
+
+    expect(G.cells[2]).toBe('1');
   });
 });
 

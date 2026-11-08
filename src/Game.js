@@ -187,6 +187,19 @@ function recordWeaponEvent(G, type, cells, before, affected = []) {
   };
 }
 
+// Merker en celle for animasjon på klienten. `kind` sier hva som skjedde.
+function markCell(G, id, kind = null) {
+  G.blink[id] = true;
+  if (G.blinkKind) G.blinkKind[id] = kind;
+}
+
+// Nullstiller blinkene fra forrige trekk og starter en ny blink-runde.
+function resetBlink(G) {
+  G.blink.fill(false);
+  G.blinkKind?.fill(null);
+  G.blinkVersion++;
+}
+
 // Hvert våpen returnerer false hvis trekket er ugyldig.
 const WEAPON_HANDLERS = {
   Artillery: ({ G, name, input }) => {
@@ -257,6 +270,9 @@ export const TicTacToe = {
     destroyed: Array(TOTAL_CELLS).fill(false),
     log: [],
     blink: Array(TOTAL_CELLS).fill(false),
+    // Hva som skjedde med en blinkende celle: 'claim', 'conquer', 'fail' eller
+    // 'revolt'. Null for våpentreff. Klienten velger effekt etter dette.
+    blinkKind: Array(TOTAL_CELLS).fill(null),
     // Inkrementeres ved hver blink-hendelse. Klienten bruker dette i React
     // `key` slik at en celle som blinker to ganger etter hverandre faktisk
     // får CSS-animasjonen restartet (uten tvinges remount beholder DOM den
@@ -307,7 +323,7 @@ export const TicTacToe = {
           G.log.unshift(
             `The people of ${territories[i]} revolt against foreign rule`,
           );
-          G.blink[i] = true;
+          markCell(G, i, 'revolt');
           revolted = true;
         }
       }
@@ -318,15 +334,15 @@ export const TicTacToe = {
   moves: {
     clickCell: ({ G, playerID, random }, id) => {
       if (!isCellId(id)) return INVALID_MOVE;
-      G.blink.fill(false);
-      G.blinkVersion++;
+      resetBlink(G);
       const name = playerToken(playerID);
       if (G.destroyed[id]) {
         return INVALID_MOVE;
       } else if (G.cells[id] === playerID) {
         return INVALID_MOVE;
       } else if (G.cells[id] !== null) {
-        if (random.Number() < INVASION_SUCCESS_CHANCE) {
+        const conquered = random.Number() < INVASION_SUCCESS_CHANCE;
+        if (conquered) {
           G.cells[id] = playerID;
           G.log.unshift(`${name} conquers ${territories[id]}`);
         } else {
@@ -334,12 +350,12 @@ export const TicTacToe = {
             `${name} attempts to invade ${territories[id]}, but fails`,
           );
         }
-        G.blink[id] = true;
+        markCell(G, id, conquered ? 'conquer' : 'fail');
         G.lastCellAttacked = id;
       } else {
         G.cells[id] = playerID;
         G.log.unshift(`${name} claims ${territories[id]}`);
-        G.blink[id] = true;
+        markCell(G, id, 'claim');
         G.lastCellAttacked = id;
       }
     },
@@ -363,8 +379,7 @@ export const TicTacToe = {
       move: ({ G, playerID }) => {
         const weapon = G.strategicWeapon[playerID];
         if (!weapon) return INVALID_MOVE;
-        G.blink.fill(false);
-        G.blinkVersion++;
+        resetBlink(G);
         const refund = Math.round(
           G.rareiumAtWeapon[playerID] * RECYCLE_REFUND_RATIO,
         );
@@ -382,8 +397,7 @@ export const TicTacToe = {
       if (!weapon || !isValidWeaponTarget(weapon, input)) return INVALID_MOVE;
 
       const before = { cells: [...G.cells], destroyed: [...G.destroyed] };
-      G.blink.fill(false);
-      G.blinkVersion++;
+      resetBlink(G);
       const name = playerToken(playerID);
       const affected = [];
       const ok = WEAPON_HANDLERS[weapon]({

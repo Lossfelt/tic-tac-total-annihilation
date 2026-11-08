@@ -199,6 +199,8 @@ export function TicTacToeBoard({
     if (owner === '1') classes.push('cell-canadia');
     if (isDestroyed) classes.push('cell-destroyed');
     if (isBlinking) classes.push('blink');
+    const blinkKind = G.blinkKind?.[id];
+    if (isBlinking && blinkKind) classes.push(`fx-${blinkKind}`);
     if (isSelected) classes.push('selected');
     if (isTargetable) classes.push('targetable');
     if (isWinning) classes.push('winning');
