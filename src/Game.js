@@ -1,11 +1,11 @@
 import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js';
+import { strategicWeapons, BIO_DESTROY_CHANCE } from './weapons.js';
 
 export const BOARD_SIZE = 4;
 export const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
 export const NUM_PLAYERS = 2;
 export const REVOLT_CHANCE = 0.05;
 export const INVASION_SUCCESS_CHANCE = 0.2;
-export const BIO_DESTROY_CHANCE = 0.5;
 export const RAREIUM_WEAPON_CHANCE_DIVISOR = 100;
 export const RECYCLE_REFUND_RATIO = 0.7;
 
@@ -28,12 +28,7 @@ export const territories = [
   'the Sunset Swamps',
 ];
 
-export const strategicWeapons = [
-  'Artillery',
-  'Air Strike',
-  'Biological Warfare',
-  'Dirty Nuke',
-];
+export { strategicWeapons, BIO_DESTROY_CHANCE };
 
 const positions = [
   // Horizontal lines

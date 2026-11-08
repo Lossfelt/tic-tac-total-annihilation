@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import {
   IsRow,
   RECYCLE_REFUND_RATIO,
+  TOTAL_CELLS,
   formatLogEntry,
   territories,
 } from './Game.js';
+import { WEAPONS, strategicWeapons } from './weapons.js';
 import NukeAnimation from './NukeAnimation.jsx';
 import AirStrikeAnimation from './AirStrikeAnimation.jsx';
 import ArtilleryAnimation from './ArtilleryAnimation.jsx';
@@ -14,46 +16,6 @@ import BioAnimation from './BioAnimation.jsx';
 import WinEffect from './WinEffect.jsx';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
 import { useJustArmed } from './useJustArmed.js';
-
-// Våpen som kan gis med testknappen (bare i utviklingsmodus).
-const DEBUG_WEAPONS = [
-  'Dirty Nuke',
-  'Air Strike',
-  'Artillery',
-  'Biological Warfare',
-];
-
-const WEAPON_TARGET_COUNT = {
-  'Air Strike': 3,
-  Artillery: 1,
-  'Biological Warfare': 1,
-  'Dirty Nuke': 1,
-};
-
-const WEAPON_META = {
-  Artillery: {
-    icon: '💥',
-    description: 'Destroys 1 target and its 4 orthogonal neighbours.',
-    instruction: 'Select 1 target cell',
-  },
-  'Air Strike': {
-    icon: '✈️',
-    description:
-      'Destroys 3 cells in a row (horizontal, vertical or diagonal).',
-    instruction: 'Select 3 cells in a row',
-  },
-  'Biological Warfare': {
-    icon: '☣️',
-    description: 'Each cell in a 3x3 area has a 50% chance to be destroyed.',
-    instruction: 'Select 1 target cell (3x3 area)',
-  },
-  'Dirty Nuke': {
-    icon: '☢️',
-    description:
-      'Permanently destroys 1 target cell. The cell cannot be claimed again.',
-    instruction: 'Select 1 target cell',
-  },
-};
 
 // Velger ikon for en loggoppføring basert på keyword. Holdt enkelt: loggen
 // er strenger, og typene er gjenkjennelige fra unike fraser i Game.js.
@@ -154,7 +116,7 @@ export function TicTacToeBoard({
   // et trekk som bieffekt av en render er skjørt: kjører effekten på nytt,
   // sendes trekket to ganger.
   const specialAttack = (id) => {
-    const requiredCount = WEAPON_TARGET_COUNT[specialMoveActive];
+    const requiredCount = WEAPONS[specialMoveActive].targetCount;
     setSpecialError('');
     // Klikk på et valgt mål fjerner det igjen.
     if (requiredCount > 1 && targetsOfSpecialMove.includes(id)) {
@@ -194,10 +156,10 @@ export function TicTacToeBoard({
   };
 
   const activeWeaponMeta = specialMoveActive
-    ? WEAPON_META[specialMoveActive]
+    ? WEAPONS[specialMoveActive]
     : null;
   const targetCount = specialMoveActive
-    ? WEAPON_TARGET_COUNT[specialMoveActive]
+    ? WEAPONS[specialMoveActive].targetCount
     : 0;
 
   const gameover = ctx.gameover;
@@ -207,7 +169,7 @@ export function TicTacToeBoard({
   const winningCells = new Set(gameover?.winningLine ?? []);
 
   const cells = [];
-  for (let id = 0; id < 16; id++) {
+  for (let id = 0; id < TOTAL_CELLS; id++) {
     const owner = shown.cells[id];
     const isDestroyed = shown.destroyed?.[id] ?? false;
     const isSelected = targetsOfSpecialMove.includes(id);
@@ -357,14 +319,14 @@ export function TicTacToeBoard({
                 disabled={animating || !isActive || !myWeapon}
                 title={
                   myWeapon
-                    ? WEAPON_META[myWeapon].description
+                    ? WEAPONS[myWeapon].description
                     : 'No strategic weapon available'
                 }
               >
                 {myWeapon ? (
                   <>
                     <span className="weapon-icon">
-                      {WEAPON_META[myWeapon].icon}
+                      {WEAPONS[myWeapon].icon}
                     </span>
                     <span className="weapon-name">{myWeapon}</span>
                   </>
@@ -393,7 +355,7 @@ export function TicTacToeBoard({
             </div>
 
             {import.meta.env.DEV &&
-              DEBUG_WEAPONS.map((weapon) => (
+              strategicWeapons.map((weapon) => (
                 <button
                   key={weapon}
                   type="button"
