@@ -290,6 +290,36 @@ describe('Dirty Nuke-animasjon', () => {
   });
 });
 
+describe('våpen mottatt', () => {
+  const weaponButton = () =>
+    screen.getByRole('button', {
+      name: /Dirty Nuke|Air Strike|Artillery|Biological|No weapon/,
+    });
+
+  it('har ingen effekt på et våpen som allerede finnes ved første visning', () => {
+    render(<TicTacToeBoard {...armed('Artillery')} />);
+
+    expect(weaponButton().className).not.toContain('just-armed');
+  });
+
+  it('spiller effekten når spilleren får et nytt våpen', () => {
+    const { rerender } = render(<TicTacToeBoard {...makeProps()} />);
+
+    rerender(<TicTacToeBoard {...armed('Artillery')} />);
+
+    expect(weaponButton().className).toContain('just-armed');
+  });
+
+  it('fjerner effekten når våpenet er brukt', () => {
+    const { rerender } = render(<TicTacToeBoard {...makeProps()} />);
+    rerender(<TicTacToeBoard {...armed('Artillery')} />);
+
+    rerender(<TicTacToeBoard {...makeProps()} />);
+
+    expect(weaponButton().className).not.toContain('just-armed');
+  });
+});
+
 describe('Air Strike-animasjon', () => {
   const ids = [4, 5, 6];
   const event = {

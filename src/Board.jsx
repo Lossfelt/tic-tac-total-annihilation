@@ -1,4 +1,5 @@
 import './Board.css';
+import './Effects.css';
 import { useState, useEffect } from 'react';
 import { RECYCLE_REFUND_RATIO, formatLogEntry, territories } from './Game.js';
 import NukeAnimation from './NukeAnimation.jsx';
@@ -6,6 +7,7 @@ import AirStrikeAnimation from './AirStrikeAnimation.jsx';
 import ArtilleryAnimation from './ArtilleryAnimation.jsx';
 import BioAnimation from './BioAnimation.jsx';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
+import { useJustArmed } from './useJustArmed.js';
 
 // Våpen som kan gis med testknappen (bare i utviklingsmodus).
 const DEBUG_WEAPONS = [
@@ -96,6 +98,7 @@ export function TicTacToeBoard({
   const { anim, animating, shown } = useWeaponAnimation(G);
 
   const myWeapon = G.strategicWeapon[playerID];
+  const armedCount = useJustArmed(myWeapon);
   const myRareium = G.Rareium[playerID];
   const rareiumPercent = Math.min(myRareium, 100);
   const refundPreview = Math.round(
@@ -311,9 +314,10 @@ export function TicTacToeBoard({
           <div className="weapon-panel">
             <div className="weapon-button-row">
               <button
+                key={`weapon-${armedCount}`}
                 className={`weapon-button ${specialMoveActive ? 'active' : ''} ${
                   myWeapon ? 'armed' : 'unarmed'
-                }`}
+                } ${armedCount > 0 && myWeapon ? 'just-armed' : ''}`}
                 onClick={handleSpecialMoveClick}
                 disabled={animating || !isActive || !myWeapon}
                 title={

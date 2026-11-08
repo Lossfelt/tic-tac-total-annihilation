@@ -1,0 +1,77 @@
+/* Små effekter på brettet: våpen mottatt, revolt, invasjon og seierslinje.
+   Alle tidene er korte og spilles én gang. Se også useJustArmed.js. */
+
+/* Våpen mottatt: knappen rister, ikonet spretter og en ring brer seg ut. */
+.weapon-button {
+  position: relative;
+}
+
+.weapon-button.just-armed {
+  animation: fx-armed-shake 600ms ease-out;
+}
+
+.weapon-button.just-armed .weapon-icon {
+  animation: fx-armed-icon 700ms cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.weapon-button.just-armed::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px solid var(--color-rust-bright);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  animation: fx-armed-burst 900ms ease-out forwards;
+}
+
+@keyframes fx-armed-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-5px);
+  }
+  30% {
+    transform: translateX(5px);
+  }
+  45% {
+    transform: translateX(-3px);
+  }
+  60% {
+    transform: translateX(3px);
+  }
+  80% {
+    transform: translateX(-1px);
+  }
+}
+
+@keyframes fx-armed-icon {
+  0% {
+    transform: scale(0.2) rotate(-90deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes fx-armed-burst {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(245, 147, 77, 0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35, 1.7);
+    box-shadow: 0 0 0 rgba(245, 147, 77, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weapon-button.just-armed,
+  .weapon-button.just-armed .weapon-icon,
+  .weapon-button.just-armed::after {
+    animation: none;
+  }
+}
