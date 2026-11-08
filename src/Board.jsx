@@ -1,39 +1,19 @@
 import './Board.css';
 import './Effects.css';
-import { useState, useEffect } from 'react';
-import {
-  IsRow,
-  RECYCLE_REFUND_RATIO,
-  TOTAL_CELLS,
-  territories,
-} from './Game.js';
-import { WEAPONS, strategicWeapons } from './weapons.js';
-import { formatLogEntry, logIcon } from './gameLog.js';
 import NukeAnimation from './NukeAnimation.jsx';
 import AirStrikeAnimation from './AirStrikeAnimation.jsx';
 import ArtilleryAnimation from './ArtilleryAnimation.jsx';
 import BioAnimation from './BioAnimation.jsx';
 import WinEffect from './WinEffect.jsx';
+import { BoardGrid } from './BoardGrid.jsx';
+import { WeaponPanel } from './WeaponPanel.jsx';
+import { RareiumBar } from './RareiumBar.jsx';
+import { GameLog } from './GameLog.jsx';
+import { FactionMark } from './FactionMark.jsx';
+import { FACTION_NAME } from './factions.js';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
 import { useJustArmed } from './useJustArmed.js';
-
-const FACTION_NAME = {
-  0: 'Mexican Queendom',
-  1: 'Pan-Canadia Inuit Alliance',
-};
-
-const FACTION_ICON = {
-  0: '/Queendom_icon.png',
-  1: '/Pan-Canadia_icon.png',
-};
-
-const FactionMark = ({ playerID, size = '1em' }) => (
-  <img
-    src={FACTION_ICON[playerID]}
-    alt={FACTION_NAME[playerID]}
-    style={{ height: size, width: 'auto', verticalAlign: 'middle' }}
-  />
-);
+import { useWeaponTargeting } from './useWeaponTargeting.js';
 
 export function TicTacToeBoard({
   ctx,
@@ -44,182 +24,19 @@ export function TicTacToeBoard({
   isActive,
   onPlayAgain,
 }) {
-  const [specialMoveActive, setSpecialMoveActive] = useState(false);
-  const [targetsOfSpecialMove, setTargetsOfSpecialMove] = useState([]);
-  const [recyclePending, setRecyclePending] = useState(false);
-  const [specialError, setSpecialError] = useState('');
-
   const { anim, animating, shown } = useWeaponAnimation(G);
-
   const myWeapon = G.strategicWeapon[playerID];
   const armedCount = useJustArmed(myWeapon);
-  const myRareium = G.Rareium[playerID];
-  const rareiumPercent = Math.min(myRareium, 100);
-  const refundPreview = Math.round(
-    (G.rareiumAtWeapon?.[playerID] ?? 0) * RECYCLE_REFUND_RATIO,
-  );
-
-  // Lukk recycle-bekreftelsen hvis våpenet forsvinner (brukt opp, recycled
-  // ferdig, eller turen skifter til en spiller uten våpen).
-  //
-  // Selve dialogen sjekker `recyclePending && myWeapon`, så denne effekten
-  // påvirker ikke visningen. Den nullstiller flagget slik at dialogen ikke
-  // popper opp igjen av seg selv når spilleren senere får et nytt våpen. Å
-  // utlede tilstanden i stedet fungerer ikke: i lokal modus deler begge
-  // spillerne komponenten, så `myWeapon` forsvinner og kommer tilbake hver
-  // gang turen skifter.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!myWeapon && recyclePending) setRecyclePending(false);
-  }, [myWeapon, recyclePending]);
-
-  const handleSpecialMoveClick = () => {
-    if (!specialMoveActive) {
-      if (myWeapon) setSpecialMoveActive(myWeapon);
-    } else {
-      setSpecialMoveActive(false);
-      setTargetsOfSpecialMove([]);
-      setSpecialError('');
-    }
-  };
-
-  const handleRecycleClick = () => {
-    setRecyclePending(true);
-  };
-
-  const handleRecycleConfirm = () => {
-    moves.recycleStrategicWeapon();
-    setRecyclePending(false);
-  };
-
-  const handleRecycleCancel = () => {
-    setRecyclePending(false);
-  };
-
-  // Avfyrer våpenet i samme klikk som fullfører målutvalget. Dette lå
-  // tidligere i en useEffect som reagerte på at listen ble full, men å sende
-  // et trekk som bieffekt av en render er skjørt: kjører effekten på nytt,
-  // sendes trekket to ganger.
-  const specialAttack = (id) => {
-    const requiredCount = WEAPONS[specialMoveActive].targetCount;
-    setSpecialError('');
-    // Klikk på et valgt mål fjerner det igjen.
-    if (requiredCount > 1 && targetsOfSpecialMove.includes(id)) {
-      setTargetsOfSpecialMove(targetsOfSpecialMove.filter((t) => t !== id));
-      return;
-    }
-    // Et ugyldig fullt valg står igjen til spilleren fjerner en celle.
-    if (requiredCount > 1 && targetsOfSpecialMove.length >= requiredCount) {
-      setSpecialError('Deselect a cell first, then pick another.');
-      return;
-    }
-    const targets = [...targetsOfSpecialMove, id];
-    if (!requiredCount || targets.length < requiredCount) {
-      setTargetsOfSpecialMove(targets);
-      return;
-    }
-    // Air Strike vil ha tre på rad. Er valget ugyldig beholdes det, så
-    // spilleren kan rette det i stedet for å miste våpenmodusen.
-    if (requiredCount > 1 && !IsRow(targets)) {
-      setTargetsOfSpecialMove(targets);
-      setSpecialError('The three cells must be in a straight line.');
-      return;
-    }
-    // Air Strike vil ha hele array-en som mål; de andre tar en enkelt celle.
-    const arg = requiredCount === 1 ? targets[0] : targets;
-    moves.useStrategicWeapon(arg);
-    setTargetsOfSpecialMove([]);
-    setSpecialMoveActive(false);
-  };
+  const targeting = useWeaponTargeting(moves, myWeapon);
 
   const clickCell = (id) => {
-    if (specialMoveActive) {
-      specialAttack(id);
-    } else {
-      moves.clickCell(id);
-    }
+    if (targeting.active) targeting.pick(id);
+    else moves.clickCell(id);
   };
-
-  const activeWeaponMeta = specialMoveActive
-    ? WEAPONS[specialMoveActive]
-    : null;
-  const targetCount = specialMoveActive
-    ? WEAPONS[specialMoveActive].targetCount
-    : 0;
 
   const gameover = ctx.gameover;
   const winnerID = gameover?.winner;
-  const winnerName =
-    gameover && (matchData[winnerID]?.name || FACTION_NAME[winnerID]);
-  const winningCells = new Set(gameover?.winningLine ?? []);
-
-  const cells = [];
-  for (let id = 0; id < TOTAL_CELLS; id++) {
-    const owner = shown.cells[id];
-    const isDestroyed = shown.destroyed?.[id] ?? false;
-    const isSelected = targetsOfSpecialMove.includes(id);
-    const isBlinking = !animating && G.blink[id];
-    const isWinning = winningCells.has(id);
-
-    // En destroyed celle kan ikke nuke-es på nytt, men kan brukes som
-    // sentrum for område-våpen (Artillery / Air Strike / Bio Warfare) for å
-    // ramme cellene rundt.
-    const blockedForSpecial = isDestroyed && specialMoveActive === 'Dirty Nuke';
-    const isTargetable = specialMoveActive && !blockedForSpecial;
-
-    const classes = ['cell'];
-    if (owner === '0') classes.push('cell-queendom');
-    if (owner === '1') classes.push('cell-canadia');
-    if (isDestroyed) classes.push('cell-destroyed');
-    if (isBlinking) classes.push('blink');
-    const blinkKind = G.blinkKind?.[id];
-    if (isBlinking && blinkKind) classes.push(`fx-${blinkKind}`);
-    if (isSelected) classes.push('selected');
-    if (isTargetable) classes.push('targetable');
-    if (isWinning) classes.push('winning');
-
-    const buttonKey = isBlinking
-      ? `cell-${id}-blink-${G.blinkVersion}`
-      : `cell-${id}`;
-
-    cells.push(
-      <td key={id}>
-        <button
-          key={buttonKey}
-          className={classes.join(' ')}
-          type="button"
-          title={
-            isDestroyed ? `${territories[id]} (destroyed)` : territories[id]
-          }
-          onClick={() => clickCell(id)}
-          disabled={
-            animating ||
-            (isDestroyed && (!specialMoveActive || blockedForSpecial)) ||
-            (!isActive && !specialMoveActive)
-          }
-        >
-          {isDestroyed ? (
-            <span className="cell-destroyed-icon" aria-hidden="true">
-              ☢
-            </span>
-          ) : (
-            owner !== null && (
-              <img
-                src={FACTION_ICON[owner]}
-                alt={FACTION_NAME[owner]}
-                className="cell-icon"
-              />
-            )
-          )}
-        </button>
-      </td>,
-    );
-  }
-
-  const tbody = [];
-  for (let row = 0; row < 4; row++) {
-    tbody.push(<tr key={row}>{cells.slice(row * 4, row * 4 + 4)}</tr>);
-  }
+  const nameOf = (id) => matchData[id]?.name || FACTION_NAME[id];
 
   return (
     <div className="board-container">
@@ -227,19 +44,26 @@ export function TicTacToeBoard({
         <h1 className="vs-banner">
           <span className="vs-side vs-queendom">
             <FactionMark playerID="0" size="1.2em" />
-            {matchData[0]?.name || FACTION_NAME[0]}
+            {nameOf(0)}
           </span>
           <span className="vs-divider">vs</span>
           <span className="vs-side vs-canadia">
-            {matchData[1]?.name || FACTION_NAME[1]}
+            {nameOf(1)}
             <FactionMark playerID="1" size="1.2em" />
           </span>
         </h1>
 
         <div className="board-wrapper">
-          <table className="board">
-            <tbody>{tbody}</tbody>
-          </table>
+          <BoardGrid
+            shown={shown}
+            G={G}
+            animating={animating}
+            winningLine={gameover?.winningLine}
+            weaponActive={targeting.active}
+            targets={targeting.targets}
+            isActive={isActive}
+            onCellClick={clickCell}
+          />
           {anim?.type === 'Dirty Nuke' && (
             <NukeAnimation key={anim.event.version} />
           )}
@@ -261,7 +85,7 @@ export function TicTacToeBoard({
                 gameover.winningLine ? 'winner-overlay-after-line' : ''
               }`}
             >
-              <div className="winner-overlay-name">{winnerName}</div>
+              <div className="winner-overlay-name">{nameOf(winnerID)}</div>
               <div className="winner-overlay-label">Wins</div>
             </div>
           )}
@@ -278,155 +102,32 @@ export function TicTacToeBoard({
         )}
 
         {!gameover && (
-          <div className="turn-indicator">
-            <span className="turn-label">Current turn:</span>
-            <span
-              className={`turn-name ${
-                ctx.currentPlayer === '0' ? 'queendom' : 'canadia'
-              }`}
-            >
-              {matchData[ctx.currentPlayer]?.name ||
-                FACTION_NAME[ctx.currentPlayer]}{' '}
-              <FactionMark playerID={ctx.currentPlayer} />
-            </span>
-          </div>
-        )}
-
-        {!gameover && (
-          <div className="weapon-panel">
-            <div className="weapon-button-row">
-              <button
-                key={`weapon-${armedCount}`}
-                className={`weapon-button ${specialMoveActive ? 'active' : ''} ${
-                  myWeapon ? 'armed' : 'unarmed'
-                } ${armedCount > 0 && myWeapon ? 'just-armed' : ''}`}
-                onClick={handleSpecialMoveClick}
-                disabled={animating || !isActive || !myWeapon}
-                title={
-                  myWeapon
-                    ? WEAPONS[myWeapon].description
-                    : 'No strategic weapon available'
-                }
+          <>
+            <div className="turn-indicator">
+              <span className="turn-label">Current turn:</span>
+              <span
+                className={`turn-name ${
+                  ctx.currentPlayer === '0' ? 'queendom' : 'canadia'
+                }`}
               >
-                {myWeapon ? (
-                  <>
-                    <span className="weapon-icon">
-                      {WEAPONS[myWeapon].icon}
-                    </span>
-                    <span className="weapon-name">{myWeapon}</span>
-                  </>
-                ) : (
-                  <span className="weapon-name weapon-empty">
-                    No weapon armed
-                  </span>
-                )}
-              </button>
-              <button
-                type="button"
-                className="recycle-button"
-                onClick={handleRecycleClick}
-                disabled={
-                  animating || !isActive || !myWeapon || specialMoveActive
-                }
-                title={
-                  myWeapon
-                    ? `Recycle weapon for ${refundPreview}% Rareium`
-                    : 'No weapon to recycle'
-                }
-                aria-label="Recycle strategic weapon"
-              >
-                ♻
-              </button>
+                {nameOf(ctx.currentPlayer)}{' '}
+                <FactionMark playerID={ctx.currentPlayer} />
+              </span>
             </div>
-
-            {import.meta.env.DEV &&
-              strategicWeapons.map((weapon) => (
-                <button
-                  key={weapon}
-                  type="button"
-                  className="debug-button"
-                  onClick={() => moves.debugGiveWeapon(weapon)}
-                  disabled={animating || !isActive || !!myWeapon}
-                >
-                  Debug: arm {weapon.toLowerCase()}
-                </button>
-              ))}
-
-            {recyclePending && myWeapon && (
-              <div className="recycle-confirm" role="alertdialog">
-                <div className="recycle-confirm-text">
-                  Recycle <strong>{myWeapon}</strong> for{' '}
-                  <strong>{refundPreview}%</strong> Rareium?
-                </div>
-                <div className="recycle-confirm-actions">
-                  <button
-                    type="button"
-                    className="recycle-confirm-yes"
-                    onClick={handleRecycleConfirm}
-                  >
-                    Recycle
-                  </button>
-                  <button
-                    type="button"
-                    className="recycle-confirm-no"
-                    onClick={handleRecycleCancel}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activeWeaponMeta && (
-              <div className="weapon-instruction">
-                <div className="weapon-instruction-text">
-                  {activeWeaponMeta.instruction}
-                </div>
-                <div className="weapon-instruction-count">
-                  {targetsOfSpecialMove.length} / {targetCount} selected
-                </div>
-                {specialError && (
-                  <div className="weapon-instruction-error" role="alert">
-                    {specialError}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {!gameover && (
-          <div
-            className="rareium-bar"
-            title="Rareium is the chance (%) to receive a strategic weapon at the start of your turn."
-          >
-            <div
-              className="rareium-fill"
-              style={{ width: `${rareiumPercent}%` }}
+            <WeaponPanel
+              G={G}
+              moves={moves}
+              playerID={playerID}
+              isActive={isActive}
+              animating={animating}
+              armedCount={armedCount}
+              targeting={targeting}
             />
-            <div className="rareium-label">
-              <span>Rareium</span>
-              <span className="rareium-value">{myRareium}%</span>
-            </div>
-          </div>
+            <RareiumBar rareium={G.Rareium[playerID]} />
+          </>
         )}
 
-        <div className="game-log">
-          <h2>Game Log</h2>
-          <ul>
-            {G.log.map((entry, index) => (
-              <li
-                key={`${G.log.length - index}-${entry.type}`}
-                className="log-entry"
-              >
-                <span className="log-icon">{logIcon(entry)}</span>
-                <span className="log-text">
-                  {formatLogEntry(entry, matchData)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <GameLog log={G.log} matchData={matchData} />
       </div>
     </div>
   );
