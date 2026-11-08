@@ -4,7 +4,7 @@ export function GameLog({ log, matchData }) {
   return (
     <div className="game-log">
       <h2>Game Log</h2>
-      <ul>
+      <ul aria-live="polite" aria-relevant="additions">
         {log.map((entry, index) => (
           <li key={`${log.length - index}-${entry.type}`} className="log-entry">
             <span className="log-icon">{logIcon(entry)}</span>

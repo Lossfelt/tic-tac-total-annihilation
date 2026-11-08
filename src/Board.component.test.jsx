@@ -436,3 +436,47 @@ describe('Air Strike-animasjon', () => {
     expect(cellButtons()[0].disabled).toBe(false);
   });
 });
+
+describe('tilgjengelighet', () => {
+  it('gir hver celle et navn med territorium og status', () => {
+    const cells = Array(16).fill(null);
+    cells[1] = '0';
+    cells[2] = '1';
+    const destroyed = Array(16).fill(false);
+    destroyed[3] = true;
+    render(<TicTacToeBoard {...makeProps({ G: { cells, destroyed } })} />);
+
+    expect(
+      screen.getByRole('button', { name: 'the Salt Marches: unclaimed' }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('button', {
+        name: 'the Corn Belt Desert: Mexican Queendom',
+      }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('button', {
+        name: "Hudson's Pit: Pan-Canadia Inuit Alliance",
+      }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: 'Port Orchard: destroyed' }),
+    ).toBeDefined();
+  });
+
+  it('kunngjør turbytte og logg i live-regioner', () => {
+    render(<TicTacToeBoard {...makeProps()} />);
+
+    expect(screen.getByRole('status').textContent).toMatch(/Current turn/);
+    expect(
+      document.querySelector('.game-log ul').getAttribute('aria-live'),
+    ).toBe('polite');
+  });
+
+  it('kunngjør vinneren', () => {
+    const ctx = { gameover: { winner: '1' } };
+    render(<TicTacToeBoard {...makeProps({ ctx })} />);
+
+    expect(screen.getByRole('status').textContent).toMatch(/Canadia/);
+  });
+});

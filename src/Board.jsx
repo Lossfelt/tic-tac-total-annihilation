@@ -81,6 +81,7 @@ export function TicTacToeBoard({
           )}
           {gameover && (
             <div
+              role="status"
               className={`winner-overlay winner-overlay-${winnerID} ${
                 gameover.winningLine ? 'winner-overlay-after-line' : ''
               }`}
@@ -103,7 +104,7 @@ export function TicTacToeBoard({
 
         {!gameover && (
           <>
-            <div className="turn-indicator">
+            <div className="turn-indicator" role="status">
               <span className="turn-label">Current turn:</span>
               <span
                 className={`turn-name ${

@@ -50,6 +50,13 @@ export function BoardGrid({
           title={
             isDestroyed ? `${territories[id]} (destroyed)` : territories[id]
           }
+          aria-label={`${territories[id]}: ${
+            isDestroyed
+              ? 'destroyed'
+              : owner !== null
+                ? FACTION_NAME[owner]
+                : 'unclaimed'
+          }`}
           onClick={() => onCellClick(id)}
           disabled={
             animating ||
