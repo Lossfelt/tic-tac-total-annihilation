@@ -6,7 +6,6 @@ import {
   IsRow,
   GetNeighbors,
   GetSurroundingCells,
-  formatLogEntry,
   TicTacToe,
   NUM_PLAYERS,
   TOTAL_CELLS,
@@ -321,16 +320,19 @@ describe('recycleStrategicWeapon', () => {
     expect(G.Rareium[1]).toBe(39);
   });
 
-  it('logger handlingen med spillerens placeholder', () => {
+  it('logger handlingen som strukturert oppføring', () => {
     const G = baseG();
     G.strategicWeapon[0] = 'Biological Warfare';
     G.rareiumAtWeapon[0] = 100;
 
     recycle({ G, playerID: '0' });
 
-    expect(G.log[0]).toBe(
-      '__P0__ recycles Biological Warfare and recovers 70% Rareium',
-    );
+    expect(G.log[0]).toEqual({
+      type: 'recycle',
+      player: '0',
+      weapon: 'Biological Warfare',
+      refund: 70,
+    });
   });
 
   it('returnerer INVALID_MOVE hvis spilleren ikke har et våpen', () => {
@@ -376,14 +378,17 @@ describe('useStrategicWeapon: Dirty Nuke', () => {
     expect(G.lastCellAttacked).toBe(5);
   });
 
-  it('logger handlingen med territorienavnet', () => {
+  it('logger våpenet, spilleren og målcellen', () => {
     const G = baseG();
     G.strategicWeapon[0] = 'Dirty Nuke';
 
     useWeapon({ G, playerID: '0', random: stubRandom }, 0);
 
-    expect(G.log[0]).toContain('Dirty Nuke');
-    expect(G.log[0]).toContain('the Salt Marches');
+    expect(G.log[0]).toEqual({
+      type: 'Dirty Nuke',
+      player: '0',
+      cells: [0],
+    });
   });
 
   it('avviser nuke på en allerede destroyed celle', () => {
@@ -838,44 +843,6 @@ describe('endIf: domination', () => {
   });
 });
 
-describe('formatLogEntry', () => {
-  const matchData = [
-    { id: 0, name: 'Levin' },
-    { id: 1, name: 'Eva' },
-  ];
-
-  it('erstatter __P0__ og __P1__ med navn fra matchData', () => {
-    expect(formatLogEntry('__P0__ conquers Port Orchard', matchData)).toBe(
-      'Levin conquers Port Orchard',
-    );
-    expect(formatLogEntry('__P1__ claims the Salt Marches', matchData)).toBe(
-      'Eva claims the Salt Marches',
-    );
-  });
-
-  it('erstatter flere placeholders i samme streng', () => {
-    expect(formatLogEntry('__P0__ defeats __P1__ in battle', matchData)).toBe(
-      'Levin defeats Eva in battle',
-    );
-  });
-
-  it('returnerer strengen uendret hvis det ikke finnes placeholders', () => {
-    expect(formatLogEntry('The people of Port Crater revolt', matchData)).toBe(
-      'The people of Port Crater revolt',
-    );
-  });
-
-  it('faller tilbake til "Player N" hvis matchData mangler navn', () => {
-    expect(formatLogEntry('__P0__ claims it', [{}, {}])).toBe(
-      'Player 0 claims it',
-    );
-  });
-
-  it('faller tilbake til "Player N" hvis matchData er undefined', () => {
-    expect(formatLogEntry('__P1__ acts', undefined)).toBe('Player 1 acts');
-  });
-});
-
 describe('endIf: vinner er eieren av linjen', () => {
   it('velger linjens eier, ikke spilleren som har turen', () => {
     const G = baseG();
@@ -1007,5 +974,37 @@ describe('clickCell: egen celle', () => {
     );
 
     expect(result).toBe(INVALID_MOVE);
+  });
+});
+
+describe('loggoppføringer fra trekk og revolt', () => {
+  const click = (G, id, roll, playerID = '0') =>
+    TicTacToe.moves.clickCell(
+      { G, playerID, random: { Number: () => roll } },
+      id,
+    );
+
+  it('logger claim, conquer og fail med spiller og celle', () => {
+    const G = baseG();
+    click(G, 3, 1);
+    G.cells[4] = '1';
+    click(G, 4, 0);
+    G.cells[5] = '1';
+    click(G, 5, 0.99);
+
+    expect(G.log.reverse()).toEqual([
+      { type: 'claim', player: '0', cell: 3 },
+      { type: 'conquer', player: '0', cell: 4 },
+      { type: 'fail', player: '0', cell: 5 },
+    ]);
+  });
+
+  it('logger revolt med forrige eier', () => {
+    const G = baseG();
+    G.cells[2] = '1';
+
+    TicTacToe.turn.onEnd({ G, random: { Number: () => 0 } });
+
+    expect(G.log[0]).toEqual({ type: 'revolt', player: '1', cell: 2 });
   });
 });

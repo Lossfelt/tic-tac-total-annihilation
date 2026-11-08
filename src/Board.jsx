@@ -5,10 +5,10 @@ import {
   IsRow,
   RECYCLE_REFUND_RATIO,
   TOTAL_CELLS,
-  formatLogEntry,
   territories,
 } from './Game.js';
 import { WEAPONS, strategicWeapons } from './weapons.js';
+import { formatLogEntry, logIcon } from './gameLog.js';
 import NukeAnimation from './NukeAnimation.jsx';
 import AirStrikeAnimation from './AirStrikeAnimation.jsx';
 import ArtilleryAnimation from './ArtilleryAnimation.jsx';
@@ -16,21 +16,6 @@ import BioAnimation from './BioAnimation.jsx';
 import WinEffect from './WinEffect.jsx';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
 import { useJustArmed } from './useJustArmed.js';
-
-// Velger ikon for en loggoppføring basert på keyword. Holdt enkelt: loggen
-// er strenger, og typene er gjenkjennelige fra unike fraser i Game.js.
-const logIcon = (entry) => {
-  if (entry.includes('Artillery Strike')) return '💥';
-  if (entry.includes('Air Strike')) return '✈️';
-  if (entry.includes('Biological Weapon')) return '☣️';
-  if (entry.includes('Dirty Nuke')) return '☢️';
-  if (entry.includes('recycles')) return '♻';
-  if (entry.includes('revolt')) return '✊';
-  if (entry.includes('conquers')) return '⚔️';
-  if (entry.includes('fails')) return '🛡️';
-  if (entry.includes('claims')) return '🚩';
-  return '•';
-};
 
 const FACTION_NAME = {
   0: 'Mexican Queendom',
@@ -431,7 +416,7 @@ export function TicTacToeBoard({
           <ul>
             {G.log.map((entry, index) => (
               <li
-                key={`${G.log.length - index}-${entry}`}
+                key={`${G.log.length - index}-${entry.type}`}
                 className="log-entry"
               >
                 <span className="log-icon">{logIcon(entry)}</span>

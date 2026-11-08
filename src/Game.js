@@ -143,10 +143,8 @@ export function GetSurroundingCells(id, boardSize = BOARD_SIZE) {
   return neighbors;
 }
 
-// Loggen lagres med __P<playerID>__ som placeholder for spillernavn.
-// Klienten formaterer dette mot matchData ved render, slik at serveren
-// aldri trenger en klient-sendt navneliste (som ville vært spoofbar).
-const playerToken = (playerID) => `__P${playerID}__`;
+// Loggoppføringer er objekter. Klienten lager tekst og ikon, se gameLog.js.
+const logEntry = (G, entry) => G.log.unshift(entry);
 
 function isCellId(id) {
   return Number.isInteger(id) && id >= 0 && id < TOTAL_CELLS;
@@ -195,25 +193,18 @@ function resetBlink(G) {
   G.blinkVersion++;
 }
 
-// Hvert våpen returnerer false hvis trekket er ugyldig.
+// Hvert våpen returnerer false hvis trekket er ugyldig. Loggføringen gjøres
+// av useStrategicWeapon.
 const WEAPON_HANDLERS = {
-  Artillery: ({ G, name, input }) => {
+  Artillery: ({ G, input }) => {
     [input, ...GetNeighbors(input)].forEach((target) => {
       G.cells[target] = null;
       G.blink[target] = true;
     });
-    G.log.unshift(
-      `${name} launches an Artillery Strike at ${territories[input]} and its neighbors!`,
-    );
     G.lastCellAttacked = input;
     return true;
   },
-  'Air Strike': ({ G, name, input }) => {
-    G.log.unshift(
-      `${name} launches an Air Strike at ${input
-        .map((id) => territories[id])
-        .join(', ')}`,
-    );
+  'Air Strike': ({ G, input }) => {
     input.forEach((id) => {
       G.cells[id] = null;
       G.blink[id] = true;
@@ -221,7 +212,7 @@ const WEAPON_HANDLERS = {
     G.lastCellAttacked = input[2];
     return true;
   },
-  'Biological Warfare': ({ G, name, input, random, affected }) => {
+  'Biological Warfare': ({ G, input, random, affected }) => {
     GetSurroundingCells(input).forEach((target) => {
       if (random.Number() < BIO_DESTROY_CHANCE) {
         G.cells[target] = null;
@@ -229,20 +220,14 @@ const WEAPON_HANDLERS = {
         affected.push(target);
       }
     });
-    G.log.unshift(
-      `${name} releases a Biological Weapon at ${territories[input]} and its surroundings!`,
-    );
     G.lastCellAttacked = input;
     return true;
   },
-  'Dirty Nuke': ({ G, name, input }) => {
+  'Dirty Nuke': ({ G, input }) => {
     if (G.destroyed[input]) return false;
     G.cells[input] = null;
     G.destroyed[input] = true;
     G.blink[input] = true;
-    G.log.unshift(
-      `${name} detonates a Dirty Nuke at ${territories[input]}, leaving it uninhabitable`,
-    );
     G.lastCellAttacked = input;
     return true;
   },
@@ -314,10 +299,8 @@ export const TicTacToe = {
           random.Number() < REVOLT_CHANCE &&
           i !== G.lastCellAttacked
         ) {
+          logEntry(G, { type: 'revolt', player: G.cells[i], cell: i });
           G.cells[i] = null;
-          G.log.unshift(
-            `The people of ${territories[i]} revolt against foreign rule`,
-          );
           markCell(G, i, 'revolt');
           revolted = true;
         }
@@ -330,26 +313,20 @@ export const TicTacToe = {
     clickCell: ({ G, playerID, random }, id) => {
       if (!isCellId(id)) return INVALID_MOVE;
       resetBlink(G);
-      const name = playerToken(playerID);
       if (G.destroyed[id]) {
         return INVALID_MOVE;
       } else if (G.cells[id] === playerID) {
         return INVALID_MOVE;
       } else if (G.cells[id] !== null) {
         const conquered = random.Number() < INVASION_SUCCESS_CHANCE;
-        if (conquered) {
-          G.cells[id] = playerID;
-          G.log.unshift(`${name} conquers ${territories[id]}`);
-        } else {
-          G.log.unshift(
-            `${name} attempts to invade ${territories[id]}, but fails`,
-          );
-        }
-        markCell(G, id, conquered ? 'conquer' : 'fail');
+        if (conquered) G.cells[id] = playerID;
+        const type = conquered ? 'conquer' : 'fail';
+        logEntry(G, { type, player: playerID, cell: id });
+        markCell(G, id, type);
         G.lastCellAttacked = id;
       } else {
         G.cells[id] = playerID;
-        G.log.unshift(`${name} claims ${territories[id]}`);
+        logEntry(G, { type: 'claim', player: playerID, cell: id });
         markCell(G, id, 'claim');
         G.lastCellAttacked = id;
       }
@@ -381,10 +358,7 @@ export const TicTacToe = {
         G.Rareium[playerID] += refund;
         G.strategicWeapon[playerID] = null;
         G.rareiumAtWeapon[playerID] = 0;
-        const name = playerToken(playerID);
-        G.log.unshift(
-          `${name} recycles ${weapon} and recovers ${refund}% Rareium`,
-        );
+        logEntry(G, { type: 'recycle', player: playerID, weapon, refund });
       },
     },
     useStrategicWeapon: ({ G, playerID, random }, input) => {
@@ -393,11 +367,9 @@ export const TicTacToe = {
 
       const before = { cells: [...G.cells], destroyed: [...G.destroyed] };
       resetBlink(G);
-      const name = playerToken(playerID);
       const affected = [];
       const ok = WEAPON_HANDLERS[weapon]({
         G,
-        name,
         input,
         random,
         affected,
@@ -405,13 +377,9 @@ export const TicTacToe = {
       if (!ok) return INVALID_MOVE;
 
       G.strategicWeapon[playerID] = null;
-      recordWeaponEvent(
-        G,
-        weapon,
-        Array.isArray(input) ? [...input] : [input],
-        before,
-        affected,
-      );
+      const cells = Array.isArray(input) ? [...input] : [input];
+      logEntry(G, { type: weapon, player: playerID, cells });
+      recordWeaponEvent(G, weapon, cells, before, affected);
     },
   },
 
@@ -462,12 +430,3 @@ export const TicTacToe = {
     },
   },
 };
-
-// Substituerer __P<id>__ placeholders i en loggstreng med spillernavn fra
-// matchData. Eksportert slik at klienten kan formatere alle loggoppføringer.
-export function formatLogEntry(entry, matchData) {
-  return entry.replace(/__P(\d+)__/g, (_, id) => {
-    const player = matchData?.[id];
-    return player?.name || `Player ${id}`;
-  });
-}
