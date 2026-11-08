@@ -108,14 +108,17 @@ tallene til å sammenligne regelendringer, ikke som fasit.
 
 **Struktur**
 
-- Del `TicTacToeBoard` (ca. 330 linjer), `App` (ca. 235 linjer) og
-  `Board.css` (ca. 1300 linjer, med `.lobby-actions` definert to ganger og
-  `rgba(199, 93, 58, ...)` hardkodet i stedet for `--color-rust`).
-- Samle våpenregler og metadata i én `weapons.js`. I dag finnes de både i
-  `Game.js` og `Board.jsx`, med 16 og 4 hardkodet i stedet for
-  `TOTAL_CELLS` og `BOARD_SIZE`, og "50 %" hardkodet i bio-teksten.
-- Strukturerte loggoppføringer i stedet for tekstmatching til loggikon.
-  Det gir også "hvem mistet cellen" ved revolt.
+Ferdig 8. november 2026: `Board.jsx` er delt (433 til 134 linjer) i
+`BoardGrid`, `WeaponPanel`, `RareiumBar`, `GameLog`, `FactionMark` og hooken
+`useWeaponTargeting`. `App.jsx` har fått `Lobby.jsx` (286 til 199 linjer).
+`Board.css` er et samleløp over syv filer i `src/styles`. Våpenmetadata
+ligger i `weapons.js`, og loggen er strukturerte objekter (`gameLog.js`).
+
+- Gjenstår: revolt-oppføringen husker nå forrige eier (`player`), men loggteksten
+  viser det ikke ennå ("hvem mistet cellen").
+- Gjenstår: `Game.js` er ca. 460 linjer. Vurder å skille ut brettgeometrien
+  (`IsRow`, `GetNeighbors`, `GetSurroundingCells`, vinnerlinjer) i
+  `board.js`.
 
 **Layout og lobby**
 
