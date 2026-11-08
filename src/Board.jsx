@@ -366,6 +366,17 @@ export function TicTacToeBoard({
               </button>
             </div>
 
+            {import.meta.env.DEV && (
+              <button
+                type="button"
+                className="debug-button"
+                onClick={() => moves.debugGiveNuke()}
+                disabled={animating || !isActive || !!myWeapon}
+              >
+                Debug: arm nuke
+              </button>
+            )}
+
             {recyclePending && myWeapon && (
               <div className="recycle-confirm" role="alertdialog">
                 <div className="recycle-confirm-text">

@@ -236,6 +236,12 @@ const WEAPON_HANDLERS = {
   },
 };
 
+// Testtrekk som bare finnes når serveren startes med DEBUG_MOVES=1. I
+// nettleseren finnes ikke `process`, og på produksjonsserveren er variabelen
+// ikke satt, så trekket avvises der.
+const DEBUG_MOVES =
+  typeof process !== 'undefined' && process.env?.DEBUG_MOVES === '1';
+
 export const TicTacToe = {
   name: 'TicTacToe',
 
@@ -332,6 +338,17 @@ export const TicTacToe = {
         G.blink[id] = true;
         G.lastCellAttacked = id;
       }
+    },
+    // Gir spilleren en Dirty Nuke, for å teste animasjonen. Kjøres bare på
+    // serveren (client: false) og teller ikke som turens trekk (noLimit).
+    debugGiveNuke: {
+      client: false,
+      noLimit: true,
+      move: ({ G, playerID }) => {
+        if (!DEBUG_MOVES) return INVALID_MOVE;
+        G.strategicWeapon[playerID] = 'Dirty Nuke';
+        G.rareiumAtWeapon[playerID] = 100;
+      },
     },
     recycleStrategicWeapon: {
       // noLimit gjør at recycle ikke teller mot turens maxMoves: 1. Spilleren
