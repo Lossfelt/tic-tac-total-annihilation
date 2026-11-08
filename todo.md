@@ -63,10 +63,82 @@ oppfølgingspunktet over viser at `exports` peker på ESM-byggene.
   den foreslår bare `clickCell` på tomme celler og ignorerer invasjon,
   våpen og recycle. Krever også en lokal modus (uten server) i `App.jsx`.
   Start med en enkel heuristikk.
-- Animasjon og lyd når et våpen utløses. Designes sammen, tas opp i
-  animasjonsdiskusjonen.
+- Lyd-effekter for våpen og trekk. Våpenanimasjonene er ferdige (PR 42), så
+  lyden kan legges på tidspunktene i `weaponAnimation.js`.
 - TypeScript-rewrite (kun ved en større refaktor i fremtiden, jf.
   PLAN.md).
+
+## Funn fra gjennomgang av spillet (8. november 2026)
+
+Bekreftet i koden, grovt prioritert. Balanse er antakelser og bør måles med
+en simulering før noe endres.
+
+**Robusthet (små oppgaver)**
+
+- Air Strike i `Board.jsx` (`specialAttack`) nullstiller utvalget og avslutter
+  våpenmodus selv om serveren avviser trekket, og celler kan ikke velges bort
+  enkeltvis. Gi tilbakemelding og la spilleren angre enkeltvalg.
+- `handleLeave` i `App.jsx` mangler try/catch, så spilleren kan bli sittende
+  fast hvis serveren er nede. `handlePlayAgain` viser feil bare i konsollen.
+- `endIf` i `Game.js` bruker `ctx.currentPlayer` som vinner i stedet for
+  eieren av vinnerlinjen. Trygt i dag, men skjørt.
+- Credentials logges i klartekst i `server.mjs`. Fjern i produksjon.
+- Motstanderens Rareium og våpen ligger i klienttilstanden (ingen
+  `playerView`).
+- Credentials ligger bare i `useState`, så en reload mister plassen i matchen.
+  Lagre `{matchID, playerID, credentials}` i `sessionStorage` og gjenoppta.
+
+**Tester som mangler**
+
+- `clickCell` (claim, invasjon med mocket tilfeldighet), revolt i `onEnd`
+  (inkludert unntaket for `lastCellAttacked`), og `onBegin` (Rareium og
+  våpentildeling).
+- En balansesimulering (se under).
+
+**Balanse (mål først)**
+
+- Rareium akkumuleres også mens spilleren holder et våpen, og er ubegrenset.
+  Det gir hamstring og nytt våpen rett etter bruk.
+- Recycle er gratis og teller ikke som trekk, så det er en billig reroll.
+- Invasjon (20 %) lønner seg nesten aldri, så spillet kan bli defensivt.
+- Snøballeffekt: lederen får mest Rareium og dermed våpen først. Vurder
+  comeback-bonus.
+- Ingen sudden death. Spillet kan ikke låse seg, men kan bli veldig langt.
+
+**Struktur**
+
+- Del `TicTacToeBoard` (ca. 330 linjer), `App` (ca. 235 linjer) og
+  `Board.css` (ca. 1300 linjer, med `.lobby-actions` definert to ganger og
+  `rgba(199, 93, 58, ...)` hardkodet i stedet for `--color-rust`).
+- Samle våpenregler og metadata i én `weapons.js`. I dag finnes de både i
+  `Game.js` og `Board.jsx`, med 16 og 4 hardkodet i stedet for
+  `TOTAL_CELLS` og `BOARD_SIZE`, og "50 %" hardkodet i bio-teksten.
+- Strukturerte loggoppføringer i stedet for tekstmatching til loggikon.
+  Det gir også "hvem mistet cellen" ved revolt.
+
+**Layout og lobby**
+
+- To kolonner fra ca. 900 px og kompakt mobil, slik at tur, våpen og Rareium
+  ikke ligger under brettet. Grupper Rareium og våpen som ett panel.
+- Lobbyen mangler "venter på motstander", kopier-knapp, `?match=`-lenke og
+  frakoblet-varsel (`matchData[i].isConnected` brukes ikke).
+
+**Tilgjengelighet og visuelt**
+
+- Ingen `:focus-visible`, og ingen `prefers-reduced-motion` for blink og puls
+  utenfor våpenanimasjonene.
+- Celler mister territorienavnet som tilgjengelig navn når de er okkupert
+  (bilde-alt vinner). Legg til `aria-label`.
+- Ingen `aria-live` for turbytte, logg eller seier. `AboutPopup` mangler
+  fokusfelle og fokus-retur.
+- `--color-text-dim` på bakgrunnen har kontrast på ca. 2,4:1.
+- Emoji-ikoner (våpen, logg) passer dårlig med stilen. Bytt til SVG.
+
+**Flere animasjoner (foreslått)**
+
+- Revolt, invasjon (erobret og mislyktes), seierslinje, våpen mottatt,
+  stempel når et territorium tas, turbytte, og drivende aske i lobbyen.
+  Se status i commit-historikken.
 
 ## Avvist (backlog)
 
