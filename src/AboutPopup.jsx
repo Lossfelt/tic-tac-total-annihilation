@@ -1,10 +1,38 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import './Board.css';
 
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]';
+
 const AboutPopup = ({ onClose }) => {
+  const popupRef = useRef(null);
+
+  // Fokus flyttes inn i dialogen når den åpnes og tilbake til elementet som
+  // åpnet den når den lukkes.
+  useEffect(() => {
+    const opener = document.activeElement;
+    popupRef.current?.querySelector(FOCUSABLE)?.focus();
+    return () => opener?.focus?.();
+  }, []);
+
   useEffect(() => {
     const handleKey = (event) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+      // Fokusfelle: Tab og Shift+Tab går rundt innenfor dialogen.
+      if (event.key !== 'Tab' || !popupRef.current) return;
+      const items = [...popupRef.current.querySelectorAll(FOCUSABLE)];
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
@@ -18,7 +46,11 @@ const AboutPopup = ({ onClose }) => {
       aria-labelledby="about-title"
       onClick={onClose}
     >
-      <div className="popup" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="popup"
+        ref={popupRef}
+        onClick={(event) => event.stopPropagation()}
+      >
         <button
           type="button"
           className="popup-close"
