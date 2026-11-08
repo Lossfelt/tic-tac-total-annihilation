@@ -5,8 +5,11 @@ export const BOARD_SIZE = 4;
 export const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
 export const NUM_PLAYERS = 2;
 export const REVOLT_CHANCE = 0.05;
-export const INVASION_SUCCESS_CHANCE = 0.2;
+export const INVASION_SUCCESS_CHANCE = 0.5;
 export const RAREIUM_WEAPON_CHANCE_DIVISOR = 100;
+// Rareium er en sjanse i prosent, så mer enn 100 gir ingen fordel. Taket
+// hindrer også at tallet vokser uten grense mens spilleren holder et våpen.
+export const RAREIUM_MAX = 100;
 export const RECYCLE_REFUND_RATIO = 0.7;
 
 export const territories = [
@@ -277,7 +280,10 @@ export const TicTacToe = {
       const ownedCells = G.cells.filter(
         (cell) => cell === ctx.currentPlayer,
       ).length;
-      G.Rareium[ctx.currentPlayer] += ownedCells;
+      G.Rareium[ctx.currentPlayer] = Math.min(
+        RAREIUM_MAX,
+        G.Rareium[ctx.currentPlayer] + ownedCells,
+      );
 
       if (!G.strategicWeapon[ctx.currentPlayer]) {
         if (
@@ -355,7 +361,10 @@ export const TicTacToe = {
         const refund = Math.round(
           G.rareiumAtWeapon[playerID] * RECYCLE_REFUND_RATIO,
         );
-        G.Rareium[playerID] += refund;
+        G.Rareium[playerID] = Math.min(
+          RAREIUM_MAX,
+          G.Rareium[playerID] + refund,
+        );
         G.strategicWeapon[playerID] = null;
         G.rareiumAtWeapon[playerID] = 0;
         logEntry(G, { type: 'recycle', player: playerID, weapon, refund });

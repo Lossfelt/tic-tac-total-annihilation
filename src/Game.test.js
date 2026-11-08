@@ -10,6 +10,7 @@ import {
   NUM_PLAYERS,
   TOTAL_CELLS,
   RECYCLE_REFUND_RATIO,
+  RAREIUM_MAX,
 } from './Game.js';
 import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js';
 
@@ -333,6 +334,17 @@ describe('recycleStrategicWeapon', () => {
       weapon: 'Biological Warfare',
       refund: 70,
     });
+  });
+
+  it('kapper Rareium ved taket etter refusjon', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Artillery';
+    G.rareiumAtWeapon[0] = 100;
+    G.Rareium[0] = RAREIUM_MAX - 5;
+
+    recycle({ G, playerID: '0' });
+
+    expect(G.Rareium[0]).toBe(RAREIUM_MAX);
   });
 
   it('returnerer INVALID_MOVE hvis spilleren ikke har et våpen', () => {
@@ -950,6 +962,19 @@ describe('turn.onBegin: Rareium og våpentildeling', () => {
 
     expect(G.strategicWeapon[0]).toBe('Artillery');
     expect(G.Rareium[0]).toBe(1);
+  });
+
+  it('kapper Rareium ved taket mens spilleren holder et våpen', () => {
+    const G = baseG();
+    [0, 1, 2].forEach((i) => {
+      G.cells[i] = '0';
+    });
+    G.strategicWeapon[0] = 'Artillery';
+    G.Rareium[0] = RAREIUM_MAX - 1;
+
+    begin(G, 0.99);
+
+    expect(G.Rareium[0]).toBe(RAREIUM_MAX);
   });
 
   it('påvirker ikke motstanderens Rareium', () => {
