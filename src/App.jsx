@@ -35,6 +35,7 @@ const App = () => {
   // 30-60s på å spinne opp en kald instans, så uten dette virker UI dødt.
   const [pendingAction, setPendingAction] = useState(null);
   const [lobbyError, setLobbyError] = useState('');
+  const [matchError, setMatchError] = useState('');
   const nameInput = useRef();
   const matchInput = useRef();
 
@@ -89,11 +90,18 @@ const App = () => {
     }
   };
 
+  // Spilleren forlater alltid lokalt, selv om serveren ikke svarer. Ellers
+  // blir man sittende fast i matchen når serveren er nede.
   const handleLeave = async () => {
-    await lobbyClient.leaveMatch('TicTacToe', matchID, {
-      playerID,
-      credentials,
-    });
+    try {
+      await lobbyClient.leaveMatch('TicTacToe', matchID, {
+        playerID,
+        credentials,
+      });
+    } catch (error) {
+      console.warn('Could not notify server about leaving:', error);
+    }
+    setMatchError('');
     setMatchID('');
     setCredentials('');
     setPlayerID('');
@@ -129,8 +137,10 @@ const App = () => {
       setMatchID(nextMatchID);
       setCredentials(next.playerCredentials);
       setPlayerID(next.playerID);
+      setMatchError('');
     } catch (error) {
       console.error('Error during play again:', error);
+      setMatchError('Could not start a new match. Please try again.');
     }
   };
 
@@ -241,6 +251,11 @@ const App = () => {
               About
             </button>
           </div>
+          {matchError && (
+            <div className="lobby-error" role="alert">
+              {matchError}
+            </div>
+          )}
           <TicTacToeClient
             playerID={playerID}
             credentials={credentials}
