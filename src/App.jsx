@@ -3,9 +3,10 @@ import { TicTacToeBoard } from './Board.jsx';
 import { Client } from 'boardgame.io/dist/esm/react.js';
 import { SocketIO } from 'boardgame.io/dist/esm/multiplayer.js';
 import { LobbyClient } from 'boardgame.io/dist/esm/client.js';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './Board.css';
 import AboutPopup from './AboutPopup.jsx';
+import { loadSession, saveSession, clearSession } from './session.js';
 
 const TicTacToeClient = Client({
   game: TicTacToe,
@@ -24,11 +25,13 @@ const lobbyClient = new LobbyClient({
 });
 
 const App = () => {
-  const [name, setName] = useState('');
-  const [matchID, setMatchID] = useState('');
-  const [credentials, setCredentials] = useState('');
-  const [playerID, setPlayerID] = useState('');
-  const [joined, setJoined] = useState(false);
+  // En reload gjenopptar matchen fra sessionStorage (se session.js).
+  const [saved] = useState(loadSession);
+  const [name, setName] = useState(saved?.name ?? '');
+  const [matchID, setMatchID] = useState(saved?.matchID ?? '');
+  const [credentials, setCredentials] = useState(saved?.credentials ?? '');
+  const [playerID, setPlayerID] = useState(saved?.playerID ?? '');
+  const [joined, setJoined] = useState(Boolean(saved));
   const [showAbout, setShowAbout] = useState(false);
   // Hvis ikke null: backend-kall er underveis. Brukes til å disable knapper og
   // vise en "Waiting for server"-indikator. Hovedmotivasjon: Render kan bruke
@@ -38,6 +41,11 @@ const App = () => {
   const [matchError, setMatchError] = useState('');
   const nameInput = useRef();
   const matchInput = useRef();
+
+  useEffect(() => {
+    if (joined) saveSession({ name, matchID, playerID, credentials });
+    else clearSession();
+  }, [joined, name, matchID, playerID, credentials]);
 
   const handleAbout = () => {
     setShowAbout(!showAbout);
