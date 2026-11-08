@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   planAirStrike,
   planArtillery,
+  planBio,
   getWeaponTiming,
   NUKE_DURATION_MS,
   NUKE_IMPACT_MS,
@@ -70,9 +71,7 @@ describe('getWeaponTiming', () => {
   });
 
   it('gir null for våpen uten animasjon', () => {
-    expect(
-      getWeaponTiming({ type: 'Biological Warfare', cells: [5] }),
-    ).toBeNull();
+    expect(getWeaponTiming({ type: 'Recycle', cells: [5] })).toBeNull();
   });
 });
 
@@ -129,5 +128,63 @@ describe('getWeaponTiming: Artillery', () => {
     expect(timing.hits).toHaveLength(5);
     expect(timing.impactMs).toBeGreaterThan(lastHit);
     expect(timing.impactMs).toBeLessThan(timing.durationMs);
+  });
+});
+
+describe('planBio', () => {
+  it('dekker 3x3-området rundt målet', () => {
+    const { area } = planBio([5], []);
+
+    expect(area.map((a) => a.id).sort((a, b) => a - b)).toEqual([
+      0, 1, 2, 4, 5, 6, 8, 9, 10,
+    ]);
+  });
+
+  it('dekker bare cellene som finnes når målet er i et hjørne', () => {
+    expect(planBio([0], []).area).toHaveLength(4);
+  });
+
+  it('har treff bare for cellene serveren rammet', () => {
+    const { hits } = planBio([5], [4, 6, 10]);
+
+    expect(hits.map((h) => h.id)).toEqual([4, 6, 10]);
+  });
+
+  it('rammer nære celler før fjerne', () => {
+    const { hits } = planBio([5], [10, 4]);
+    const byId = Object.fromEntries(hits.map((h) => [h.id, h.t]));
+
+    expect(byId[4]).toBeLessThan(byId[10]);
+  });
+
+  it('håndterer at ingen celler ble rammet', () => {
+    expect(planBio([5], []).hits).toEqual([]);
+    expect(planBio([5]).hits).toEqual([]);
+  });
+});
+
+describe('getWeaponTiming: Biological Warfare', () => {
+  it('bytter brettet rett etter siste treff', () => {
+    const timing = getWeaponTiming({
+      type: 'Biological Warfare',
+      cells: [5],
+      affected: [4, 6, 10],
+    });
+    const lastHit = Math.max(...timing.hits.map((h) => h.t));
+
+    expect(timing.hits).toHaveLength(3);
+    expect(timing.impactMs).toBeGreaterThan(lastHit);
+    expect(timing.impactMs).toBeLessThan(timing.durationMs);
+  });
+
+  it('har en gyldig tidslinje selv uten treff', () => {
+    const timing = getWeaponTiming({
+      type: 'Biological Warfare',
+      cells: [5],
+      affected: [],
+    });
+
+    expect(timing.hits).toEqual([]);
+    expect(Number.isFinite(timing.impactMs)).toBe(true);
   });
 });

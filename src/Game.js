@@ -175,11 +175,14 @@ function isValidWeaponTarget(weapon, input) {
 // Hendelsen klienten spiller av som animasjon. `before` er brettet slik det
 // så ut før våpenet traff, så alle klienter kan vise det frem til treffpunktet.
 // `version` økes for hver hendelse og er det klienten reagerer på.
-function recordWeaponEvent(G, type, cells, before) {
+// `affected` er cellene våpenet faktisk rammet, når det avhenger av tilfeldighet
+// (Biological Warfare), så alle klienter animerer samme utfall.
+function recordWeaponEvent(G, type, cells, before, affected = []) {
   G.weaponEvent = {
     type,
     cells,
     before,
+    affected,
     version: (G.weaponEvent?.version ?? 0) + 1,
   };
 }
@@ -210,11 +213,12 @@ const WEAPON_HANDLERS = {
     G.lastCellAttacked = input[2];
     return true;
   },
-  'Biological Warfare': ({ G, name, input, random }) => {
+  'Biological Warfare': ({ G, name, input, random, affected }) => {
     GetSurroundingCells(input).forEach((target) => {
       if (random.Number() < BIO_DESTROY_CHANCE) {
         G.cells[target] = null;
         G.blink[target] = true;
+        affected.push(target);
       }
     });
     G.log.unshift(
@@ -381,7 +385,14 @@ export const TicTacToe = {
       G.blink.fill(false);
       G.blinkVersion++;
       const name = playerToken(playerID);
-      const ok = WEAPON_HANDLERS[weapon]({ G, name, input, random });
+      const affected = [];
+      const ok = WEAPON_HANDLERS[weapon]({
+        G,
+        name,
+        input,
+        random,
+        affected,
+      });
       if (!ok) return INVALID_MOVE;
 
       G.strategicWeapon[playerID] = null;
@@ -390,6 +401,7 @@ export const TicTacToe = {
         weapon,
         Array.isArray(input) ? [...input] : [input],
         before,
+        affected,
       );
     },
   },

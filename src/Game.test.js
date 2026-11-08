@@ -587,6 +587,43 @@ describe('useStrategicWeapon: våpenhendelse', () => {
   });
 });
 
+describe('useStrategicWeapon: Biological Warfare, hendelse', () => {
+  const weaponMove = TicTacToe.moves.useStrategicWeapon;
+  const play = (G, input, numbers) => {
+    const queue = [...numbers];
+    const random = { Number: () => queue.shift() };
+    return weaponMove({ G, playerID: '0', random }, input);
+  };
+
+  it('registrerer bare cellene som faktisk ble rammet', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Biological Warfare';
+    // Senter 5 har 9 celler i området (0,1,2,4,5,6,8,9,10). Annenhver rammes.
+    play(G, 5, [0, 0.9, 0, 0.9, 0, 0.9, 0, 0.9, 0]);
+
+    expect(G.weaponEvent.affected).toEqual([0, 2, 5, 8, 10]);
+  });
+
+  it('registrerer en tom liste når ingen celler ble rammet', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Biological Warfare';
+
+    play(G, 5, Array(9).fill(0.99));
+
+    expect(G.weaponEvent.affected).toEqual([]);
+    expect(G.weaponEvent.type).toBe('Biological Warfare');
+  });
+
+  it('registrerer ingen rammede celler for våpen uten tilfeldighet', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    play(G, 5, []);
+
+    expect(G.weaponEvent.affected).toEqual([]);
+  });
+});
+
 describe('clickCell: validering', () => {
   const clickCell = TicTacToe.moves.clickCell;
 

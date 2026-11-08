@@ -4,10 +4,16 @@ import { RECYCLE_REFUND_RATIO, formatLogEntry, territories } from './Game.js';
 import NukeAnimation from './NukeAnimation.jsx';
 import AirStrikeAnimation from './AirStrikeAnimation.jsx';
 import ArtilleryAnimation from './ArtilleryAnimation.jsx';
+import BioAnimation from './BioAnimation.jsx';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
 
 // Våpen som kan gis med testknappen (bare i utviklingsmodus).
-const DEBUG_WEAPONS = ['Dirty Nuke', 'Air Strike', 'Artillery'];
+const DEBUG_WEAPONS = [
+  'Dirty Nuke',
+  'Air Strike',
+  'Artillery',
+  'Biological Warfare',
+];
 
 const WEAPON_TARGET_COUNT = {
   'Air Strike': 3,
@@ -258,6 +264,9 @@ export function TicTacToeBoard({
           </table>
           {anim?.type === 'Dirty Nuke' && (
             <NukeAnimation key={anim.event.version} />
+          )}
+          {anim?.type === 'Biological Warfare' && (
+            <BioAnimation key={anim.event.version} plan={anim.plan} />
           )}
           {anim?.type === 'Artillery' && (
             <ArtilleryAnimation key={anim.event.version} plan={anim.plan} />

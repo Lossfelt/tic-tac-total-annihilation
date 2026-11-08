@@ -1,4 +1,4 @@
-import { GetNeighbors } from './Game.js';
+import { GetNeighbors, GetSurroundingCells } from './Game.js';
 
 // Tidsrammer og geometri for våpenanimasjonene. Brukes både av
 // useWeaponAnimation (som styrer når brettet byttes og når klikk igjen er
@@ -114,6 +114,42 @@ export function planArtillery(cells, version) {
   };
 }
 
+// Biological Warfare. En beholder faller på målet og gassen sprer seg over
+// 3x3-området. Cellene serveren har valgt å ramme tømmes etter hvert som
+// gassen når dem, de nærmeste først.
+const BIO_IMPACT_MS = 900;
+const BIO_HIT_BASE_MS = 1000;
+const BIO_HIT_STEP_MS = 260;
+const BIO_DURATION_MS = 4200;
+
+// Område og treffpunkter for Biological Warfare. `affected` er cellene
+// serveren faktisk rammet (tilfeldig), og kan være tom.
+export function planBio(cells, affected = []) {
+  const center = cellCenter(cells[0]);
+  const hits = affected.map((id) => {
+    const point = cellCenter(id);
+    const distance = Math.hypot(point.x - center.x, point.y - center.y);
+    return {
+      id,
+      ...point,
+      t: Math.round(
+        BIO_HIT_BASE_MS + (distance / CELL_UNITS) * BIO_HIT_STEP_MS,
+      ),
+    };
+  });
+  return {
+    center,
+    from: { x: center.x + 60, y: center.y - 240 },
+    area: GetSurroundingCells(cells[0]).map((id) => ({
+      id,
+      ...cellCenter(id),
+    })),
+    hits,
+    impactMs: BIO_IMPACT_MS,
+    durationMs: BIO_DURATION_MS,
+  };
+}
+
 // Tidslinjen for en våpenhendelse, eller null hvis våpenet ikke har animasjon.
 //   impactMs: når brettet bytter fra "før" til "etter"
 //   hits: celler som tømmes underveis, hver på sitt tidspunkt (ms)
@@ -140,6 +176,17 @@ export function getWeaponTiming(event) {
   if (event.type === 'Artillery') {
     const plan = planArtillery(event.cells, event.version);
     const lastHit = Math.max(...plan.hits.map((h) => h.t));
+    return {
+      type: event.type,
+      durationMs: plan.durationMs,
+      impactMs: lastHit + 60,
+      hits: plan.hits.map(({ id, t }) => ({ id, t })),
+      plan,
+    };
+  }
+  if (event.type === 'Biological Warfare') {
+    const plan = planBio(event.cells, event.affected);
+    const lastHit = Math.max(BIO_HIT_BASE_MS, ...plan.hits.map((h) => h.t));
     return {
       type: event.type,
       durationMs: plan.durationMs,
