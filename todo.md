@@ -96,15 +96,31 @@ trekk, 8 % seier ved dominans, median 53 trekk per parti, 90. persentil 201.
 Våpnene brukes jevnt. Tilfeldige spillere sier lite om strategi, så bruk
 tallene til å sammenligne regelendringer, ikke som fasit.
 
-**Balanse (mål først)**
+**Balanse (målt 8. november 2026)**
 
-- Rareium akkumuleres også mens spilleren holder et våpen, og er ubegrenset.
-  Det gir hamstring og nytt våpen rett etter bruk.
-- Recycle er gratis og teller ikke som trekk, så det er en billig reroll.
-- Invasjon (20 %) lønner seg nesten aldri, så spillet kan bli defensivt.
-- Snøballeffekt: lederen får mest Rareium og dermed våpen først. Vurder
-  comeback-bonus.
-- Ingen sudden death. Spillet kan ikke låse seg, men kan bli veldig langt.
+Målt med `npm run simulate` (600 partier per kjøring, våpen siktes grådig,
+cellevalg ellers tilfeldig). Tallene er andel seiere for spiller 0 mot 1 når
+de to bruker ulike enkle strategier. Dette er enkle bots, ikke optimalt spill.
+
+- Hamstring lønner seg ikke. Å bruke våpen med 95 % sjanse slo å spare dem
+  (5 %) med 63 mot 37, og aldri å bruke våpen tapte 40 mot 60. Rareium kan
+  likevel vokse ubegrenset mens man holder et våpen (opptil 566 i målingen),
+  uten effekt. Rareium bør kappes ved 100 eller slutte å samles mens man
+  holder et våpen, for å unngå forvirrende tall.
+- Recycle er ikke en for sterk reroll. Å resirkulere 90 % av gangene ga 6,2
+  våpen per parti mot 3,5, men tapte 39 mot 61 fordi våpnene sjelden brukes.
+  Ingen endring nødvendig.
+- Invasjon (20 %) er for svak. En spiller som angriper fiendeceller i 90 % av
+  trekkene vant 0,5 % mot en som aldri angriper. Ved 50 % angrep mot 5 % ble
+  det 16 mot 84. Ved 40 % suksess ble det 35 mot 66, og ved 50 % suksess ble
+  det 50 mot 49 (jevnt). Anbefaling: heve `INVASION_SUCCESS_CHANCE` mot 40
+  til 50 %, og spille litt for å se om det gjør spillet for aggressivt.
+  Grunnlinjen (begge tilfeldige) går fra 52 til 55 % for spiller 0 ved 50 %.
+- Snøballeffekt er moderat. Lederen etter 12 trekk vinner 56 til 60 % av
+  partiene. Ingen comeback-bonus nødvendig nå.
+- Første spiller har en liten fordel: 52 mot 47 % (resten uavgjort).
+- Lengde: median ca. 53 trekk, 90. persentil ca. 200, og 0,5 til 1 % av
+  partiene når 400-trekksgrensen. Sudden death er lavt prioritert.
 
 **Struktur**
 
