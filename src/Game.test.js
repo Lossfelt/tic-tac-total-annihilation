@@ -920,3 +920,92 @@ describe('playerView', () => {
     expect(playerView({ G, playerID: null })).toBe(G);
   });
 });
+
+describe('turn.onBegin: Rareium og våpentildeling', () => {
+  const { onBegin } = TicTacToe.turn;
+  const begin = (G, roll, die = 1) =>
+    onBegin({
+      G,
+      ctx: { currentPlayer: '0' },
+      random: { Number: () => roll, Die: () => die },
+    });
+
+  it('gir Rareium lik antall celler spilleren eier', () => {
+    const G = baseG();
+    [0, 1, 5].forEach((i) => {
+      G.cells[i] = '0';
+    });
+    G.cells[2] = '1';
+
+    begin(G, 0.99);
+
+    expect(G.Rareium).toEqual([3, 0]);
+  });
+
+  it('nullstiller lastCellAttacked', () => {
+    const G = baseG();
+    G.lastCellAttacked = 4;
+
+    begin(G, 0.99);
+
+    expect(G.lastCellAttacked).toBeNull();
+  });
+
+  it('deler ut våpen og nullstiller Rareium når trekningen treffer', () => {
+    const G = baseG();
+    G.cells[0] = '0';
+    G.Rareium[0] = 49;
+
+    begin(G, 0, 4); // Die 4 gir det fjerde våpenet
+
+    expect(G.strategicWeapon[0]).toBe('Dirty Nuke');
+    expect(G.rareiumAtWeapon[0]).toBe(50);
+    expect(G.Rareium[0]).toBe(0);
+  });
+
+  it('deler ikke ut våpen når trekningen bommer', () => {
+    const G = baseG();
+    G.cells[0] = '0';
+    G.Rareium[0] = 49;
+
+    begin(G, 0.99);
+
+    expect(G.strategicWeapon[0]).toBeNull();
+    expect(G.Rareium[0]).toBe(50);
+  });
+
+  it('deler ikke ut nytt våpen til en spiller som allerede har ett', () => {
+    const G = baseG();
+    G.cells[0] = '0';
+    G.strategicWeapon[0] = 'Artillery';
+
+    begin(G, 0, 4);
+
+    expect(G.strategicWeapon[0]).toBe('Artillery');
+    expect(G.Rareium[0]).toBe(1);
+  });
+
+  it('påvirker ikke motstanderens Rareium', () => {
+    const G = baseG();
+    G.cells[0] = '1';
+    G.Rareium[1] = 10;
+
+    begin(G, 0.99);
+
+    expect(G.Rareium[1]).toBe(10);
+  });
+});
+
+describe('clickCell: egen celle', () => {
+  it('avviser trekk på en celle spilleren allerede eier', () => {
+    const G = baseG();
+    G.cells[3] = '0';
+
+    const result = TicTacToe.moves.clickCell(
+      { G, playerID: '0', random: { Number: () => 0 } },
+      3,
+    );
+
+    expect(result).toBe(INVALID_MOVE);
+  });
+});
