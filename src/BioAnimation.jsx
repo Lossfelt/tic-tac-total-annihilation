@@ -82,7 +82,7 @@ function buildGas(area, center) {
   const withMotion = (p, i) => ({
     ...p,
     ...spreadFrom(p.x, p.y),
-    delay: Math.round(between(0, 300)),
+    delay: Math.round(between(0, 150)),
     sway: i % 2 ? 'a' : 'b',
   });
   return {

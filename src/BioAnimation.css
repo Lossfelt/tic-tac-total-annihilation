@@ -45,7 +45,7 @@
   transform-box: fill-box;
   transform-origin: center;
   opacity: 0;
-  animation: bw-spread 1100ms ease-out calc(var(--impact) + var(--x)) both;
+  animation: bw-spread 650ms ease-out calc(var(--impact) + var(--x)) both;
 }
 .bw-sway {
   transform-box: fill-box;
@@ -61,7 +61,7 @@
 /* Sporer stiger opp av gassen når den har spredt seg. */
 .bw-spore {
   opacity: 0;
-  animation: bw-spore 2400ms ease-out calc(var(--impact) + 700ms + var(--sd))
+  animation: bw-spore 2400ms ease-out calc(var(--impact) + 450ms + var(--sd))
     both;
 }
 

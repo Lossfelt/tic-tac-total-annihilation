@@ -115,12 +115,12 @@ export function planArtillery(cells, version) {
 }
 
 // Biological Warfare. En beholder faller på målet og gassen sprer seg over
-// 3x3-området (ferdig ca. 2,3 s). Først da vises hvilke celler serveren har
+// 3x3-området (ferdig ca. 1,7 s). Først da vises hvilke celler serveren har
 // valgt å ramme, og de tømmes, de nærmeste først.
 const BIO_IMPACT_MS = 900;
-const BIO_HIT_BASE_MS = 2400;
+const BIO_HIT_BASE_MS = 1800;
 const BIO_HIT_STEP_MS = 260;
-const BIO_DURATION_MS = 5200;
+const BIO_DURATION_MS = 4400;
 
 // Område og treffpunkter for Biological Warfare. `affected` er cellene
 // serveren faktisk rammet (tilfeldig), og kan være tom.
