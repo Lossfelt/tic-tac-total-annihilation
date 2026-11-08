@@ -11,7 +11,11 @@ import { act } from 'react';
 import { render, screen, cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TicTacToeBoard } from './Board.jsx';
-import { NUKE_DURATION_MS, NUKE_IMPACT_MS } from './weaponAnimation.js';
+import {
+  NUKE_DURATION_MS,
+  NUKE_IMPACT_MS,
+  getWeaponTiming,
+} from './weaponAnimation.js';
 
 afterEach(cleanup);
 
@@ -283,5 +287,57 @@ describe('Dirty Nuke-animasjon', () => {
     rerender(<TicTacToeBoard {...makeProps({ G })} />);
 
     expect(overlay()).toBeNull();
+  });
+});
+
+describe('Air Strike-animasjon', () => {
+  const ids = [4, 5, 6];
+  const event = {
+    type: 'Air Strike',
+    cells: ids,
+    version: 1,
+    before: {
+      cells: ids.reduce(
+        (cells, i) => Object.assign(cells, { [i]: '0' }),
+        Array(16).fill(null),
+      ),
+      destroyed: Array(16).fill(false),
+    },
+  };
+  const timing = getWeaponTiming(event);
+  const owned = (id) => cellButtons()[id].className.includes('cell-queendom');
+  const overlay = () => screen.queryByTestId('air-strike-animation');
+
+  afterEach(() => vi.useRealTimers());
+
+  it('tømmer cellene én og én når bombene treffer', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<TicTacToeBoard {...makeProps()} />);
+    rerender(<TicTacToeBoard {...makeProps({ G: { weaponEvent: event } })} />);
+
+    expect(overlay()).not.toBeNull();
+    expect(ids.every(owned)).toBe(true);
+
+    act(() => vi.advanceTimersByTime(timing.hits[0].t));
+    expect(owned(4)).toBe(false);
+    expect(owned(5)).toBe(true);
+    expect(owned(6)).toBe(true);
+
+    act(() => vi.advanceTimersByTime(timing.hits[1].t - timing.hits[0].t));
+    expect(owned(5)).toBe(false);
+    expect(owned(6)).toBe(true);
+  });
+
+  it('bytter til det nye brettet og slipper trekk når animasjonen er ferdig', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<TicTacToeBoard {...makeProps()} />);
+    rerender(<TicTacToeBoard {...makeProps({ G: { weaponEvent: event } })} />);
+
+    expect(cellButtons()[0].disabled).toBe(true);
+
+    act(() => vi.advanceTimersByTime(timing.durationMs));
+
+    expect(overlay()).toBeNull();
+    expect(cellButtons()[0].disabled).toBe(false);
   });
 });

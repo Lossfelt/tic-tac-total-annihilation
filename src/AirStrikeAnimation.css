@@ -1,0 +1,194 @@
+/* Air Strike. Se AirStrikeAnimation.jsx. Treffene starter på --d (ms) som er
+   satt per eksplosjon fra weaponAnimation.js. Animasjonene spilles én gang og
+   blir stående i sluttilstand til komponenten fjernes. */
+
+.as-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  cursor: wait;
+  animation: as-fade var(--as-dur) linear forwards;
+}
+
+.as-overlay svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.as-dim {
+  opacity: 0;
+  animation: as-dim var(--as-dur) linear forwards;
+}
+
+.as-plane {
+  animation: as-fly var(--fly) linear forwards;
+}
+
+.as-scorch,
+.as-bomb,
+.as-flash,
+.as-fire,
+.as-ring,
+.as-smoke {
+  opacity: 0;
+  animation-delay: var(--d);
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.as-scorch {
+  animation-name: as-scorch;
+  animation-duration: 1.4s;
+}
+.as-bomb {
+  animation-name: as-bomb;
+  animation-duration: 280ms;
+  animation-timing-function: ease-in;
+}
+.as-flash {
+  animation-name: as-flash;
+  animation-duration: 450ms;
+}
+.as-fire {
+  animation-name: as-fire;
+  animation-duration: 1s;
+}
+.as-ring {
+  animation-name: as-ring;
+  animation-duration: 700ms;
+}
+.as-smoke {
+  animation-name: as-smoke;
+  animation-duration: 1.8s;
+  animation-delay: calc(var(--d) + var(--x));
+}
+
+@keyframes as-fade {
+  0%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes as-dim {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.4;
+  }
+  80% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes as-fly {
+  from {
+    transform: translate(var(--x0), var(--y0));
+  }
+  to {
+    transform: translate(var(--x1), var(--y1));
+  }
+}
+
+/* Bomben kommer fra flyet og krymper mens den faller mot cellen. */
+@keyframes as-bomb {
+  0% {
+    opacity: 0;
+    transform: translate(var(--ox), var(--oy)) scale(1.8);
+  }
+  10% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.8);
+  }
+}
+
+@keyframes as-scorch {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  15% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+}
+
+@keyframes as-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes as-fire {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes as-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+@keyframes as-smoke {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3);
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sx), var(--sy)) scale(1.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-overlay {
+    display: none;
+  }
+}

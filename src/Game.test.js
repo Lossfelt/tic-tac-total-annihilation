@@ -606,6 +606,22 @@ describe('clickCell: validering', () => {
   );
 });
 
+describe('debugGiveWeapon', () => {
+  const give = TicTacToe.moves.debugGiveWeapon;
+
+  it('kjører bare på serveren og teller ikke som turens trekk', () => {
+    expect(give.client).toBe(false);
+    expect(give.noLimit).toBe(true);
+  });
+
+  it('avvises uten DEBUG_MOVES, slik at det ikke virker i produksjon', () => {
+    const G = baseG();
+
+    expect(give.move({ G, playerID: '0' }, 'Dirty Nuke')).toBe(INVALID_MOVE);
+    expect(G.strategicWeapon[0]).toBeNull();
+  });
+});
+
 describe('GetWinningLine med destroyed celle', () => {
   it('returnerer null hvis en celle i en ellers full linje er destroyed', () => {
     // Linjen [0,1,2,3] er eid av spiller 0 på 0,1,3 og destroyed (null) på 2.

@@ -339,14 +339,16 @@ export const TicTacToe = {
         G.lastCellAttacked = id;
       }
     },
-    // Gir spilleren en Dirty Nuke, for å teste animasjonen. Kjøres bare på
+    // Gir spilleren et våpen, for å teste animasjonene. Kjøres bare på
     // serveren (client: false) og teller ikke som turens trekk (noLimit).
-    debugGiveNuke: {
+    debugGiveWeapon: {
       client: false,
       noLimit: true,
-      move: ({ G, playerID }) => {
-        if (!DEBUG_MOVES) return INVALID_MOVE;
-        G.strategicWeapon[playerID] = 'Dirty Nuke';
+      move: ({ G, playerID }, weapon) => {
+        if (!DEBUG_MOVES || !strategicWeapons.includes(weapon)) {
+          return INVALID_MOVE;
+        }
+        G.strategicWeapon[playerID] = weapon;
         G.rareiumAtWeapon[playerID] = 100;
       },
     },
