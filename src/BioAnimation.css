@@ -58,6 +58,13 @@
   animation: bw-sway-b 2.8s ease-in-out infinite alternate;
 }
 
+/* Sporer stiger opp av gassen når den har spredt seg. */
+.bw-spore {
+  opacity: 0;
+  animation: bw-spore 2400ms ease-out calc(var(--impact) + 700ms + var(--sd))
+    both;
+}
+
 .bw-mark {
   opacity: 0;
   animation: bw-mark 1500ms ease-out var(--d) both;
@@ -141,10 +148,10 @@
     transform: translate(var(--sx), var(--sy)) scale(0.2);
   }
   20% {
-    opacity: 0.78;
+    opacity: var(--o);
   }
   100% {
-    opacity: 0.78;
+    opacity: var(--o);
     transform: translate(0, 0) scale(1);
   }
 }
@@ -158,6 +165,20 @@
 @keyframes bw-sway-b {
   to {
     transform: translate(-4px, 3px) scale(0.96);
+  }
+}
+
+@keyframes bw-spore {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--bx), -50px);
   }
 }
 

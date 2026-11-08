@@ -5,59 +5,111 @@ import { makeRng } from './rng.js';
 import { BOARD_UNITS } from './weaponAnimation.js';
 
 // Biological Warfare: en beholder faller ned over målcellen og sprekker, og en
-// giftig gassky brer seg over 3x3-området. Cellene som faktisk blir rammet
-// (tilfeldig, bestemt av serveren) får et giftmerke og tømmes etter hvert som
-// gassen når dem. Tegnet som SVG og animert med CSS. Rute og tidspunkter
-// kommer fra planBio().
+// giftig gassky brer seg over 3x3-området. Først når gassen har spredt seg
+// vises hvilke celler som faktisk ble rammet (tilfeldig, bestemt av
+// serveren): de får et giftmerke og tømmes, de nærmeste først. Tegnet som SVG
+// og animert med CSS. Rute og tidspunkter kommer fra planBio().
 
 const INK = '#1d1712';
-const GAS = [
+const GLOW = '#d8ff7a';
+
+// Fargetrapper for gassen: [base, lys, høylys].
+const GAS_BACK = ['#1f4a16', '#3a7524', '#6bb040'];
+const GAS_MID = [
   ['#2f6a22', '#5fae38', '#a8e068'],
   ['#3f7d2a', '#7fbf3f', '#c4ec7a'],
   ['#285a1c', '#4f8f2f', '#8fcf50'],
 ];
-const GLOW = '#d8ff7a';
+const GAS_FRONT = ['#5fae38', '#a8e068', '#e4ffb0'];
 
-// Gasspuffer fordelt over hver celle i området, som sprer seg ut fra målet.
+// Gassen i tre lag: store mørke skyer bakerst, midtlaget, og små lyse puffer
+// foran. Dessuten tåkeslør og små sporer som stiger. Alt spres ut fra målet.
 function buildGas(area, center) {
-  const puffs = [];
+  const rand = makeRng(100 + area.length);
+  const between = (a, b) => a + (b - a) * rand();
+  const spreadFrom = (x, y) => ({
+    sx: -(x - center.x) * 0.85,
+    sy: -(y - center.y) * 0.85,
+  });
+  const layer = { back: [], mid: [], wisps: [], front: [], spores: [] };
+
   area.forEach((cell) => {
-    const rand = makeRng(100 + cell.id);
-    const between = (a, b) => a + (b - a) * rand();
+    const around = (spread) => ({
+      x: cell.x + between(-spread, spread),
+      y: cell.y + between(-spread, spread),
+    });
+    for (let i = 0; i < 2; i++) {
+      const p = around(30);
+      layer.back.push({ ...p, r: between(30, 44), colors: GAS_BACK, o: 0.55 });
+    }
     for (let i = 0; i < 3; i++) {
-      const x = cell.x + between(-34, 34);
-      const y = cell.y + between(-34, 34);
-      puffs.push({
-        x,
-        y,
+      const p = around(34);
+      layer.mid.push({
+        ...p,
         r: between(20, 34),
-        sx: -(x - center.x) * 0.85,
-        sy: -(y - center.y) * 0.85,
-        delay: Math.round(between(0, 300)),
-        colors: GAS[puffs.length % GAS.length],
-        sway: puffs.length % 2 ? 'a' : 'b',
+        colors: GAS_MID[(layer.mid.length + i) % GAS_MID.length],
+        o: 0.78,
+      });
+    }
+    const wisp = around(28);
+    layer.wisps.push({
+      ...wisp,
+      rx: between(26, 42),
+      ry: between(7, 11),
+      angle: between(0, 180),
+      o: 0.35,
+    });
+    for (let i = 0; i < 2; i++) {
+      const p = around(30);
+      layer.front.push({
+        ...p,
+        r: between(11, 21),
+        colors: GAS_FRONT,
+        o: 0.85,
+      });
+    }
+    for (let i = 0; i < 3; i++) {
+      const p = around(40);
+      layer.spores.push({
+        ...p,
+        r: between(1.4, 2.6),
+        bx: between(-14, 14),
+        delay: Math.round(between(0, 900)),
       });
     }
   });
-  return puffs;
+
+  const withMotion = (p, i) => ({
+    ...p,
+    ...spreadFrom(p.x, p.y),
+    delay: Math.round(between(0, 300)),
+    sway: i % 2 ? 'a' : 'b',
+  });
+  return {
+    back: layer.back.map(withMotion),
+    mid: layer.mid.map(withMotion),
+    wisps: layer.wisps.map(withMotion),
+    front: layer.front.map(withMotion),
+    spores: layer.spores,
+  };
 }
 
 // Giftmerke, tegnet som tre sammenflettede ringer rundt et senter.
-function Biohazard() {
+function Biohazard({ size = 1, stroke = GLOW }) {
   return (
-    <g fill="none" stroke={GLOW} strokeWidth="3">
+    <g fill="none" stroke={stroke} strokeWidth={3 * size}>
       {[0, 120, 240].map((angle) => {
         const rad = ((angle - 90) * Math.PI) / 180;
         return (
           <circle
             key={angle}
-            cx={Math.cos(rad) * 11}
-            cy={Math.sin(rad) * 11}
-            r="10"
+            cx={Math.cos(rad) * 11 * size}
+            cy={Math.sin(rad) * 11 * size}
+            r={10 * size}
           />
         );
       })}
-      <circle r="4" fill={GLOW} />
+      <circle r={4 * size} fill={stroke} />
     </g>
   );
 }
@@ -70,26 +122,83 @@ const BUBBLES = [
   { x: -22, y: -4, bx: -14, delay: 460 },
 ];
 
+// Gassbeholderen sett ovenfra: stålsylinder med fareskravering, bolter, ventil
+// og giftmerke på lokket.
 function Canister() {
   return (
     <g>
-      <circle r="16" fill="#5e6e34" stroke={INK} strokeWidth="1.5" />
       <path
-        d="M-12 -4 L12 4 M-12 4 L12 -4"
-        stroke="#e0d33a"
-        strokeWidth="5"
-        strokeLinecap="round"
-        opacity="0.9"
-      />
-      <circle r="5" fill="#2a3318" stroke={INK} strokeWidth="1" />
-      <path
-        d="M-9 -10 A12 12 0 0 1 2 -13"
-        stroke="#c4d68a"
-        strokeWidth="2"
+        d="M-9 -17 Q0 -26 9 -17"
         fill="none"
+        stroke={INK}
+        strokeWidth="3.4"
         strokeLinecap="round"
-        opacity="0.7"
       />
+      <path
+        d="M-9 -17 Q0 -26 9 -17"
+        fill="none"
+        stroke="#8a8a60"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <circle r="19" fill="#4a5a2c" stroke={INK} strokeWidth="1.6" />
+      <circle r="15.5" fill="none" stroke={INK} strokeWidth="5.4" />
+      <circle
+        r="15.5"
+        fill="none"
+        stroke="#e6cf3a"
+        strokeWidth="5"
+        strokeDasharray="6.5 6.5"
+      />
+      <circle r="12.5" fill="#6f7f40" stroke={INK} strokeWidth="1" />
+      <circle r="9.6" fill="#7d8c4a" stroke="#4a5a2c" strokeWidth="0.8" />
+      {[0, 60, 120, 180, 240, 300].map((angle) => {
+        const rad = (angle * Math.PI) / 180;
+        return (
+          <circle
+            key={angle}
+            cx={Math.cos(rad) * 11.2}
+            cy={Math.sin(rad) * 11.2}
+            r="1.1"
+            fill="#2e3818"
+          />
+        );
+      })}
+      <g opacity="0.85">
+        <Biohazard size={0.34} stroke="#e4ffb0" />
+      </g>
+      <circle r="4.6" fill="#8a8a60" stroke={INK} strokeWidth="1" />
+      <path
+        d="M-6.4 0 H6.4 M0 -6.4 V6.4"
+        stroke="#c4c07a"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <circle r="1.9" fill="#c75d3a" stroke={INK} strokeWidth="0.6" />
+      <path
+        d="M-12 -9 A15 15 0 0 1 0 -15.5"
+        fill="none"
+        stroke="#e8f0c0"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        opacity="0.75"
+      />
+    </g>
+  );
+}
+
+function GasPuff({ p, children }) {
+  return (
+    <g
+      className="bw-puff"
+      style={{
+        '--sx': `${p.sx}px`,
+        '--sy': `${p.sy}px`,
+        '--x': `${p.delay}ms`,
+        '--o': p.o,
+      }}
+    >
+      <g className={`bw-sway bw-sway-${p.sway}`}>{children}</g>
     </g>
   );
 }
@@ -121,20 +230,43 @@ export default function BioAnimation({ plan }) {
         <g transform={`translate(${plan.center.x} ${plan.center.y})`}>
           <circle className="bw-shadow" r="22" fill="#000" />
         </g>
-        {gas.map((p, i) => (
-          <g
-            key={i}
-            className="bw-puff"
-            style={{
-              '--sx': `${p.sx}px`,
-              '--sy': `${p.sy}px`,
-              '--x': `${p.delay}ms`,
-            }}
-          >
-            <g className={`bw-sway bw-sway-${p.sway}`}>
-              <Puff x={p.x} y={p.y} r={p.r} colors={p.colors} />
-            </g>
-          </g>
+        {gas.back.map((p, i) => (
+          <GasPuff key={`b${i}`} p={p}>
+            <Puff x={p.x} y={p.y} r={p.r} colors={p.colors} />
+          </GasPuff>
+        ))}
+        {gas.mid.map((p, i) => (
+          <GasPuff key={`m${i}`} p={p}>
+            <Puff x={p.x} y={p.y} r={p.r} colors={p.colors} />
+          </GasPuff>
+        ))}
+        {gas.wisps.map((p, i) => (
+          <GasPuff key={`w${i}`} p={p}>
+            <ellipse
+              cx={p.x}
+              cy={p.y}
+              rx={p.rx}
+              ry={p.ry}
+              fill="#9fe05a"
+              transform={`rotate(${p.angle.toFixed(0)} ${p.x.toFixed(1)} ${p.y.toFixed(1)})`}
+            />
+          </GasPuff>
+        ))}
+        {gas.front.map((p, i) => (
+          <GasPuff key={`f${i}`} p={p}>
+            <Puff x={p.x} y={p.y} r={p.r} colors={p.colors} />
+          </GasPuff>
+        ))}
+        {gas.spores.map((s, i) => (
+          <circle
+            key={`s${i}`}
+            className="bw-spore"
+            cx={s.x}
+            cy={s.y}
+            r={s.r}
+            fill="#e4ffb0"
+            style={{ '--bx': `${s.bx}px`, '--sd': `${s.delay}ms` }}
+          />
         ))}
         {plan.hits.map((hit) => (
           <g
