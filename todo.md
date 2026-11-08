@@ -73,20 +73,16 @@ oppfølgingspunktet over viser at `exports` peker på ESM-byggene.
 Bekreftet i koden, grovt prioritert. Balanse er antakelser og bør måles med
 en simulering før noe endres.
 
-**Robusthet (små oppgaver)**
+**Robusthet**
 
-- Air Strike i `Board.jsx` (`specialAttack`) nullstiller utvalget og avslutter
-  våpenmodus selv om serveren avviser trekket, og celler kan ikke velges bort
-  enkeltvis. Gi tilbakemelding og la spilleren angre enkeltvalg.
-- `handleLeave` i `App.jsx` mangler try/catch, så spilleren kan bli sittende
-  fast hvis serveren er nede. `handlePlayAgain` viser feil bare i konsollen.
-- `endIf` i `Game.js` bruker `ctx.currentPlayer` som vinner i stedet for
-  eieren av vinnerlinjen. Trygt i dag, men skjørt.
-- Credentials logges i klartekst i `server.mjs`. Fjern i produksjon.
-- Motstanderens Rareium og våpen ligger i klienttilstanden (ingen
-  `playerView`).
-- Credentials ligger bare i `useState`, så en reload mister plassen i matchen.
-  Lagre `{matchID, playerID, credentials}` i `sessionStorage` og gjenoppta.
+Ferdig 8. november 2026: Air Strike kan angre enkeltvalg og viser melding ved
+ugyldig valg, `handleLeave` og `handlePlayAgain` håndterer feil, `endIf` bruker
+linjens eier, credentials logges ikke, `playerView` skjuler motstanderens
+Rareium og våpen, og en reload gjenopptar matchen via `sessionStorage`.
+
+- Gjenstår: en lagret økt kan peke på en match som er borte (serveren
+  restartet). Da må spilleren trykke Leave. Vurder å sjekke matchen ved
+  gjenopptakelse.
 
 **Tester som mangler**
 
