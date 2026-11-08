@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { RECYCLE_REFUND_RATIO, formatLogEntry, territories } from './Game.js';
 import NukeAnimation from './NukeAnimation.jsx';
 import AirStrikeAnimation from './AirStrikeAnimation.jsx';
+import ArtilleryAnimation from './ArtilleryAnimation.jsx';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
 
 // Våpen som kan gis med testknappen (bare i utviklingsmodus).
-const DEBUG_WEAPONS = ['Dirty Nuke', 'Air Strike'];
+const DEBUG_WEAPONS = ['Dirty Nuke', 'Air Strike', 'Artillery'];
 
 const WEAPON_TARGET_COUNT = {
   'Air Strike': 3,
@@ -257,6 +258,9 @@ export function TicTacToeBoard({
           </table>
           {anim?.type === 'Dirty Nuke' && (
             <NukeAnimation key={anim.event.version} />
+          )}
+          {anim?.type === 'Artillery' && (
+            <ArtilleryAnimation key={anim.event.version} plan={anim.plan} />
           )}
           {anim?.type === 'Air Strike' && (
             <AirStrikeAnimation key={anim.event.version} plan={anim.plan} />

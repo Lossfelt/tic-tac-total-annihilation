@@ -1,3 +1,5 @@
+import { GetNeighbors } from './Game.js';
+
 // Tidsrammer og geometri for våpenanimasjonene. Brukes både av
 // useWeaponAnimation (som styrer når brettet byttes og når klikk igjen er
 // tillatt) og av animasjonskomponentene, slik at alt går i takt.
@@ -75,6 +77,43 @@ export function planAirStrike(cells, version) {
   };
 }
 
+// Artillery. Skallet faller inn mot målcellen og rammer den og de fire
+// naboene. Naboene går av litt etter, som en sjokkbølge.
+const ART_IMPACT_MS = 1000;
+const ART_NEIGHBOR_DELAY_MS = 130;
+const ART_DURATION_MS = 4200;
+// Hvor langt utenfor målet skallet starter.
+const ART_START_UNITS = 520;
+
+// Rute og treffpunkter for Artillery. Skallet kommer fra et hjørne som
+// veksler med versjonen, som alle klienter har felles.
+export function planArtillery(cells, version) {
+  const center = cells[0];
+  const target = cellCenter(center);
+  const comesFrom = ((version % 4) * 90 + 45) * (Math.PI / 180);
+  const ux = Math.cos(comesFrom);
+  const uy = Math.sin(comesFrom);
+  const hit = (id, t, scale) => ({ id, ...cellCenter(id), t, scale });
+
+  return {
+    from: {
+      x: target.x + ux * ART_START_UNITS,
+      y: target.y + uy * ART_START_UNITS,
+    },
+    to: target,
+    // Skallet tegnes med nesen mot +x, så det snus mot bevegelsen.
+    angle: (comesFrom * 180) / Math.PI + 180,
+    hits: [
+      hit(center, ART_IMPACT_MS, 1.15),
+      ...GetNeighbors(center).map((id) =>
+        hit(id, ART_IMPACT_MS + ART_NEIGHBOR_DELAY_MS, 0.8),
+      ),
+    ],
+    impactMs: ART_IMPACT_MS,
+    durationMs: ART_DURATION_MS,
+  };
+}
+
 // Tidslinjen for en våpenhendelse, eller null hvis våpenet ikke har animasjon.
 //   impactMs: når brettet bytter fra "før" til "etter"
 //   hits: celler som tømmes underveis, hver på sitt tidspunkt (ms)
@@ -89,6 +128,17 @@ export function getWeaponTiming(event) {
   }
   if (event.type === 'Air Strike') {
     const plan = planAirStrike(event.cells, event.version);
+    const lastHit = Math.max(...plan.hits.map((h) => h.t));
+    return {
+      type: event.type,
+      durationMs: plan.durationMs,
+      impactMs: lastHit + 60,
+      hits: plan.hits.map(({ id, t }) => ({ id, t })),
+      plan,
+    };
+  }
+  if (event.type === 'Artillery') {
+    const plan = planArtillery(event.cells, event.version);
     const lastHit = Math.max(...plan.hits.map((h) => h.t));
     return {
       type: event.type,

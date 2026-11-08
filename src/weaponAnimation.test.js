@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   planAirStrike,
+  planArtillery,
   getWeaponTiming,
   NUKE_DURATION_MS,
   NUKE_IMPACT_MS,
@@ -69,6 +70,64 @@ describe('getWeaponTiming', () => {
   });
 
   it('gir null for våpen uten animasjon', () => {
-    expect(getWeaponTiming({ type: 'Artillery', cells: [5] })).toBeNull();
+    expect(
+      getWeaponTiming({ type: 'Biological Warfare', cells: [5] }),
+    ).toBeNull();
+  });
+});
+
+describe('planArtillery', () => {
+  it('rammer målet og alle fire naboene i midten av brettet', () => {
+    const { hits } = planArtillery([5], 1);
+
+    expect(hits.map((h) => h.id).sort((a, b) => a - b)).toEqual([
+      1, 4, 5, 6, 9,
+    ]);
+  });
+
+  it('rammer bare de naboene som finnes i et hjørne', () => {
+    const ids = planArtillery([0], 1).hits.map((h) => h.id);
+
+    expect(ids.sort((a, b) => a - b)).toEqual([0, 1, 4]);
+  });
+
+  it('treffer målet først og naboene litt etter, større i midten', () => {
+    const { hits } = planArtillery([5], 1);
+    const [center, ...neighbors] = hits;
+
+    expect(center.id).toBe(5);
+    expect(neighbors.every((n) => n.t > center.t)).toBe(true);
+    expect(neighbors.every((n) => n.scale < center.scale)).toBe(true);
+  });
+
+  it('lar skallet komme fra ulike retninger for ulike versjoner', () => {
+    const froms = [1, 2, 3, 4].map((v) => {
+      const { from } = planArtillery([5], v);
+      return `${Math.round(from.x)},${Math.round(from.y)}`;
+    });
+
+    expect(new Set(froms).size).toBe(4);
+  });
+
+  it('starter utenfor brettet og lander på målcellen', () => {
+    const { from, to } = planArtillery([5], 1);
+
+    expect(from.x < 0 || from.x > 400 || from.y < 0 || from.y > 400).toBe(true);
+    expect(to).toEqual({ x: 150, y: 150 });
+  });
+});
+
+describe('getWeaponTiming: Artillery', () => {
+  it('bytter brettet rett etter at siste nabo er truffet', () => {
+    const timing = getWeaponTiming({
+      type: 'Artillery',
+      cells: [5],
+      version: 1,
+    });
+    const lastHit = Math.max(...timing.hits.map((h) => h.t));
+
+    expect(timing.hits).toHaveLength(5);
+    expect(timing.impactMs).toBeGreaterThan(lastHit);
+    expect(timing.impactMs).toBeLessThan(timing.durationMs);
   });
 });

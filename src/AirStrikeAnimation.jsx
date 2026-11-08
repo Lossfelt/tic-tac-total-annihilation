@@ -1,6 +1,5 @@
 import './AirStrikeAnimation.css';
-import Puff from './Puff.jsx';
-import { makeRng } from './rng.js';
+import Explosion from './Explosion.jsx';
 import { BOARD_UNITS, BOMB_FALL_MS } from './weaponAnimation.js';
 
 // Air Strike: et bombefly flyr langs de tre valgte cellene og slipper en
@@ -8,8 +7,6 @@ import { BOARD_UNITS, BOMB_FALL_MS } from './weaponAnimation.js';
 // NukeAnimation. Ruten og tidspunktene kommer fra planAirStrike().
 
 const INK = '#1d1712';
-const SMOKE_DARK = ['#3a2c24', '#5a483a', '#7a6652'];
-const SMOKE_LIGHT = ['#4a3a30', '#6b5a4a', '#8a7762'];
 
 // Flyet sett ovenfra, nesen mot høyre (+x).
 const FUSELAGE =
@@ -165,170 +162,6 @@ function Plane() {
   );
 }
 
-// Tre varianter av eksplosjon, så de tre treffene ikke ser helt like ut.
-function buildBoom(seed) {
-  const rand = makeRng(seed);
-  const between = (a, b) => a + (b - a) * rand();
-  const polar = (min, max) => {
-    const angle = between(0, 6.283);
-    const dist = between(min, max);
-    return { dx: Math.cos(angle) * dist, dy: Math.sin(angle) * dist };
-  };
-
-  const fire = [];
-  [
-    { n: 7, f: 1, r: [12, 18] },
-    { n: 5, f: 0.55, r: [12, 17] },
-    { n: 1, f: 0, r: [14, 16] },
-  ].forEach((ring) => {
-    for (let i = 0; i < ring.n; i++) {
-      const angle = (i / ring.n) * 6.283 + between(-0.3, 0.3);
-      const x = Math.cos(angle) * 24 * ring.f;
-      const y = Math.sin(angle) * 24 * ring.f;
-      fire.push({
-        x,
-        y,
-        r: between(ring.r[0], ring.r[1]),
-        t: Math.min(1, Math.hypot(x, y) / 30),
-      });
-    }
-  });
-  fire.sort((a, b) => b.t - a.t);
-
-  return {
-    fire,
-    smoke: Array.from({ length: 8 }, (_, i) => ({
-      x: between(-16, 16),
-      y: between(-12, 12),
-      r: between(12, 20),
-      sx: between(-46, 46),
-      sy: between(-78, -26),
-      delay: i * 45,
-      colors: i % 2 ? SMOKE_DARK : SMOKE_LIGHT,
-    })),
-    debris: Array.from({ length: 9 }, (_, i) => ({
-      ...polar(42, 86),
-      rot: between(-420, 420),
-      size: between(0.8, 1.6),
-      fill: i % 3 === 0 ? '#e8791f' : '#3a2a20',
-    })),
-    sparks: Array.from({ length: 12 }, () => ({
-      ...polar(55, 105),
-      r: between(1.2, 2.4),
-    })),
-    streaks: Array.from({ length: 7 }, () => {
-      const { dx, dy } = polar(34, 52);
-      return { x: dx, y: dy };
-    }),
-  };
-}
-
-const BOOMS = [buildBoom(3), buildBoom(7), buildBoom(13)];
-
-// Bombe som faller mot cellen, så eksplosjon med lysglimt, ildkule, sjokkring,
-// skrot, gnister og røyk. --d er tidspunktet for treffet.
-function Boom({ hit, bombOffset, index }) {
-  const boom = BOOMS[index % BOOMS.length];
-  return (
-    <g
-      transform={`translate(${hit.x} ${hit.y})`}
-      style={{ '--d': `${hit.t}ms` }}
-    >
-      <g className="as-scorch">
-        <ellipse rx="37" ry="33" fill="#1a0805" transform="rotate(20)" />
-        <ellipse rx="24" ry="20" fill="#2e1008" transform="rotate(-15)" />
-        {boom.streaks.map((s, i) => (
-          <line
-            key={i}
-            x2={s.x}
-            y2={s.y}
-            stroke="#1a0805"
-            strokeWidth="3"
-            strokeLinecap="round"
-            opacity="0.5"
-          />
-        ))}
-      </g>
-      <g
-        className="as-bomb"
-        style={{
-          '--d': `${hit.t - BOMB_FALL_MS}ms`,
-          '--ox': `${bombOffset.x}px`,
-          '--oy': `${bombOffset.y}px`,
-        }}
-      >
-        <path
-          d="M10 0 C10 -4 4 -5 -6 -5 L-10 -3 L-10 3 L-6 5 C4 5 10 4 10 0Z"
-          fill="#2e2823"
-          stroke="#1a1511"
-          strokeWidth="1"
-        />
-        <path d="M6 -2.5 L-4 -3.4" stroke="#6b5f50" strokeWidth="1" />
-        <path d="M-10 -3 L-16 -8 L-16 8 L-10 3Z" fill="#c75d3a" />
-      </g>
-      <circle className="as-flash" r="60" fill="#fff3b0" />
-      <g className="as-fire">
-        {boom.fire.map((p, i) => (
-          <Puff key={i} x={p.x} y={p.y} r={p.r} t={p.t} />
-        ))}
-      </g>
-      <circle
-        className="as-ring"
-        r="44"
-        fill="none"
-        stroke="#ffd9a0"
-        strokeWidth="4"
-      />
-      <circle
-        className="as-ring as-ring-late"
-        r="44"
-        fill="none"
-        stroke="#ffe9c0"
-        strokeWidth="2"
-      />
-      {boom.debris.map((d, i) => (
-        <g
-          key={i}
-          className="as-debris"
-          style={{
-            '--dx': `${d.dx}px`,
-            '--dy': `${d.dy}px`,
-            '--rot': `${d.rot}deg`,
-          }}
-        >
-          <path
-            d="M-3 -2 L3 -3 L4 2 L-2 3Z"
-            transform={`scale(${d.size.toFixed(2)})`}
-            fill={d.fill}
-          />
-        </g>
-      ))}
-      {boom.sparks.map((s, i) => (
-        <circle
-          key={i}
-          className="as-spark"
-          r={s.r}
-          fill="#ffd23a"
-          style={{ '--dx': `${s.dx}px`, '--dy': `${s.dy}px` }}
-        />
-      ))}
-      {boom.smoke.map((s, i) => (
-        <g
-          key={i}
-          className="as-smoke"
-          style={{
-            '--sx': `${s.sx}px`,
-            '--sy': `${s.sy}px`,
-            '--x': `${s.delay}ms`,
-          }}
-        >
-          <Puff x={s.x} y={s.y} r={s.r} colors={s.colors} />
-        </g>
-      ))}
-    </g>
-  );
-}
-
 // Dekker hele brettet og fanger alle klikk mens animasjonen spilles. Skal
 // bare monteres mens animasjonen går: CSS-animasjonene starter ved montering.
 export default function AirStrikeAnimation({ plan }) {
@@ -346,8 +179,35 @@ export default function AirStrikeAnimation({ plan }) {
           height={BOARD_UNITS}
           fill="#1a0805"
         />
+        {plan.hits.map((hit) => (
+          <g key={`bomb-${hit.id}`} transform={`translate(${hit.x} ${hit.y})`}>
+            <g
+              className="as-bomb"
+              style={{
+                '--d': `${hit.t - BOMB_FALL_MS}ms`,
+                '--ox': `${plan.bombOffset.x}px`,
+                '--oy': `${plan.bombOffset.y}px`,
+              }}
+            >
+              <path
+                d="M10 0 C10 -4 4 -5 -6 -5 L-10 -3 L-10 3 L-6 5 C4 5 10 4 10 0Z"
+                fill="#2e2823"
+                stroke="#1a1511"
+                strokeWidth="1"
+              />
+              <path d="M6 -2.5 L-4 -3.4" stroke="#6b5f50" strokeWidth="1" />
+              <path d="M-10 -3 L-16 -8 L-16 8 L-10 3Z" fill="#c75d3a" />
+            </g>
+          </g>
+        ))}
         {plan.hits.map((hit, i) => (
-          <Boom key={hit.id} hit={hit} bombOffset={plan.bombOffset} index={i} />
+          <Explosion
+            key={hit.id}
+            x={hit.x}
+            y={hit.y}
+            delay={hit.t}
+            variant={i}
+          />
         ))}
         <g
           className="as-plane"
