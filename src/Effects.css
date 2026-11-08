@@ -124,6 +124,71 @@
   animation: fx-shield 700ms ease-out forwards;
 }
 
+/* Revolt: cellen er tom, så den sprekker opp og rister mens støv stiger. */
+.cell.fx-revolt::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23d9c9a3' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 6 L44 28 L56 40 L42 58 L52 74 L46 94'/%3E%3Cpath d='M56 40 L78 46 L90 62'/%3E%3Cpath d='M42 58 L22 56 L10 70'/%3E%3Cpath d='M44 28 L26 22'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  pointer-events: none;
+  animation: fx-crack 1000ms ease-out forwards;
+}
+
+.cell.fx-revolt::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 18%;
+  height: 40%;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(180, 150, 110, 0.7) 0%,
+    rgba(180, 150, 110, 0) 70%
+  );
+  pointer-events: none;
+  animation: fx-rise 1000ms ease-out forwards;
+}
+
+@keyframes fx-crack {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateX(0);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1) translateX(-3px);
+  }
+  25% {
+    transform: scale(1) translateX(3px);
+  }
+  35% {
+    transform: scale(1) translateX(-2px);
+  }
+  45% {
+    transform: scale(1) translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes fx-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30%) scale(1.5);
+  }
+}
+
 @keyframes fx-stamp {
   0% {
     opacity: 0;
@@ -211,7 +276,9 @@
   .cell.fx-fail .cell-icon,
   .cell.fx-claim::after,
   .cell.fx-conquer::before,
-  .cell.fx-fail::after {
+  .cell.fx-fail::after,
+  .cell.fx-revolt::before,
+  .cell.fx-revolt::after {
     animation: none;
   }
 
