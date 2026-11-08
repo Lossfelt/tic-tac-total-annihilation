@@ -86,24 +86,28 @@
   animation: fx-dust 600ms ease-out forwards;
 }
 
-/* Erobret: fargen sveiper over cellen og ikonet snur seg inn. */
+/* Erobret: en ring i den nye eierens farge brer seg ut fra midten, og det
+   nye ikonet stemples inn når ringen har startet. */
+.cell.fx-conquer {
+  --fx-ring: #ff7a4a;
+}
+
+.cell.fx-conquer.cell-canadia {
+  --fx-ring: #7ec8ff;
+}
+
 .cell.fx-conquer .cell-icon {
-  animation: fx-conquer-icon 650ms ease-out;
+  animation: fx-conquer-icon 900ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
 }
 
 .cell.fx-conquer::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    100deg,
-    transparent 0%,
-    rgba(255, 235, 200, 0.75) 50%,
-    transparent 100%
-  );
-  clip-path: inset(0 round var(--radius-sm));
+  border: 4px solid var(--fx-ring);
+  border-radius: 50%;
   pointer-events: none;
-  animation: fx-sweep 650ms ease-out forwards;
+  animation: fx-ring 900ms ease-out forwards;
 }
 
 /* Mislykket invasjon: ikonet rister og et skjold blinker. */
@@ -215,24 +219,29 @@
 }
 
 @keyframes fx-conquer-icon {
-  0% {
+  0%,
+  30% {
     opacity: 0;
-    transform: rotateY(90deg) scale(0.6);
+    transform: scale(2.2) rotate(-12deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.92) rotate(2deg);
   }
   100% {
     opacity: 1;
-    transform: rotateY(0) scale(1);
+    transform: scale(1) rotate(0);
   }
 }
 
-@keyframes fx-sweep {
+@keyframes fx-ring {
   0% {
-    opacity: 1;
-    transform: translateX(-120%);
+    opacity: 0.95;
+    transform: scale(0.1);
   }
   100% {
     opacity: 0;
-    transform: translateX(120%);
+    transform: scale(1.7);
   }
 }
 
