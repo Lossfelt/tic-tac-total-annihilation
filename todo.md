@@ -129,14 +129,15 @@ ligger i `weapons.js`, og loggen er strukturerte objekter (`gameLog.js`).
 
 **Tilgjengelighet og visuelt**
 
-- Ingen `:focus-visible`, og ingen `prefers-reduced-motion` for blink og puls
-  utenfor våpenanimasjonene.
-- Celler mister territorienavnet som tilgjengelig navn når de er okkupert
-  (bilde-alt vinner). Legg til `aria-label`.
-- Ingen `aria-live` for turbytte, logg eller seier. `AboutPopup` mangler
-  fokusfelle og fokus-retur.
-- `--color-text-dim` på bakgrunnen har kontrast på ca. 2,4:1.
+Ferdig 8. november 2026: `:focus-visible`, global `prefers-reduced-motion`,
+`aria-label` på celler (territorium og status), `aria-live` for turbytte, logg
+og seier, fokusfelle og fokus-retur i `AboutPopup`, og tekstfargene
+`--color-text-muted` og `--color-text-dim` er lysnet til minst 4,5:1 mot
+bakgrunnene. Ikke prøvd med skjermleser.
+
 - Emoji-ikoner (våpen, logg) passer dårlig med stilen. Bytt til SVG.
+- Gjenstår å sjekke: kontrast på andre farger enn tekstfargene (f.eks.
+  rust-tekst på mørk bakgrunn), og at fokusringen ikke klippes på celler.
 
 **Flere animasjoner**
 
