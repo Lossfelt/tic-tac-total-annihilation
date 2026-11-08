@@ -65,8 +65,6 @@ oppfølgingspunktet over viser at `exports` peker på ESM-byggene.
   Start med en enkel heuristikk.
 - Animasjon og lyd når et våpen utløses. Designes sammen, tas opp i
   animasjonsdiskusjonen.
-- Rett loggtekst ved recycling i `Game.js`: `recovers ${refund}% Rareium`
-  er feil, `refund` er et antall og ikke en prosent.
 - TypeScript-rewrite (kun ved en større refaktor i fremtiden, jf.
   PLAN.md).
 
