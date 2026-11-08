@@ -1,0 +1,38 @@
+/* ---------- Mobile / landscape tweaks ---------- */
+
+@media (max-width: 480px) {
+  :root {
+    --cell-size: clamp(50px, 18vmin, 90px);
+  }
+
+  .board-container {
+    padding: 0.5rem;
+  }
+
+  .game-log ul {
+    max-height: 140px;
+  }
+
+  .weapon-button-row {
+    width: 100%;
+  }
+
+  .weapon-button {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  :root {
+    --cell-size: clamp(40px, 12vh, 70px);
+  }
+
+  .board-content {
+    gap: 0.7rem;
+  }
+
+  .game-log ul {
+    max-height: 100px;
+  }
+}

@@ -1,0 +1,188 @@
+/* ---------- AboutPopup ---------- */
+
+.popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.92) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: popup-fade-in 0.2s ease-out;
+}
+
+@keyframes popup-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.popup {
+  position: relative;
+  width: min(100%, 680px);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(
+    180deg,
+    var(--color-bg-elevated) 0%,
+    var(--color-bg-deep) 100%
+  );
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 180, 0.06),
+    var(--shadow-deep);
+  padding: 1.8rem 1.6rem;
+  color: var(--color-text);
+  animation: popup-slide-in 0.25s ease-out;
+}
+
+@keyframes popup-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.popup::-webkit-scrollbar {
+  width: 8px;
+}
+
+.popup::-webkit-scrollbar-track {
+  background: var(--color-bg-deep);
+}
+
+.popup::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+
+.popup-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 1.5rem;
+  line-height: 1;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-close:hover {
+  background: var(--color-rust-dim);
+  color: var(--color-sand);
+  border-color: var(--color-rust);
+}
+
+.popup-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  color: var(--color-rust-bright);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 0.2rem 0;
+  text-align: left;
+}
+
+.popup-section {
+  margin-bottom: 1.2rem;
+}
+
+.popup-section:last-child {
+  margin-bottom: 0;
+}
+
+.popup-section h3 {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  color: var(--color-sand);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem 0;
+}
+
+.popup-section p {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0 0 0.5rem 0;
+  color: var(--color-text);
+}
+
+.faction.queendom h3 {
+  color: var(--color-queendom);
+}
+
+.faction.canadia h3 {
+  color: var(--color-canadia);
+}
+
+.faction-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.faction-header img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.faction-flag {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Bevarer hele bildet med naturlig sideforhold - ingen cropping. */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.6rem;
+  filter: brightness(0.85) contrast(1.05);
+}
+
+.weapons-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.weapons-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  background: var(--color-bg-deep);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.weapon-emoji {
+  flex: 0 0 auto;
+  font-size: 1.4rem;
+  line-height: 1;
+}
