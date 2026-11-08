@@ -2,79 +2,52 @@
 
 Ting som ikke er en del av en aktiv plan, men som kan tas opp senere.
 
-## Blokkerte / utsatte oppgaver
+## Jevnlig oppfølging
+
+### Sjekk om boardgame.io har innført `exports`
+
+Sjekk jevnlig (f.eks. sammen med revurderingen rundt februar 2027, se
+under) om boardgame.io har fått et `exports`-felt i `package.json`, og
+om det peker på ESM-byggene. Siste sjekk 8. november 2026: nyeste
+versjon på npm er fortsatt 0.50.2, uten `exports`, og
+`boardgame.io/server/package.json` har `"main": "../dist/cjs/server.js"`.
+
+Sjekk i tillegg:
+
+- Har 0.51 landet på npm? (Vedlikehold ligger på master, men uten ny
+  release. Se boardgameio/boardgame.io#1236 og #1255.)
+- Er `svelte` gjort valgfri peer-dependency i en utgitt versjon? Det
+  fjerner de gjenstående sikkerhetsvarslene.
+
+Kommando:
+
+```bash
+npm view boardgame.io version
+node -e "console.log(require('boardgame.io/package.json').exports)"
+```
+
+Hvis `exports` finnes og peker på ESM: vurder å gjenåpne importopprydding
+(se "Avvist" under). Hvis ikke: gjør ingenting.
+
+## Avvist
 
 ### Rydde opp i boardgame.io-imports (tidligere plan 1.2)
 
-Bytte interne dypstier til de offisielle entry-points i boardgame.io:
+Planen var å bytte dypstiene (`boardgame.io/dist/cjs/core.js` osv.) til
+de offisielle entry-points (`boardgame.io/core`, `/react`, `/multiplayer`,
+`/client`, `/server`). Avvist, ikke bare utsatt:
 
-- `boardgame.io/dist/cjs/core.js` til `boardgame.io/core` i `src/Game.js`
-- `boardgame.io/dist/cjs/react.js` til `boardgame.io/react` i `src/App.js`
-- `boardgame.io/dist/cjs/multiplayer.js` til `boardgame.io/multiplayer`
-  i `src/App.js`
-- `boardgame.io/dist/cjs/client.js` til `boardgame.io/client` i `src/App.js`
-- `boardgame.io/dist/cjs/server.js` til `boardgame.io/server`
-  i `src/server.mjs`
+- Proxy-mappene har `"main"` som peker på CJS-bygg, og pakken har ingen
+  `exports`. Node ESM (`server.mjs`, og `Game.js` som deles med serveren)
+  kan derfor ikke bruke dem.
+- `App.jsx` bruker bevisst `dist/esm/...`. Rolldown i Vite 8 klarer ikke
+  å tree-shake det Svelte-baserte debug-panelet fra CJS-byggene, som
+  gir ca. 80 kB større produksjonsbundle. Rene entry-points ville trukket
+  CJS inn igjen.
+- Gjenstående gevinst er rent estetisk.
 
-**Hvorfor det er pent:**
-
-- Slipper å peke inn i pakkens interne mappestruktur. Hvis biblioteket
-  flytter `core.js` til en annen sti i en patch-versjon, brekker
-  dypstien vår.
-- Matcher pakkens dokumenterte API.
-- Mindre støy i imports.
-
-**Hvorfor det er blokkert:**
-
-`boardgame.io/server`, `boardgame.io/core` osv. er proxy-mapper under
-`node_modules/boardgame.io/`. Hver har en `package.json` som peker
-`"main"` til den faktiske CJS-filen:
-
-```json
-// node_modules/boardgame.io/server/package.json
-{ "main": "../dist/cjs/server.js" }
-```
-
-Dette fungerer for **Vite** (resolver `main`-feltet automatisk), men
-**ikke for Node ESM** med vår `"type": "module"`. Node ESM krever enten
-fully-specified paths (`.js`) eller en `exports`-felt i package.json,
-og boardgame.io sine proxy-mapper har ingen av delene.
-
-Konsekvensen:
-
-- **App.js**: kan trygt byttes til ren variant (kjører bare i Vite).
-- **server.mjs**: må beholde `dist/cjs/server.js` (kjører i Node ESM).
-- **Game.js**: importeres av både App.js (Vite) og server.mjs (Node ESM),
-  så må også beholde `dist/cjs/core.js` for å fungere i begge.
-
-Bare App.js kan ryddes opp uten å brekke noe. Det betyr inkonsistens i
-kodebasen (noen filer bruker rene paths, andre dypstier).
-
-**Mulige veier videre:**
-
-- Drop `"type": "module"` i package.json. Brekker ESM-syntaks i
-  `src/server.mjs`, så filen må skrives om til CommonJS.
-- Vent til boardgame.io legger til `exports`-felt i en fremtidig
-  versjon.
-- Rydd partielt og lev med inkonsistens.
-
-Anbefaling: la det stå inntil videre. Rent estetisk problem.
-
-**Oppdatering 13. august 2026: delvis avvist, ikke bare utsatt.**
-
-Konklusjonen over var at `App.js` trygt kunne ryddes til ren variant siden den
-bare kjører i Vite. Det stemmer ikke lenger. `App.jsx` importerer nå bevisst
-`boardgame.io/dist/esm/...`, fordi rolldown i Vite 8 ikke klarer å tree-shake
-bort det Svelte-baserte debug-panelet fra CJS-byggene. Med CJS vokser
-produksjonsbundelen med rundt 80 kB.
-
-Proxy-mappene (`boardgame.io/react` osv.) peker `main` til `dist/cjs/`, så å
-bytte til dem ville trekke inn CJS igjen og gjøre bundelen større. Den delen av
-oppgaven bør altså ikke gjøres, selv om boardgame.io skulle legge til et
-`exports`-felt, med mindre det feltet peker på ESM-byggene.
-
-`Game.js` og `server.mjs` er uendret: begge må fortsatt bruke `dist/cjs/`, av
-grunnen beskrevet over. Se README under "Avhengigheter og sikkerhet".
+Se README under "Avhengigheter og sikkerhet". Gjenåpnes bare hvis
+oppfølgingspunktet over viser at `exports` peker på ESM-byggene.
 
 ## Backlog (lavere prioritet, ta etter hvert)
 

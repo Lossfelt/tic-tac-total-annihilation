@@ -138,18 +138,13 @@ Erstatt CJS-stier med offisielle entry points:
 
 Verifiser at både klient og server starter uten feil etter endring.
 
-Notat (blokkert, utsatt til Fase 2): De offisielle entry points er
-proxy-directories som kun fungerer med CommonJS dir-resolution. Dagens
-setup har `"type": "module"` i `package.json`, som tvinger strict ESM
-fully-specified paths både i webpack (CRA) og Node ESM (server.mjs).
-Begge feiler med `boardgame.io/core` etc. Vite (Fase 2) håndterer disse
-proxy-stiene korrekt, så stegget tas der.
-
-Oppdatering etter Fase 2: Selv med Vite kan ikke `Game.js` og
-`server.mjs` bruke rene entry-points fordi `server.mjs` kjører i Node
-ESM som krever fully-specified paths. Bare `App.js` kan ryddes uten å
-brekke noe, men det gir inkonsistens i kodebasen. Detaljer i
-[todo.md](todo.md).
+Notat (avvist 8. november 2026): De offisielle entry points er
+proxy-directories med `main` som peker på CJS-bygg, og pakken har ingen
+`exports`-felt. Node ESM (`server.mjs`, og `Game.js` som deles med
+serveren) kan derfor ikke bruke dem, og `App.jsx` bruker bevisst
+`dist/esm/...` for å holde bundelen liten. Steget gjøres ikke.
+Begrunnelse og et jevnlig oppfølgingspunkt (sjekk om boardgame.io
+innfører `exports`) ligger i [todo.md](todo.md).
 
 ### [x] 1.3 Oppdater README
 
