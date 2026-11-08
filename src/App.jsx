@@ -3,9 +3,10 @@ import { TicTacToeBoard } from './Board.jsx';
 import { Client } from 'boardgame.io/dist/esm/react.js';
 import { SocketIO } from 'boardgame.io/dist/esm/multiplayer.js';
 import { LobbyClient } from 'boardgame.io/dist/esm/client.js';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './Board.css';
 import AboutPopup from './AboutPopup.jsx';
+import Lobby from './Lobby.jsx';
 import { loadSession, saveSession, clearSession } from './session.js';
 
 const TicTacToeClient = Client({
@@ -39,8 +40,6 @@ const App = () => {
   const [pendingAction, setPendingAction] = useState(null);
   const [lobbyError, setLobbyError] = useState('');
   const [matchError, setMatchError] = useState('');
-  const nameInput = useRef();
-  const matchInput = useRef();
 
   useEffect(() => {
     if (joined) saveSession({ name, matchID, playerID, credentials });
@@ -51,16 +50,7 @@ const App = () => {
     setShowAbout(!showAbout);
   };
 
-  const handleNameChange = (event) => {
-    event.preventDefault();
-    setName(nameInput.current.value);
-  };
-
-  const handleJoin = async (inputMatchID) => {
-    const id =
-      typeof inputMatchID === 'string'
-        ? inputMatchID
-        : matchInput.current.value;
+  const handleJoin = async (id) => {
     if (!matchID) {
       setMatchID(id);
     }
@@ -155,91 +145,14 @@ const App = () => {
   return (
     <div>
       {!joined ? (
-        <div className="lobby">
-          <div className="lobby-title">
-            <h1 className="game-title">
-              <span className="game-title-main">Tic Tac Total</span>
-              <span className="game-title-accent">Annihilation</span>
-            </h1>
-            <div className="lobby-subtitle">Post-collapse territory war</div>
-          </div>
-
-          <div className="factions-preview">
-            <div className="faction-card queendom">
-              <img src="/Queendom_icon.png" alt="Mexican Queendom" />
-              <span>Mexican Queendom</span>
-            </div>
-            <div className="faction-card canadia">
-              <img
-                src="/Pan-Canadia_icon.png"
-                alt="Pan-Canadia Inuit Alliance"
-              />
-              <span>Pan-Canadia Inuit Alliance</span>
-            </div>
-          </div>
-
-          {!name ? (
-            <form className="lobby-form" onSubmit={handleNameChange}>
-              <h2>Who will lead the troops?</h2>
-              <input
-                ref={nameInput}
-                type="text"
-                placeholder="Enter your name"
-                maxLength={32}
-              />
-              <button type="submit">Submit</button>
-            </form>
-          ) : (
-            <div className="lobby-actions">
-              <h2>Welcome, general {name}</h2>
-              <button onClick={handleCreate} disabled={pendingAction !== null}>
-                Create new match
-              </button>
-              <div className="lobby-divider">or join existing</div>
-              <div className="lobby-row">
-                <input
-                  ref={matchInput}
-                  type="number"
-                  placeholder="Match ID"
-                  disabled={pendingAction !== null}
-                />
-                <button
-                  onClick={() => handleJoin()}
-                  disabled={pendingAction !== null}
-                >
-                  Join
-                </button>
-              </div>
-              {pendingAction ? (
-                <div className="lobby-pending" role="status" aria-live="polite">
-                  <span className="lobby-pending-dot" aria-hidden="true" />
-                  <span className="lobby-pending-text">
-                    Waiting for server
-                    <span className="lobby-pending-ellipsis" aria-hidden="true">
-                      <span>.</span>
-                      <span>.</span>
-                      <span>.</span>
-                    </span>
-                  </span>
-                  <span className="lobby-pending-hint">
-                    First connect can take 30-60 seconds while the backend wakes
-                    up.
-                  </span>
-                </div>
-              ) : (
-                <div className="lobby-hint">
-                  Match ID is shared with your opponent so they can join the
-                  same battle.
-                </div>
-              )}
-              {lobbyError && (
-                <div className="lobby-error" role="alert">
-                  {lobbyError}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <Lobby
+          name={name}
+          pendingAction={pendingAction}
+          lobbyError={lobbyError}
+          onSubmitName={setName}
+          onCreate={handleCreate}
+          onJoin={handleJoin}
+        />
       ) : (
         <div className="match-shell">
           <div className="match-bar">
