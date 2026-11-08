@@ -15,7 +15,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src",
-    "test": "vitest"
+    "test": "vitest",
+    "simulate": "node scripts/simulate.mjs"
   },
   "overrides": {
     "socket.io": "^4.8.3",

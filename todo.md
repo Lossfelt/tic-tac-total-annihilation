@@ -84,12 +84,17 @@ Rareium og våpen, og en reload gjenopptar matchen via `sessionStorage`.
   restartet). Da må spilleren trykke Leave. Vurder å sjekke matchen ved
   gjenopptakelse.
 
-**Tester som mangler**
+**Tester**
 
-- `clickCell` (claim, invasjon med mocket tilfeldighet), revolt i `onEnd`
-  (inkludert unntaket for `lastCellAttacked`), og `onBegin` (Rareium og
-  våpentildeling).
-- En balansesimulering (se under).
+Ferdig 8. november 2026: tester for `clickCell`, revolt i `onEnd`, `onBegin`
+(Rareium og våpentildeling), `playerView` og `endIf`. Balansesimulering ligger
+i `scripts/simulate.mjs` (`npm run simulate`).
+
+Første kjøring, 1000 partier med tilfeldige spillere som bruker våpen med 50 %
+sjanse: spiller 0 vant 52 %, spiller 1 vant 47 %, 1 % uavgjort etter 400
+trekk, 8 % seier ved dominans, median 53 trekk per parti, 90. persentil 201.
+Våpnene brukes jevnt. Tilfeldige spillere sier lite om strategi, så bruk
+tallene til å sammenligne regelendringer, ikke som fasit.
 
 **Balanse (mål først)**
 
