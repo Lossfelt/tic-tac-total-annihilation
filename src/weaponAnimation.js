@@ -4,11 +4,12 @@ import { GetNeighbors, GetSurroundingCells } from './Game.js';
 // useWeaponAnimation (som styrer når brettet byttes og når klikk igjen er
 // tillatt) og av animasjonskomponentene, slik at alt går i takt.
 
-// Dirty Nuke. Varigheten brukes også av CSS via --nk-dur.
-export const NUKE_DURATION_MS = 5500;
+// Dirty Nuke. Varigheten brukes også av CSS via --nk-dur, og SVG-en i
+// public/nuke.svg har samme lengde (dur="2s").
+export const NUKE_DURATION_MS = 2000;
 
 // Når brettet bytter fra "før" til "etter". Skal ligge på toppen av
-// lysglimtet (ca. 5 % av varigheten), så spilleren ikke ser cellene forsvinne.
+// lysglimtet (ca. 15 % av varigheten), så spilleren ikke ser cellene forsvinne.
 export const NUKE_IMPACT_MS = 300;
 
 // Air Strike. Brettet tegnes som 4x4 ruter på 100 enheter hver.

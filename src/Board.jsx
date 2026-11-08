@@ -1,7 +1,6 @@
 import './Board.css';
 import './Effects.css';
 import NukeAnimation from './NukeAnimation.jsx';
-import NukeAnimationV3 from './NukeAnimationV3.jsx';
 import AirStrikeAnimation from './AirStrikeAnimation.jsx';
 import ArtilleryAnimation from './ArtilleryAnimation.jsx';
 import BioAnimation from './BioAnimation.jsx';
@@ -15,10 +14,6 @@ import { FACTION_NAME } from './factions.js';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
 import { useJustArmed } from './useJustArmed.js';
 import { useWeaponTargeting } from './useWeaponTargeting.js';
-
-// Prøvevariant: legg til ?nuke=v3 i adressen for å se den nye soppskyen.
-const NUKE_V3 =
-  new URLSearchParams(window.location.search).get('nuke') === 'v3';
 
 export function TicTacToeBoard({
   ctx,
@@ -69,12 +64,12 @@ export function TicTacToeBoard({
             isActive={isActive}
             onCellClick={clickCell}
           />
-          {anim?.type === 'Dirty Nuke' &&
-            (NUKE_V3 ? (
-              <NukeAnimationV3 key={anim.event.version} />
-            ) : (
-              <NukeAnimation key={anim.event.version} />
-            ))}
+          {anim?.type === 'Dirty Nuke' && (
+            <NukeAnimation
+              key={anim.event.version}
+              version={anim.event.version}
+            />
+          )}
           {anim?.type === 'Biological Warfare' && (
             <BioAnimation key={anim.event.version} plan={anim.plan} />
           )}
