@@ -23,7 +23,7 @@ const AIR_MARGIN_UNITS = 260;
 // Hvor lenge bomben faller før den treffer.
 export const BOMB_FALL_MS = 280;
 
-const cellCenter = (id) => ({
+export const cellCenter = (id) => ({
   x: ((id % 4) + 0.5) * CELL_UNITS,
   y: (Math.floor(id / 4) + 0.5) * CELL_UNITS,
 });

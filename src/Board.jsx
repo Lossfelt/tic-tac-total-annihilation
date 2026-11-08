@@ -6,6 +6,7 @@ import NukeAnimation from './NukeAnimation.jsx';
 import AirStrikeAnimation from './AirStrikeAnimation.jsx';
 import ArtilleryAnimation from './ArtilleryAnimation.jsx';
 import BioAnimation from './BioAnimation.jsx';
+import WinEffect from './WinEffect.jsx';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
 import { useJustArmed } from './useJustArmed.js';
 
@@ -280,7 +281,14 @@ export function TicTacToeBoard({
             <AirStrikeAnimation key={anim.event.version} plan={anim.plan} />
           )}
           {gameover && (
-            <div className={`winner-overlay winner-overlay-${winnerID}`}>
+            <WinEffect winnerID={winnerID} winningLine={gameover.winningLine} />
+          )}
+          {gameover && (
+            <div
+              className={`winner-overlay winner-overlay-${winnerID} ${
+                gameover.winningLine ? 'winner-overlay-after-line' : ''
+              }`}
+            >
               <div className="winner-overlay-name">{winnerName}</div>
               <div className="winner-overlay-label">Wins</div>
             </div>

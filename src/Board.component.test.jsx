@@ -290,6 +290,43 @@ describe('Dirty Nuke-animasjon', () => {
   });
 });
 
+describe('seierseffekt', () => {
+  const won = (extra) =>
+    makeProps({
+      ctx: { currentPlayer: '0', gameover: { winner: '0', ...extra } },
+    });
+
+  it('tegner en strek gjennom vinnercellene', () => {
+    render(<TicTacToeBoard {...won({ winningLine: [4, 5, 6, 7] })} />);
+
+    expect(screen.getByTestId('win-line')).not.toBeNull();
+  });
+
+  it('viser bare glør, ingen strek, ved seier ved dominans', () => {
+    render(<TicTacToeBoard {...won({})} />);
+
+    expect(screen.getByTestId('win-effect')).not.toBeNull();
+    expect(screen.queryByTestId('win-line')).toBeNull();
+  });
+
+  it('lar vinnerteksten vente på streken bare når det finnes en linje', () => {
+    const { container, rerender } = render(
+      <TicTacToeBoard {...won({ winningLine: [4, 5, 6, 7] })} />,
+    );
+    const overlay = () => container.querySelector('.winner-overlay');
+    expect(overlay().className).toContain('winner-overlay-after-line');
+
+    rerender(<TicTacToeBoard {...won({})} />);
+    expect(overlay().className).not.toContain('winner-overlay-after-line');
+  });
+
+  it('viser ingen seierseffekt før spillet er over', () => {
+    render(<TicTacToeBoard {...makeProps()} />);
+
+    expect(screen.queryByTestId('win-effect')).toBeNull();
+  });
+});
+
 describe('våpen mottatt', () => {
   const weaponButton = () =>
     screen.getByRole('button', {
