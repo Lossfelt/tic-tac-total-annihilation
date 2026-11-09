@@ -1,0 +1,29 @@
+/* Overlegg for NukeAnimation. Dekker brettet, fanger klikk og fades ut de
+   siste 15 % av varigheten. */
+.nk-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  cursor: wait;
+  animation: nk-fade var(--nk-dur) linear forwards;
+}
+
+.nk-overlay img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
+}
+
+@keyframes nk-fade {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

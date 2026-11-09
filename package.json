@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "boardgame.io": "^0.50.2",
+    "qrcode-generator": "^2.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -15,7 +16,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src",
-    "test": "vitest"
+    "test": "vitest",
+    "simulate": "node scripts/simulate.mjs"
   },
   "overrides": {
     "socket.io": "^4.8.3",

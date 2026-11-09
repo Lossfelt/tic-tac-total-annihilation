@@ -1,0 +1,299 @@
+/* Små effekter på brettet: våpen mottatt, invasjon, revolt og seierslinje.
+   Alle tidene er korte og spilles én gang. Se også useJustArmed.js.
+   Celleeffektene (fx-claim, fx-conquer, fx-fail, fx-revolt) legges på cellen
+   sammen med .blink, som allerede animerer selve knappen. Her animeres bare
+   ikonet og pseudo-elementene, så de ikke krasjer med den. */
+
+/* Våpen mottatt: knappen rister, ikonet spretter og en ring brer seg ut. */
+.weapon-button {
+  position: relative;
+}
+
+.weapon-button.just-armed {
+  animation: fx-armed-shake 600ms ease-out;
+}
+
+.weapon-button.just-armed .weapon-icon {
+  animation: fx-armed-icon 700ms cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.weapon-button.just-armed::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 2px solid var(--color-rust-bright);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  animation: fx-armed-burst 900ms ease-out forwards;
+}
+
+@keyframes fx-armed-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-5px);
+  }
+  30% {
+    transform: translateX(5px);
+  }
+  45% {
+    transform: translateX(-3px);
+  }
+  60% {
+    transform: translateX(3px);
+  }
+  80% {
+    transform: translateX(-1px);
+  }
+}
+
+@keyframes fx-armed-icon {
+  0% {
+    transform: scale(0.2) rotate(-90deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes fx-armed-burst {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(245, 147, 77, 0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35, 1.7);
+    box-shadow: 0 0 0 rgba(245, 147, 77, 0);
+  }
+}
+
+/* Territorium tatt: ikonet stemples ned og støv brer seg ut. */
+.cell.fx-claim .cell-icon {
+  animation: fx-stamp 500ms cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+
+.cell.fx-claim::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 230, 190, 0.9);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: fx-dust 600ms ease-out forwards;
+}
+
+/* Erobret: en ring i den nye eierens farge brer seg ut fra midten, og det
+   nye ikonet stemples inn når ringen har startet. */
+.cell.fx-conquer {
+  --fx-ring: #ff7a4a;
+}
+
+.cell.fx-conquer.cell-canadia {
+  --fx-ring: #7ec8ff;
+}
+
+.cell.fx-conquer .cell-icon {
+  animation: fx-conquer-icon 900ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.cell.fx-conquer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 4px solid var(--fx-ring);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: fx-ring 900ms ease-out forwards;
+}
+
+/* Mislykket invasjon: ikonet rister og et skjold blinker. */
+.cell.fx-fail .cell-icon {
+  animation: fx-block-shake 450ms ease-out;
+}
+
+.cell.fx-fail::after {
+  content: '';
+  position: absolute;
+  left: 27%;
+  top: 23%;
+  width: 46%;
+  height: 54%;
+  background: rgba(160, 200, 230, 0.85);
+  clip-path: polygon(50% 0, 100% 15%, 100% 55%, 50% 100%, 0 55%, 0 15%);
+  pointer-events: none;
+  animation: fx-shield 700ms ease-out forwards;
+}
+
+/* Revolt: cellen er tom, så den sprekker opp og rister mens støv stiger. */
+.cell.fx-revolt::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23d9c9a3' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 6 L44 28 L56 40 L42 58 L52 74 L46 94'/%3E%3Cpath d='M56 40 L78 46 L90 62'/%3E%3Cpath d='M42 58 L22 56 L10 70'/%3E%3Cpath d='M44 28 L26 22'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  pointer-events: none;
+  animation: fx-crack 1000ms ease-out forwards;
+}
+
+.cell.fx-revolt::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 18%;
+  height: 40%;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(180, 150, 110, 0.7) 0%,
+    rgba(180, 150, 110, 0) 70%
+  );
+  pointer-events: none;
+  animation: fx-rise 1000ms ease-out forwards;
+}
+
+@keyframes fx-crack {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateX(0);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1) translateX(-3px);
+  }
+  25% {
+    transform: scale(1) translateX(3px);
+  }
+  35% {
+    transform: scale(1) translateX(-2px);
+  }
+  45% {
+    transform: scale(1) translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes fx-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30%) scale(1.5);
+  }
+}
+
+@keyframes fx-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(2.2) rotate(-12deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.92) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes fx-dust {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes fx-conquer-icon {
+  0%,
+  30% {
+    opacity: 0;
+    transform: scale(2.2) rotate(-12deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.92) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes fx-ring {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes fx-block-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px) rotate(-4deg);
+  }
+  40% {
+    transform: translateX(6px) rotate(4deg);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes fx-shield {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  25% {
+    opacity: 0.95;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell.fx-claim .cell-icon,
+  .cell.fx-conquer .cell-icon,
+  .cell.fx-fail .cell-icon,
+  .cell.fx-claim::after,
+  .cell.fx-conquer::before,
+  .cell.fx-fail::after,
+  .cell.fx-revolt::before,
+  .cell.fx-revolt::after {
+    animation: none;
+  }
+
+  .weapon-button.just-armed,
+  .weapon-button.just-armed .weapon-icon,
+  .weapon-button.just-armed::after {
+    animation: none;
+  }
+}

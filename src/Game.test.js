@@ -6,11 +6,11 @@ import {
   IsRow,
   GetNeighbors,
   GetSurroundingCells,
-  formatLogEntry,
   TicTacToe,
   NUM_PLAYERS,
   TOTAL_CELLS,
   RECYCLE_REFUND_RATIO,
+  RAREIUM_MAX,
 } from './Game.js';
 import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js';
 
@@ -270,10 +270,12 @@ const baseG = () => ({
   log: [],
   blink: Array(TOTAL_CELLS).fill(false),
   blinkVersion: 0,
+  blinkKind: Array(TOTAL_CELLS).fill(null),
   lastCellAttacked: null,
   strategicWeapon: Array(NUM_PLAYERS).fill(null),
   Rareium: Array(NUM_PLAYERS).fill(0),
   rareiumAtWeapon: Array(NUM_PLAYERS).fill(0),
+  weaponEvent: { type: null, cells: [], before: null, version: 0 },
 });
 
 describe('recycleStrategicWeapon', () => {
@@ -319,16 +321,30 @@ describe('recycleStrategicWeapon', () => {
     expect(G.Rareium[1]).toBe(39);
   });
 
-  it('logger handlingen med spillerens placeholder', () => {
+  it('logger handlingen som strukturert oppføring', () => {
     const G = baseG();
     G.strategicWeapon[0] = 'Biological Warfare';
     G.rareiumAtWeapon[0] = 100;
 
     recycle({ G, playerID: '0' });
 
-    expect(G.log[0]).toBe(
-      '__P0__ recycles Biological Warfare and recovers 70% Rareium',
-    );
+    expect(G.log[0]).toEqual({
+      type: 'recycle',
+      player: '0',
+      weapon: 'Biological Warfare',
+      refund: 70,
+    });
+  });
+
+  it('kapper Rareium ved taket etter refusjon', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Artillery';
+    G.rareiumAtWeapon[0] = 100;
+    G.Rareium[0] = RAREIUM_MAX - 5;
+
+    recycle({ G, playerID: '0' });
+
+    expect(G.Rareium[0]).toBe(RAREIUM_MAX);
   });
 
   it('returnerer INVALID_MOVE hvis spilleren ikke har et våpen', () => {
@@ -374,14 +390,17 @@ describe('useStrategicWeapon: Dirty Nuke', () => {
     expect(G.lastCellAttacked).toBe(5);
   });
 
-  it('logger handlingen med territorienavnet', () => {
+  it('logger våpenet, spilleren og målcellen', () => {
     const G = baseG();
     G.strategicWeapon[0] = 'Dirty Nuke';
 
     useWeapon({ G, playerID: '0', random: stubRandom }, 0);
 
-    expect(G.log[0]).toContain('Dirty Nuke');
-    expect(G.log[0]).toContain('the Salt Marches');
+    expect(G.log[0]).toEqual({
+      type: 'Dirty Nuke',
+      player: '0',
+      cells: [0],
+    });
   });
 
   it('avviser nuke på en allerede destroyed celle', () => {
@@ -481,6 +500,266 @@ describe('clickCell på destroyed celle', () => {
   });
 });
 
+describe('useStrategicWeapon: validering', () => {
+  const weaponMove = TicTacToe.moves.useStrategicWeapon;
+  const stubRandom = { Number: () => 0 };
+  const play = (G, input) =>
+    weaponMove({ G, playerID: '0', random: stubRandom }, input);
+
+  it('avviser trekket når spilleren ikke har et våpen', () => {
+    const G = baseG();
+    G.cells[5] = '1';
+
+    expect(play(G, 5)).toBe(INVALID_MOVE);
+    expect(G.cells[5]).toBe('1');
+    expect(G.weaponEvent.version).toBe(0);
+  });
+
+  it.each([-1, 16, 99, 1.5, '5', null, undefined, [5]])(
+    'avviser ugyldig enkeltmål %j',
+    (input) => {
+      const G = baseG();
+      G.strategicWeapon[0] = 'Artillery';
+
+      expect(play(G, input)).toBe(INVALID_MOVE);
+      expect(G.strategicWeapon[0]).toBe('Artillery');
+    },
+  );
+
+  it.each([
+    [[0, 0, 0]],
+    [[0, 1]],
+    [[0, 1, 2, 3]],
+    [[0, 1, 5]],
+    [[0, 1, 99]],
+    [5],
+    ['0', '1', '2'],
+  ])('avviser ugyldig Air Strike-mål %j', (input) => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Air Strike';
+
+    expect(play(G, input)).toBe(INVALID_MOVE);
+    expect(G.strategicWeapon[0]).toBe('Air Strike');
+  });
+});
+
+describe('useStrategicWeapon: våpenhendelse', () => {
+  const weaponMove = TicTacToe.moves.useStrategicWeapon;
+  const stubRandom = { Number: () => 0 };
+  const play = (G, input) =>
+    weaponMove({ G, playerID: '0', random: stubRandom }, input);
+
+  it('registrerer type, mål og versjon', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    play(G, 5);
+
+    expect(G.weaponEvent.type).toBe('Dirty Nuke');
+    expect(G.weaponEvent.cells).toEqual([5]);
+    expect(G.weaponEvent.version).toBe(1);
+  });
+
+  it('lagrer brettet slik det var før våpenet traff', () => {
+    const G = baseG();
+    G.cells[5] = '1';
+    G.cells[6] = '0';
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    play(G, 5);
+
+    expect(G.weaponEvent.before.cells[5]).toBe('1');
+    expect(G.weaponEvent.before.cells[6]).toBe('0');
+    expect(G.weaponEvent.before.destroyed[5]).toBe(false);
+    expect(G.cells[5]).toBeNull();
+    expect(G.destroyed[5]).toBe(true);
+  });
+
+  it('øker versjonen for hvert våpen som brukes', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Dirty Nuke';
+    play(G, 5);
+    G.strategicWeapon[0] = 'Artillery';
+    play(G, 9);
+
+    expect(G.weaponEvent.version).toBe(2);
+    expect(G.weaponEvent.type).toBe('Artillery');
+  });
+
+  it('registrerer alle tre målene for Air Strike', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Air Strike';
+
+    play(G, [0, 1, 2]);
+
+    expect(G.weaponEvent.cells).toEqual([0, 1, 2]);
+  });
+
+  it('registrerer ingen hendelse for et avvist trekk', () => {
+    const G = baseG();
+    G.destroyed[7] = true;
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    expect(play(G, 7)).toBe(INVALID_MOVE);
+    expect(G.weaponEvent.version).toBe(0);
+  });
+});
+
+describe('useStrategicWeapon: Biological Warfare, hendelse', () => {
+  const weaponMove = TicTacToe.moves.useStrategicWeapon;
+  const play = (G, input, numbers) => {
+    const queue = [...numbers];
+    const random = { Number: () => queue.shift() };
+    return weaponMove({ G, playerID: '0', random }, input);
+  };
+
+  it('registrerer bare cellene som faktisk ble rammet', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Biological Warfare';
+    // Senter 5 har 9 celler i området (0,1,2,4,5,6,8,9,10). Annenhver rammes.
+    play(G, 5, [0, 0.9, 0, 0.9, 0, 0.9, 0, 0.9, 0]);
+
+    expect(G.weaponEvent.affected).toEqual([0, 2, 5, 8, 10]);
+  });
+
+  it('registrerer en tom liste når ingen celler ble rammet', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Biological Warfare';
+
+    play(G, 5, Array(9).fill(0.99));
+
+    expect(G.weaponEvent.affected).toEqual([]);
+    expect(G.weaponEvent.type).toBe('Biological Warfare');
+  });
+
+  it('registrerer ingen rammede celler for våpen uten tilfeldighet', () => {
+    const G = baseG();
+    G.strategicWeapon[0] = 'Dirty Nuke';
+
+    play(G, 5, []);
+
+    expect(G.weaponEvent.affected).toEqual([]);
+  });
+});
+
+describe('clickCell: hva som skjedde med cellen', () => {
+  const clickCell = TicTacToe.moves.clickCell;
+  const play = (G, id, roll) =>
+    clickCell({ G, playerID: '0', random: { Number: () => roll } }, id);
+
+  it("merker en ledig celle som 'claim'", () => {
+    const G = baseG();
+
+    play(G, 3, 1);
+
+    expect(G.cells[3]).toBe('0');
+    expect(G.blink[3]).toBe(true);
+    expect(G.blinkKind[3]).toBe('claim');
+  });
+
+  it("merker en vellykket invasjon som 'conquer'", () => {
+    const G = baseG();
+    G.cells[3] = '1';
+
+    play(G, 3, 0);
+
+    expect(G.cells[3]).toBe('0');
+    expect(G.blinkKind[3]).toBe('conquer');
+  });
+
+  it("merker en mislykket invasjon som 'fail'", () => {
+    const G = baseG();
+    G.cells[3] = '1';
+
+    play(G, 3, 0.99);
+
+    expect(G.cells[3]).toBe('1');
+    expect(G.blinkKind[3]).toBe('fail');
+  });
+
+  it('nullstiller forrige trekks merker ved neste trekk', () => {
+    const G = baseG();
+    play(G, 3, 1);
+    play(G, 4, 1);
+
+    expect(G.blink[3]).toBe(false);
+    expect(G.blinkKind[3]).toBeNull();
+    expect(G.blinkKind[4]).toBe('claim');
+  });
+
+  it('nullstiller merkene også når et våpen brukes', () => {
+    const G = baseG();
+    play(G, 3, 1);
+    G.strategicWeapon[0] = 'Dirty Nuke';
+    TicTacToe.moves.useStrategicWeapon(
+      { G, playerID: '0', random: { Number: () => 0 } },
+      9,
+    );
+
+    expect(G.blinkKind[3]).toBeNull();
+    expect(G.blink[9]).toBe(true);
+    expect(G.blinkKind[9]).toBeNull();
+  });
+});
+
+describe('revolt (onEnd)', () => {
+  it("merker cellen som 'revolt' og tømmer den", () => {
+    const G = baseG();
+    G.cells[2] = '1';
+    G.lastCellAttacked = null;
+
+    TicTacToe.turn.onEnd({ G, random: { Number: () => 0 } });
+
+    expect(G.cells[2]).toBeNull();
+    expect(G.blinkKind[2]).toBe('revolt');
+  });
+
+  it('lar cellen som ble angrepet denne runden i fred', () => {
+    const G = baseG();
+    G.cells[2] = '1';
+    G.lastCellAttacked = 2;
+
+    TicTacToe.turn.onEnd({ G, random: { Number: () => 0 } });
+
+    expect(G.cells[2]).toBe('1');
+  });
+});
+
+describe('clickCell: validering', () => {
+  const clickCell = TicTacToe.moves.clickCell;
+
+  it.each([-1, 16, 99, 1.5, '3', null, undefined])(
+    'avviser ugyldig celle-id %j',
+    (id) => {
+      const G = baseG();
+
+      const result = clickCell(
+        { G, playerID: '0', random: { Number: () => 1 } },
+        id,
+      );
+
+      expect(result).toBe(INVALID_MOVE);
+      expect(G.cells).toEqual(Array(16).fill(null));
+    },
+  );
+});
+
+describe('debugGiveWeapon', () => {
+  const give = TicTacToe.moves.debugGiveWeapon;
+
+  it('kjører bare på serveren og teller ikke som turens trekk', () => {
+    expect(give.client).toBe(false);
+    expect(give.noLimit).toBe(true);
+  });
+
+  it('avvises uten DEBUG_MOVES, slik at det ikke virker i produksjon', () => {
+    const G = baseG();
+
+    expect(give.move({ G, playerID: '0' }, 'Dirty Nuke')).toBe(INVALID_MOVE);
+    expect(G.strategicWeapon[0]).toBeNull();
+  });
+});
+
 describe('GetWinningLine med destroyed celle', () => {
   it('returnerer null hvis en celle i en ellers full linje er destroyed', () => {
     // Linjen [0,1,2,3] er eid av spiller 0 på 0,1,3 og destroyed (null) på 2.
@@ -576,40 +855,181 @@ describe('endIf: domination', () => {
   });
 });
 
-describe('formatLogEntry', () => {
-  const matchData = [
-    { id: 0, name: 'Levin' },
-    { id: 1, name: 'Eva' },
-  ];
+describe('endIf: vinner er eieren av linjen', () => {
+  it('velger linjens eier, ikke spilleren som har turen', () => {
+    const G = baseG();
+    [0, 1, 2, 3].forEach((i) => {
+      G.cells[i] = '1';
+    });
 
-  it('erstatter __P0__ og __P1__ med navn fra matchData', () => {
-    expect(formatLogEntry('__P0__ conquers Port Orchard', matchData)).toBe(
-      'Levin conquers Port Orchard',
-    );
-    expect(formatLogEntry('__P1__ claims the Salt Marches', matchData)).toBe(
-      'Eva claims the Salt Marches',
-    );
+    const result = TicTacToe.endIf({ G, ctx: { currentPlayer: '0' } });
+
+    expect(result.winner).toBe('1');
+  });
+});
+
+describe('playerView', () => {
+  const { playerView } = TicTacToe;
+  const makeG = () => {
+    const G = baseG();
+    G.Rareium = [30, 70];
+    G.strategicWeapon = ['Dirty Nuke', 'Artillery'];
+    G.rareiumAtWeapon = [10, 20];
+    return G;
+  };
+
+  it('skjuler motstanderens Rareium og våpen, men viser egne', () => {
+    const view = playerView({ G: makeG(), playerID: '0' });
+
+    expect(view.Rareium).toEqual([30, 0]);
+    expect(view.strategicWeapon).toEqual(['Dirty Nuke', null]);
+    expect(view.rareiumAtWeapon).toEqual([10, 0]);
   });
 
-  it('erstatter flere placeholders i samme streng', () => {
-    expect(formatLogEntry('__P0__ defeats __P1__ in battle', matchData)).toBe(
-      'Levin defeats Eva in battle',
-    );
+  it('endrer ikke selve spilltilstanden', () => {
+    const G = makeG();
+    playerView({ G, playerID: '1' });
+
+    expect(G.Rareium).toEqual([30, 70]);
   });
 
-  it('returnerer strengen uendret hvis det ikke finnes placeholders', () => {
-    expect(formatLogEntry('The people of Port Crater revolt', matchData)).toBe(
-      'The people of Port Crater revolt',
-    );
+  it('viser alt uten playerID', () => {
+    const G = makeG();
+
+    expect(playerView({ G, playerID: null })).toBe(G);
+  });
+});
+
+describe('turn.onBegin: Rareium og våpentildeling', () => {
+  const { onBegin } = TicTacToe.turn;
+  const begin = (G, roll, die = 1) =>
+    onBegin({
+      G,
+      ctx: { currentPlayer: '0' },
+      random: { Number: () => roll, Die: () => die },
+    });
+
+  it('gir Rareium lik antall celler spilleren eier', () => {
+    const G = baseG();
+    [0, 1, 5].forEach((i) => {
+      G.cells[i] = '0';
+    });
+    G.cells[2] = '1';
+
+    begin(G, 0.99);
+
+    expect(G.Rareium).toEqual([3, 0]);
   });
 
-  it('faller tilbake til "Player N" hvis matchData mangler navn', () => {
-    expect(formatLogEntry('__P0__ claims it', [{}, {}])).toBe(
-      'Player 0 claims it',
-    );
+  it('nullstiller lastCellAttacked', () => {
+    const G = baseG();
+    G.lastCellAttacked = 4;
+
+    begin(G, 0.99);
+
+    expect(G.lastCellAttacked).toBeNull();
   });
 
-  it('faller tilbake til "Player N" hvis matchData er undefined', () => {
-    expect(formatLogEntry('__P1__ acts', undefined)).toBe('Player 1 acts');
+  it('deler ut våpen og nullstiller Rareium når trekningen treffer', () => {
+    const G = baseG();
+    G.cells[0] = '0';
+    G.Rareium[0] = 49;
+
+    begin(G, 0, 4); // Die 4 gir det fjerde våpenet
+
+    expect(G.strategicWeapon[0]).toBe('Dirty Nuke');
+    expect(G.rareiumAtWeapon[0]).toBe(50);
+    expect(G.Rareium[0]).toBe(0);
+  });
+
+  it('deler ikke ut våpen når trekningen bommer', () => {
+    const G = baseG();
+    G.cells[0] = '0';
+    G.Rareium[0] = 49;
+
+    begin(G, 0.99);
+
+    expect(G.strategicWeapon[0]).toBeNull();
+    expect(G.Rareium[0]).toBe(50);
+  });
+
+  it('deler ikke ut nytt våpen til en spiller som allerede har ett', () => {
+    const G = baseG();
+    G.cells[0] = '0';
+    G.strategicWeapon[0] = 'Artillery';
+
+    begin(G, 0, 4);
+
+    expect(G.strategicWeapon[0]).toBe('Artillery');
+    expect(G.Rareium[0]).toBe(1);
+  });
+
+  it('kapper Rareium ved taket mens spilleren holder et våpen', () => {
+    const G = baseG();
+    [0, 1, 2].forEach((i) => {
+      G.cells[i] = '0';
+    });
+    G.strategicWeapon[0] = 'Artillery';
+    G.Rareium[0] = RAREIUM_MAX - 1;
+
+    begin(G, 0.99);
+
+    expect(G.Rareium[0]).toBe(RAREIUM_MAX);
+  });
+
+  it('påvirker ikke motstanderens Rareium', () => {
+    const G = baseG();
+    G.cells[0] = '1';
+    G.Rareium[1] = 10;
+
+    begin(G, 0.99);
+
+    expect(G.Rareium[1]).toBe(10);
+  });
+});
+
+describe('clickCell: egen celle', () => {
+  it('avviser trekk på en celle spilleren allerede eier', () => {
+    const G = baseG();
+    G.cells[3] = '0';
+
+    const result = TicTacToe.moves.clickCell(
+      { G, playerID: '0', random: { Number: () => 0 } },
+      3,
+    );
+
+    expect(result).toBe(INVALID_MOVE);
+  });
+});
+
+describe('loggoppføringer fra trekk og revolt', () => {
+  const click = (G, id, roll, playerID = '0') =>
+    TicTacToe.moves.clickCell(
+      { G, playerID, random: { Number: () => roll } },
+      id,
+    );
+
+  it('logger claim, conquer og fail med spiller og celle', () => {
+    const G = baseG();
+    click(G, 3, 1);
+    G.cells[4] = '1';
+    click(G, 4, 0);
+    G.cells[5] = '1';
+    click(G, 5, 0.99);
+
+    expect(G.log.reverse()).toEqual([
+      { type: 'claim', player: '0', cell: 3 },
+      { type: 'conquer', player: '0', cell: 4 },
+      { type: 'fail', player: '0', cell: 5 },
+    ]);
+  });
+
+  it('logger revolt med forrige eier', () => {
+    const G = baseG();
+    G.cells[2] = '1';
+
+    TicTacToe.turn.onEnd({ G, random: { Number: () => 0 } });
+
+    expect(G.log[0]).toEqual({ type: 'revolt', player: '1', cell: 2 });
   });
 });

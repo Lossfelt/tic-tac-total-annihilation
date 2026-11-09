@@ -1,0 +1,75 @@
+/* Seierseffekt. Se WinEffect.jsx. Streken tegnes på 700 ms, og vinnerteksten
+   (.winner-overlay-after-line i Board.css) kommer først etter det. */
+
+.win-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.win-effect svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Vinnerteksten venter til streken er tegnet. */
+.winner-overlay.winner-overlay-after-line {
+  animation-delay: 0.85s;
+  animation-fill-mode: both;
+}
+
+.win-line-glow,
+.win-line-core {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: win-draw 700ms ease-out 150ms forwards;
+}
+
+.win-line-glow {
+  opacity: 0.45;
+}
+
+.win-ember {
+  opacity: 0;
+  animation: win-ember var(--dur) ease-out var(--delay) infinite;
+}
+
+@keyframes win-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes win-ember {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), -360px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .winner-overlay.winner-overlay-after-line {
+    animation-delay: 0s;
+  }
+
+  .win-line-glow,
+  .win-line-core {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .win-ember {
+    display: none;
+  }
+}
