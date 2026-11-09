@@ -1,5 +1,6 @@
 import { BOARD_SIZE, TOTAL_CELLS, territories } from './Game.js';
 import { FACTION_ICON, FACTION_NAME } from './factions.js';
+import { RadiationIcon } from './icons.jsx';
 
 // Selve brettet. `shown` er brettet slik animasjonen viser det akkurat nå,
 // `weaponActive` er navnet på våpenet spilleren sikter med (eller false).
@@ -66,7 +67,7 @@ export function BoardGrid({
         >
           {isDestroyed ? (
             <span className="cell-destroyed-icon" aria-hidden="true">
-              ☢
+              <RadiationIcon />
             </span>
           ) : (
             owner !== null && (

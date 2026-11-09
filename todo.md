@@ -152,7 +152,10 @@ og seier, fokusfelle og fokus-retur i `AboutPopup`, og tekstfargene
 `--color-text-muted` og `--color-text-dim` er lysnet til minst 4,5:1 mot
 bakgrunnene. Ikke prøvd med skjermleser.
 
-- Emoji-ikoner (våpen, logg) passer dårlig med stilen. Bytt til SVG.
+- Gjort 9. november 2026: emoji er erstattet. Våpenikoner som silhuetter
+  (`icons.jsx`: granat, fly, giftig-symbol for Biological Warfare og
+  strålingssymbol for Dirty Nuke), egne SVG for recycle og ødelagt celle, og
+  loggen bruker fraksjonsmerke og stensilmerke (`gameLog.js`).
 - Gjenstår å sjekke: kontrast på andre farger enn tekstfargene (f.eks.
   rust-tekst på mørk bakgrunn), og at fokusringen ikke klippes på celler.
 

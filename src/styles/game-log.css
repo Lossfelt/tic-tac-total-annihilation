@@ -60,10 +60,42 @@
   border-bottom: none;
 }
 
-.log-icon {
+.log-faction {
   flex: 0 0 auto;
-  width: 1.2em;
+  align-self: center;
+}
+
+.log-tag {
+  flex: 0 0 auto;
+  min-width: 4.4em;
+  padding: 0 0.35em;
+  border-radius: var(--radius-sm);
+  background: var(--color-text-dim);
+  color: var(--color-bg-deep);
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
   text-align: center;
+}
+
+.log-tag-faction-0 {
+  background: var(--color-queendom);
+}
+
+.log-tag-faction-1 {
+  background: var(--color-canadia);
+}
+
+.log-tag-weapon {
+  background: var(--color-rust);
+}
+
+.log-tag-revolt {
+  background: var(--color-military);
+}
+
+.log-tag-recycle {
+  background: var(--color-military);
 }
 
 .log-text {

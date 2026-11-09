@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatLogEntry, logIcon } from './gameLog.js';
+import { formatLogEntry, logTag, logTagClass } from './gameLog.js';
 
 const matchData = [
   { id: 0, name: 'Levin' },
@@ -69,11 +69,24 @@ describe('formatLogEntry', () => {
   });
 });
 
-describe('logIcon', () => {
-  it('bruker våpenikonet for våpen og egne ikoner for resten', () => {
-    expect(logIcon({ type: 'Dirty Nuke' })).toBe('☢️');
-    expect(logIcon({ type: 'claim' })).toBe('🚩');
-    expect(logIcon({ type: 'revolt' })).toBe('✊');
-    expect(logIcon({ type: 'ukjent' })).toBe('•');
+describe('logTag', () => {
+  it('gir korte stensilmerker for hver type', () => {
+    expect(logTag({ type: 'claim' })).toBe('CLAIM');
+    expect(logTag({ type: 'revolt' })).toBe('REVOLT');
+    expect(logTag({ type: 'Dirty Nuke' })).toBe('NUKE');
+    expect(logTag({ type: 'Biological Warfare' })).toBe('BIO');
+  });
+
+  it('velger farge etter fraksjon for ta og erobre, ellers etter type', () => {
+    expect(logTagClass({ type: 'claim', player: '1' })).toContain(
+      'log-tag-faction-1',
+    );
+    expect(logTagClass({ type: 'conquer', player: '0' })).toContain(
+      'log-tag-faction-0',
+    );
+    expect(logTagClass({ type: 'Artillery' })).toContain('log-tag-weapon');
+    expect(logTagClass({ type: 'fail', player: '0' })).toContain(
+      'log-tag-fail',
+    );
   });
 });

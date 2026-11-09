@@ -41,13 +41,27 @@ export function formatLogEntry(entry, matchData) {
   }
 }
 
-const LOG_ICONS = {
-  recycle: '♻',
-  revolt: '✊',
-  conquer: '⚔️',
-  fail: '🛡️',
-  claim: '🚩',
+// Kort stensilmerke for hva som skjedde. Fargen velges i CSS etter typen.
+const LOG_TAGS = {
+  claim: 'CLAIM',
+  conquer: 'CONQUER',
+  fail: 'FAIL',
+  revolt: 'REVOLT',
+  recycle: 'RECYCLE',
+  Artillery: 'ART',
+  'Air Strike': 'AIR',
+  'Biological Warfare': 'BIO',
+  'Dirty Nuke': 'NUKE',
 };
 
-export const logIcon = (entry) =>
-  WEAPONS[entry.type]?.icon ?? LOG_ICONS[entry.type] ?? '•';
+export const logTag = (entry) => LOG_TAGS[entry.type] ?? entry.type;
+
+// Klassen styrer fargen: fraksjonsfarge for å ta og erobre, ellers etter type.
+export const logTagClass = (entry) => {
+  if (entry.type === 'claim' || entry.type === 'conquer') {
+    return `log-tag log-tag-faction-${entry.player}`;
+  }
+  return WEAPONS[entry.type]
+    ? 'log-tag log-tag-weapon'
+    : `log-tag log-tag-${entry.type}`;
+};

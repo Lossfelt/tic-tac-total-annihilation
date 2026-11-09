@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RECYCLE_REFUND_RATIO } from './Game.js';
 import { WEAPONS, strategicWeapons } from './weapons.js';
+import { RecycleIcon, WeaponIcon } from './icons.jsx';
 
 // Våpenknapp, recycle med bekreftelse, testknapper (bare i utviklingsmodus)
 // og instruksjonen mens spilleren velger mål.
@@ -58,7 +59,9 @@ export function WeaponPanel({
         >
           {myWeapon ? (
             <>
-              <span className="weapon-icon">{WEAPONS[myWeapon].icon}</span>
+              <span className="weapon-icon">
+                <WeaponIcon weapon={myWeapon} />
+              </span>
               <span className="weapon-name">{myWeapon}</span>
             </>
           ) : (
@@ -77,7 +80,7 @@ export function WeaponPanel({
           }
           aria-label="Recycle strategic weapon"
         >
-          ♻
+          <RecycleIcon />
         </button>
       </div>
 

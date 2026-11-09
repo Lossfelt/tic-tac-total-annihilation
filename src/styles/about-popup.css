@@ -181,8 +181,9 @@
   line-height: 1.45;
 }
 
-.weapon-emoji {
+.about-weapon-icon {
   flex: 0 0 auto;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   line-height: 1;
+  color: var(--color-rust-bright);
 }
