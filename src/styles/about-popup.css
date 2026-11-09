@@ -157,7 +157,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   margin-bottom: 0.6rem;
-  filter: brightness(0.85) contrast(1.05);
 }
 
 .weapons-list {
