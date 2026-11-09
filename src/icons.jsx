@@ -1,3 +1,5 @@
+import { BIOHAZARD_PATH } from './biohazardPath.js';
+
 // Ikonsettet: ensfargede silhuetter som arver tekstfargen (currentColor) og
 // skalerer med skriftstørrelsen. Erstatter emoji, som ser ulike ut på hver
 // plattform og ikke passer stilen.
@@ -36,41 +38,10 @@ export const RadiationIcon = () => (
   </svg>
 );
 
-// Biofare-symbolet: tre klør (halvmåner) rundt en liten ring. Hver klo er en
-// sirkel A (radius 7,5, sentrum 7,5 fra midten) minus en like stor sirkel B som
-// er skjøvet 4,5 mot midten, så klørne åpner seg inn mot ringen.
-const CLAW_R = 7.5;
-const CLAW_DIST = 7.5;
-const CLAW_SHIFT = 4.5;
-
-const biohazardClaw = (deg) => {
-  const rad = (deg * Math.PI) / 180;
-  const ux = Math.cos(rad);
-  const uy = Math.sin(rad);
-  const nx = -uy;
-  const ny = ux;
-  // Midtpunktet mellom sirklene og halve kordelengden i skjæringspunktene.
-  const mid = CLAW_DIST - CLAW_SHIFT / 2;
-  const h = Math.sqrt(CLAW_R ** 2 - (CLAW_SHIFT / 2) ** 2);
-  const pt = (sign) =>
-    `${(16 + ux * mid + sign * h * nx).toFixed(2)} ${(16 + uy * mid + sign * h * ny).toFixed(2)}`;
-  // Ytre bue av A (stor, mot klokka i skjermvinkel), så indre bue av B tilbake.
-  return `M${pt(1)}A${CLAW_R} ${CLAW_R} 0 1 0 ${pt(-1)}A${CLAW_R} ${CLAW_R} 0 0 1 ${pt(1)}Z`;
-};
-
+// Biofare-symbolet. Banen ligger i biohazardPath.js og tegnes som fylt form.
 const BiohazardIcon = () => (
-  <svg {...svgProps} fill="currentColor" strokeWidth={0}>
-    {[-90, 30, 150].map((deg) => (
-      <path key={deg} d={biohazardClaw(deg)} />
-    ))}
-    <circle
-      cx="16"
-      cy="16"
-      r="2.2"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-    />
+  <svg {...svgProps} viewBox="0 0 48 48" fill="currentColor" strokeWidth={0}>
+    <path d={BIOHAZARD_PATH} />
   </svg>
 );
 
