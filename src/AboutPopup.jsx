@@ -79,12 +79,12 @@ const AboutPopup = ({ onClose }) => {
 
         <section className="popup-section faction queendom">
           <div className="faction-header">
-            <img src="/Queendom_icon.png" alt="Mexican Queendom icon" />
+            <img src="/queendom-emblem.webp" alt="Mexican Queendom icon" />
             <h3>The Mexican Queendom</h3>
           </div>
           <img
             className="faction-flag"
-            src="/Mexican_Queendom.jpg"
+            src="/queendom-flag.webp"
             alt="Mexican Queendom flag"
           />
           <p>
@@ -100,14 +100,14 @@ const AboutPopup = ({ onClose }) => {
         <section className="popup-section faction canadia">
           <div className="faction-header">
             <img
-              src="/Pan-Canadia_icon.png"
+              src="/pan-canada-emblem.webp"
               alt="Pan-Canadia Inuit Alliance icon"
             />
             <h3>The Pan-Canadia Inuit Alliance</h3>
           </div>
           <img
             className="faction-flag"
-            src="/Pan-Canadia.jpg"
+            src="/pan-canada-flag.webp"
             alt="Pan-Canadia Inuit Alliance flag"
           />
           <p>

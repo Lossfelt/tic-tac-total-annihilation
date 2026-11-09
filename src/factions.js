@@ -5,6 +5,6 @@ export const FACTION_NAME = {
 };
 
 export const FACTION_ICON = {
-  0: '/Queendom_icon.png',
-  1: '/Pan-Canadia_icon.png',
+  0: '/queendom-emblem.webp',
+  1: '/pan-canada-emblem.webp',
 };

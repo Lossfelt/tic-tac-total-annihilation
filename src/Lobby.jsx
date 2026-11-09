@@ -34,11 +34,11 @@ export default function Lobby({
 
       <div className="factions-preview">
         <div className="faction-card queendom">
-          <img src="/Queendom_icon.png" alt="Mexican Queendom" />
+          <img src="/queendom-emblem.webp" alt="Mexican Queendom" />
           <span>Mexican Queendom</span>
         </div>
         <div className="faction-card canadia">
-          <img src="/Pan-Canadia_icon.png" alt="Pan-Canadia Inuit Alliance" />
+          <img src="/pan-canada-emblem.webp" alt="Pan-Canadia Inuit Alliance" />
           <span>Pan-Canadia Inuit Alliance</span>
         </div>
       </div>
