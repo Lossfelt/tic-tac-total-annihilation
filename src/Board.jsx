@@ -9,6 +9,7 @@ import { BoardGrid } from './BoardGrid.jsx';
 import { WeaponPanel } from './WeaponPanel.jsx';
 import { RareiumBar } from './RareiumBar.jsx';
 import { GameLog } from './GameLog.jsx';
+import { MatchStatus } from './MatchStatus.jsx';
 import { FactionMark } from './FactionMark.jsx';
 import { FACTION_NAME } from './factions.js';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
@@ -19,6 +20,7 @@ export function TicTacToeBoard({
   ctx,
   G,
   moves,
+  matchID,
   matchData,
   playerID,
   isActive,
@@ -52,6 +54,12 @@ export function TicTacToeBoard({
             <FactionMark playerID="1" size="1.2em" />
           </span>
         </h1>
+
+        <MatchStatus
+          matchID={matchID}
+          matchData={matchData}
+          playerID={playerID}
+        />
 
         <div className="board-wrapper">
           <BoardGrid

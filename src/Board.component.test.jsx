@@ -480,3 +480,42 @@ describe('tilgjengelighet', () => {
     expect(screen.getByRole('status').textContent).toMatch(/Canadia/);
   });
 });
+
+describe('matchstatus', () => {
+  const status = () => document.querySelector('.match-status');
+
+  it('viser ventemelding med match-ID når motstanderen ikke har blitt med', () => {
+    const props = makeProps({
+      matchID: '123456',
+      matchData: [{ id: 0, name: 'Queendom' }, { id: 1 }],
+    });
+    render(<TicTacToeBoard {...props} />);
+
+    expect(status().textContent).toMatch(/Waiting for an opponent/);
+    expect(status().textContent).toMatch(/123456/);
+  });
+
+  it('varsler når motstanderen er frakoblet', () => {
+    const props = makeProps({
+      matchData: [
+        { id: 0, name: 'Queendom', isConnected: true },
+        { id: 1, name: 'Canadia', isConnected: false },
+      ],
+    });
+    render(<TicTacToeBoard {...props} />);
+
+    expect(status().textContent).toMatch(/Canadia disconnected/);
+  });
+
+  it('viser ingenting når begge spillerne er tilkoblet', () => {
+    const props = makeProps({
+      matchData: [
+        { id: 0, name: 'Queendom', isConnected: true },
+        { id: 1, name: 'Canadia', isConnected: true },
+      ],
+    });
+    render(<TicTacToeBoard {...props} />);
+
+    expect(status()).toBeNull();
+  });
+});
