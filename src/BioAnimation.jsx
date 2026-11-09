@@ -1,3 +1,4 @@
+import { BIOHAZARD_PATH } from './biohazardPath.js';
 import './BioAnimation.css';
 import { useMemo } from 'react';
 import Puff from './Puff.jsx';
@@ -94,23 +95,16 @@ function buildGas(area, center) {
   };
 }
 
-// Giftmerke, tegnet som tre sammenflettede ringer rundt et senter.
+// Biofare-symbolet (se biohazardPath.js), sentrert i origo. size 1 er ca. 43
+// enheter bredt.
 function Biohazard({ size = 1, stroke = GLOW }) {
+  const scale = size * 0.9;
   return (
-    <g fill="none" stroke={stroke} strokeWidth={3 * size}>
-      {[0, 120, 240].map((angle) => {
-        const rad = ((angle - 90) * Math.PI) / 180;
-        return (
-          <circle
-            key={angle}
-            cx={Math.cos(rad) * 11 * size}
-            cy={Math.sin(rad) * 11 * size}
-            r={10 * size}
-          />
-        );
-      })}
-      <circle r={4 * size} fill={stroke} />
-    </g>
+    <path
+      d={BIOHAZARD_PATH}
+      fill={stroke}
+      transform={`scale(${scale}) translate(-24 -24)`}
+    />
   );
 }
 
