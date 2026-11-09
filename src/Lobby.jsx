@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import LobbyAsh from './LobbyAsh.jsx';
 
 // Lobbyskjermen: tittel, fraksjoner, navneskjema og opprett/bli med. All
 // tilstand og alle backend-kall ligger i App.jsx.
@@ -22,6 +23,7 @@ export default function Lobby({
 
   return (
     <div className="lobby">
+      <LobbyAsh />
       <div className="lobby-title">
         <h1 className="game-title">
           <span className="game-title-main">Tic Tac Total</span>

@@ -158,11 +158,11 @@ bakgrunnene. Ikke prøvd med skjermleser.
 
 **Flere animasjoner**
 
-- Gjort (PR 42): revolt, invasjon (erobret og mislyktes), seierslinje, våpen
-  mottatt og stempel når et territorium tas.
-- Gjenstår: banner ved turbytte og drivende aske i lobbyen.
-- Alle animasjoner er sett som enkeltframes, men ikke prøvd i ekte
-  multiplayer med to klienter.
+- Gjort: revolt, invasjon (erobret og mislyktes), seierslinje, våpen mottatt,
+  stempel når et territorium tas, soppsky v3 for Dirty Nuke, banner ved
+  turbytte (`useTurnBanner`) og drivende aske i lobbyen (`LobbyAsh`).
+- Alle animasjoner er sett som enkeltframes i nettleseren, men ikke prøvd i
+  ekte multiplayer med to klienter.
 
 ## Avvist (backlog)
 

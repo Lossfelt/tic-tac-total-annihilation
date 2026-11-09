@@ -31,6 +31,14 @@ describe('Lobby', () => {
     expect(onJoin).toHaveBeenCalledWith('654321');
   });
 
+  it('viser aske bak lobbyen, skjult for skjermlesere', () => {
+    renderLobby();
+
+    const ash = screen.getByTestId('lobby-ash');
+    expect(ash.getAttribute('aria-hidden')).toBe('true');
+    expect(ash.children.length).toBeGreaterThan(10);
+  });
+
   it('har tomt felt uten invitasjon', () => {
     renderLobby();
 
