@@ -55,91 +55,100 @@ export function TicTacToeBoard({
           </span>
         </h1>
 
-        <MatchStatus
-          matchID={matchID}
-          matchData={matchData}
-          playerID={playerID}
-        />
-
-        <div className="board-wrapper">
-          <BoardGrid
-            shown={shown}
-            G={G}
-            animating={animating}
-            winningLine={gameover?.winningLine}
-            weaponActive={targeting.active}
-            targets={targeting.targets}
-            isActive={isActive}
-            onCellClick={clickCell}
+        <div className="board-main">
+          <MatchStatus
+            matchID={matchID}
+            matchData={matchData}
+            playerID={playerID}
           />
-          {anim?.type === 'Dirty Nuke' && (
-            <NukeAnimation
-              key={anim.event.version}
-              version={anim.event.version}
+
+          <div className="board-wrapper">
+            <BoardGrid
+              shown={shown}
+              G={G}
+              animating={animating}
+              winningLine={gameover?.winningLine}
+              weaponActive={targeting.active}
+              targets={targeting.targets}
+              isActive={isActive}
+              onCellClick={clickCell}
             />
-          )}
-          {anim?.type === 'Biological Warfare' && (
-            <BioAnimation key={anim.event.version} plan={anim.plan} />
-          )}
-          {anim?.type === 'Artillery' && (
-            <ArtilleryAnimation key={anim.event.version} plan={anim.plan} />
-          )}
-          {anim?.type === 'Air Strike' && (
-            <AirStrikeAnimation key={anim.event.version} plan={anim.plan} />
-          )}
+            {anim?.type === 'Dirty Nuke' && (
+              <NukeAnimation
+                key={anim.event.version}
+                version={anim.event.version}
+              />
+            )}
+            {anim?.type === 'Biological Warfare' && (
+              <BioAnimation key={anim.event.version} plan={anim.plan} />
+            )}
+            {anim?.type === 'Artillery' && (
+              <ArtilleryAnimation key={anim.event.version} plan={anim.plan} />
+            )}
+            {anim?.type === 'Air Strike' && (
+              <AirStrikeAnimation key={anim.event.version} plan={anim.plan} />
+            )}
+            {gameover && (
+              <WinEffect
+                winnerID={winnerID}
+                winningLine={gameover.winningLine}
+              />
+            )}
+            {gameover && (
+              <div
+                role="status"
+                className={`winner-overlay winner-overlay-${winnerID} ${
+                  gameover.winningLine ? 'winner-overlay-after-line' : ''
+                }`}
+              >
+                <div className="winner-overlay-name">{nameOf(winnerID)}</div>
+                <div className="winner-overlay-label">Wins</div>
+              </div>
+            )}
+          </div>
+
           {gameover && (
-            <WinEffect winnerID={winnerID} winningLine={gameover.winningLine} />
-          )}
-          {gameover && (
-            <div
-              role="status"
-              className={`winner-overlay winner-overlay-${winnerID} ${
-                gameover.winningLine ? 'winner-overlay-after-line' : ''
-              }`}
+            <button
+              className="play-again-button"
+              type="button"
+              onClick={onPlayAgain}
             >
-              <div className="winner-overlay-name">{nameOf(winnerID)}</div>
-              <div className="winner-overlay-label">Wins</div>
-            </div>
+              Play again
+            </button>
           )}
         </div>
 
-        {gameover && (
-          <button
-            className="play-again-button"
-            type="button"
-            onClick={onPlayAgain}
-          >
-            Play again
-          </button>
-        )}
+        <div className="board-side">
+          {!gameover && (
+            <>
+              <div className="turn-indicator" role="status">
+                <span className="turn-label">Current turn:</span>
+                <span
+                  className={`turn-name ${
+                    ctx.currentPlayer === '0' ? 'queendom' : 'canadia'
+                  }`}
+                >
+                  {nameOf(ctx.currentPlayer)}{' '}
+                  <FactionMark playerID={ctx.currentPlayer} />
+                </span>
+              </div>
+              <div className="command-panel">
+                <WeaponPanel
+                  G={G}
+                  moves={moves}
+                  playerID={playerID}
+                  isActive={isActive}
+                  animating={animating}
+                  armedCount={armedCount}
+                  targeting={targeting}
+                />
+                <RareiumBar rareium={G.Rareium[playerID]} />
+              </div>
+            </>
+          )}
 
-        {!gameover && (
-          <>
-            <div className="turn-indicator" role="status">
-              <span className="turn-label">Current turn:</span>
-              <span
-                className={`turn-name ${
-                  ctx.currentPlayer === '0' ? 'queendom' : 'canadia'
-                }`}
-              >
-                {nameOf(ctx.currentPlayer)}{' '}
-                <FactionMark playerID={ctx.currentPlayer} />
-              </span>
-            </div>
-            <WeaponPanel
-              G={G}
-              moves={moves}
-              playerID={playerID}
-              isActive={isActive}
-              animating={animating}
-              armedCount={armedCount}
-              targeting={targeting}
-            />
-            <RareiumBar rareium={G.Rareium[playerID]} />
-          </>
-        )}
-
-        <GameLog log={G.log} matchData={matchData} />
+          <GameLog log={G.log} matchData={matchData} />
+        </div>
       </div>
     </div>
   );

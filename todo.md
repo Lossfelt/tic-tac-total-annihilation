@@ -135,10 +135,14 @@ ligger i `weapons.js`, og loggen er strukturerte objekter (`gameLog.js`).
 
 **Layout og lobby**
 
-- To kolonner fra ca. 900 px og kompakt mobil, slik at tur, våpen og Rareium
-  ikke ligger under brettet. Grupper Rareium og våpen som ett panel.
-- Lobbyen mangler "venter på motstander", kopier-knapp, `?match=`-lenke og
-  frakoblet-varsel (`matchData[i].isConnected` brukes ikke).
+Ferdig 9. november 2026: to kolonner fra 900 px (brett til venstre, tur,
+våpen, Rareium og logg til høyre), "venter på motstander" med kopier-lenke,
+`?match=`-invitasjon som fyller ut match-ID, frakoblet-varsel, og kontroll av
+at den lagrede matchen finnes før gjenopptakelse. Sett i nettleseren på 1200 px
+og 375 px, ikke prøvd med to ekte spillere.
+
+- Gjenstår: på mobil ligger tur og våpen under brettet. Vurder en kompakt rad
+  rett under brettet, og å skjule loggen bak en knapp.
 
 **Tilgjengelighet og visuelt**
 

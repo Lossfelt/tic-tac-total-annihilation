@@ -258,3 +258,18 @@
 .turn-name.canadia {
   color: var(--color-canadia);
 }
+
+/* Venstre kolonne (brett) og høyre kolonne (tur, våpen, logg). På smale
+   skjermer er wrapperne usynlige, så innholdet stables som før. */
+.board-main,
+.board-side {
+  display: contents;
+}
+
+.command-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}

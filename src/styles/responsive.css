@@ -36,3 +36,28 @@
     max-height: 100px;
   }
 }
+
+/* To kolonner på bred skjerm: brettet til venstre, kontrollene til høyre. */
+@media (min-width: 900px) {
+  .board-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    align-items: start;
+    column-gap: 2rem;
+    row-gap: 1rem;
+    max-width: 1000px;
+  }
+
+  .vs-banner {
+    grid-column: 1 / -1;
+  }
+
+  .board-main,
+  .board-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+}
