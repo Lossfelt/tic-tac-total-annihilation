@@ -36,26 +36,41 @@ export const RadiationIcon = () => (
   </svg>
 );
 
-// Kjemisk fare: dødningehodet i en rombe (GHS-piktogram for giftig).
-const ToxicIcon = () => (
-  <svg {...svgProps} strokeWidth={1.8}>
-    <path d="M16 1.500 30.500 16 16 30.500 1.500 16Z" />
-    <path d="M16 9c-3.300 0-5.200 2.200-5.200 4.800 0 1.600.8 2.800 2 3.600V20h6.400v-2.600c1.200-.8 2-2 2-3.600C21.200 11.200 19.300 9 16 9Z" />
+// Biofare-symbolet: tre klør (halvmåner) rundt en liten ring. Hver klo er en
+// sirkel A (radius 7,5, sentrum 7,5 fra midten) minus en like stor sirkel B som
+// er skjøvet 4,5 mot midten, så klørne åpner seg inn mot ringen.
+const CLAW_R = 7.5;
+const CLAW_DIST = 7.5;
+const CLAW_SHIFT = 4.5;
+
+const biohazardClaw = (deg) => {
+  const rad = (deg * Math.PI) / 180;
+  const ux = Math.cos(rad);
+  const uy = Math.sin(rad);
+  const nx = -uy;
+  const ny = ux;
+  // Midtpunktet mellom sirklene og halve kordelengden i skjæringspunktene.
+  const mid = CLAW_DIST - CLAW_SHIFT / 2;
+  const h = Math.sqrt(CLAW_R ** 2 - (CLAW_SHIFT / 2) ** 2);
+  const pt = (sign) =>
+    `${(16 + ux * mid + sign * h * nx).toFixed(2)} ${(16 + uy * mid + sign * h * ny).toFixed(2)}`;
+  // Ytre bue av A (stor, mot klokka i skjermvinkel), så indre bue av B tilbake.
+  return `M${pt(1)}A${CLAW_R} ${CLAW_R} 0 1 0 ${pt(-1)}A${CLAW_R} ${CLAW_R} 0 0 1 ${pt(1)}Z`;
+};
+
+const BiohazardIcon = () => (
+  <svg {...svgProps} fill="currentColor" strokeWidth={0}>
+    {[-90, 30, 150].map((deg) => (
+      <path key={deg} d={biohazardClaw(deg)} />
+    ))}
     <circle
-      cx="13.700"
-      cy="14.200"
-      r="1.200"
-      fill="currentColor"
-      stroke="none"
+      cx="16"
+      cy="16"
+      r="2.2"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
     />
-    <circle
-      cx="18.300"
-      cy="14.200"
-      r="1.200"
-      fill="currentColor"
-      stroke="none"
-    />
-    <path d="M14.600 20v1.600M16 20v1.600M17.400 20v1.600" />
   </svg>
 );
 
@@ -75,7 +90,7 @@ const AirStrikeIcon = () => (
 const WEAPON_ICONS = {
   Artillery: ArtilleryIcon,
   'Air Strike': AirStrikeIcon,
-  'Biological Warfare': ToxicIcon,
+  'Biological Warfare': BiohazardIcon,
   'Dirty Nuke': RadiationIcon,
 };
 
