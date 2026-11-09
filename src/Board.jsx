@@ -10,7 +10,6 @@ import { WeaponPanel } from './WeaponPanel.jsx';
 import { RareiumBar } from './RareiumBar.jsx';
 import { GameLog } from './GameLog.jsx';
 import { MatchStatus } from './MatchStatus.jsx';
-import { useTurnHighlight } from './useTurnHighlight.js';
 import { FactionMark } from './FactionMark.jsx';
 import { FACTION_NAME } from './factions.js';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
@@ -40,8 +39,7 @@ export function TicTacToeBoard({
   const gameover = ctx.gameover;
   const winnerID = gameover?.winner;
   const nameOf = (id) => matchData[id]?.name || FACTION_NAME[id];
-  const turnChanged = useTurnHighlight(ctx.turn, { animating, gameover });
-  const highlightTurn = turnChanged && ctx.currentPlayer === playerID;
+  const myTurn = ctx.currentPlayer === playerID;
 
   return (
     <div className="board-container">
@@ -125,7 +123,7 @@ export function TicTacToeBoard({
           {!gameover && (
             <>
               <div
-                className={`turn-indicator ${highlightTurn ? 'turn-indicator-pulse' : ''}`}
+                className={`turn-indicator ${myTurn ? 'turn-indicator-mine' : ''}`}
                 role="status"
               >
                 <span className="turn-label">Current turn:</span>

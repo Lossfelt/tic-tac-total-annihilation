@@ -8,7 +8,6 @@
 // bare hva brettet ber serveren om, ikke hva serveren gjør med det.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act } from 'react';
-import { TURN_HIGHLIGHT_MS } from './useTurnHighlight.js';
 import { render, screen, cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TicTacToeBoard } from './Board.jsx';
@@ -524,36 +523,30 @@ describe('matchstatus', () => {
   });
 });
 
-describe('turbytte-fremheving', () => {
-  const withTurn = (turn, currentPlayer) =>
-    makeProps({ ctx: { turn, currentPlayer } });
+describe('turindikator', () => {
+  const withTurn = (currentPlayer) => makeProps({ ctx: { currentPlayer } });
   const indicator = () => document.querySelector('.turn-indicator');
-  const pulsing = () => indicator().classList.contains('turn-indicator-pulse');
+  const highlighted = () =>
+    indicator().classList.contains('turn-indicator-mine');
 
-  afterEach(() => vi.useRealTimers());
+  it('er uthevet mens det er spillerens egen tur', () => {
+    render(<TicTacToeBoard {...withTurn('0')} />);
 
-  it('fremheves ikke ved første visning', () => {
-    render(<TicTacToeBoard {...withTurn(3, '0')} />);
-
-    expect(pulsing()).toBe(false);
+    expect(highlighted()).toBe(true);
   });
 
-  it('fremheves når det blir spillerens tur, og går tilbake', () => {
-    vi.useFakeTimers();
-    const { rerender } = render(<TicTacToeBoard {...withTurn(3, '1')} />);
+  it('er ikke uthevet mens det er motstanderens tur', () => {
+    render(<TicTacToeBoard {...withTurn('1')} />);
 
-    rerender(<TicTacToeBoard {...withTurn(4, '0')} />);
-    expect(pulsing()).toBe(true);
-
-    act(() => vi.advanceTimersByTime(TURN_HIGHLIGHT_MS));
-    expect(pulsing()).toBe(false);
+    expect(highlighted()).toBe(false);
   });
 
-  it('fremheves ikke når det blir motstanderens tur', () => {
-    const { rerender } = render(<TicTacToeBoard {...withTurn(3, '0')} />);
+  it('følger turen når den skifter', () => {
+    const { rerender } = render(<TicTacToeBoard {...withTurn('1')} />);
+    rerender(<TicTacToeBoard {...withTurn('0')} />);
+    expect(highlighted()).toBe(true);
 
-    rerender(<TicTacToeBoard {...withTurn(4, '1')} />);
-
-    expect(pulsing()).toBe(false);
+    rerender(<TicTacToeBoard {...withTurn('1')} />);
+    expect(highlighted()).toBe(false);
   });
 });

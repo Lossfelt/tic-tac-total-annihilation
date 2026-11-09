@@ -160,7 +160,7 @@ bakgrunnene. Ikke prøvd med skjermleser.
 
 - Gjort: revolt, invasjon (erobret og mislyktes), seierslinje, våpen mottatt,
   stempel når et territorium tas, soppsky v3 for Dirty Nuke, banner ved
-  fremheving av turindikatoren når det blir din tur (`useTurnHighlight`, erstattet et banner) og drivende aske i lobbyen (`LobbyAsh`).
+  permanent utheving av turindikatoren mens det er din tur (erstattet et banner) og drivende aske i lobbyen (`LobbyAsh`).
 - Alle animasjoner er sett som enkeltframes i nettleseren, men ikke prøvd i
   ekte multiplayer med to klienter.
 
