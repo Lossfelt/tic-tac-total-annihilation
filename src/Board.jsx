@@ -121,7 +121,7 @@ export function TicTacToeBoard({
 
         <div className="board-side">
           {!gameover && (
-            <>
+            <div className="command-panel">
               <div
                 className={`turn-indicator ${myTurn ? 'turn-indicator-mine' : ''}`}
                 role="status"
@@ -136,19 +136,17 @@ export function TicTacToeBoard({
                   <FactionMark playerID={ctx.currentPlayer} />
                 </span>
               </div>
-              <div className="command-panel">
-                <WeaponPanel
-                  G={G}
-                  moves={moves}
-                  playerID={playerID}
-                  isActive={isActive}
-                  animating={animating}
-                  armedCount={armedCount}
-                  targeting={targeting}
-                />
-                <RareiumBar rareium={G.Rareium[playerID]} />
-              </div>
-            </>
+              <WeaponPanel
+                G={G}
+                moves={moves}
+                playerID={playerID}
+                isActive={isActive}
+                animating={animating}
+                armedCount={armedCount}
+                targeting={targeting}
+              />
+              <RareiumBar rareium={G.Rareium[playerID]} />
+            </div>
           )}
 
           <GameLog log={G.log} matchData={matchData} />

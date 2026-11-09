@@ -61,3 +61,65 @@
     min-width: 0;
   }
 }
+
+/* Kompakt mobil: tur og Rareium på én rad, våpenknappen under, og loggen
+   foldet sammen til siste hendelse. */
+@media (max-width: 899px) {
+  .board-content {
+    gap: 0.75rem;
+  }
+
+  .command-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .command-panel .turn-indicator {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .command-panel .rareium-bar {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: none;
+  }
+
+  .command-panel .weapon-panel {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  /* Etiketten er skjult for synet for å spare plass, men leses fortsatt opp. */
+  .command-panel .turn-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .weapon-button {
+    padding: 0.5rem 1rem;
+  }
+
+  .game-log-toggle {
+    display: inline-block;
+  }
+
+  .game-log-collapsed li:not(:first-child) {
+    display: none;
+  }
+
+  .game-log-collapsed ul {
+    max-height: none;
+    overflow: visible;
+  }
+}

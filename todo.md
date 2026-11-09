@@ -141,8 +141,9 @@ våpen, Rareium og logg til høyre), "venter på motstander" med kopier-lenke,
 at den lagrede matchen finnes før gjenopptakelse. Sett i nettleseren på 1200 px
 og 375 px, ikke prøvd med to ekte spillere.
 
-- Gjenstår: på mobil ligger tur og våpen under brettet. Vurder en kompakt rad
-  rett under brettet, og å skjule loggen bak en knapp.
+- Gjort 9. november 2026: på smale skjermer ligger tur og Rareium på én rad
+  med våpenknappen under, og loggen er foldet sammen til siste hendelse med en
+  knapp for å vise alt. Sett i nettleseren på 375 px og 1200 px.
 
 **Tilgjengelighet og visuelt**
 
