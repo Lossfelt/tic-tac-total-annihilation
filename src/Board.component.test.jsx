@@ -494,6 +494,9 @@ describe('matchstatus', () => {
 
     expect(status().textContent).toMatch(/Waiting for an opponent/);
     expect(status().textContent).toMatch(/123456/);
+    expect(
+      screen.getByRole('img', { name: /QR code to join match 123456/ }),
+    ).toBeDefined();
   });
 
   it('varsler når motstanderen er frakoblet', () => {
