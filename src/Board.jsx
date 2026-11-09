@@ -10,8 +10,7 @@ import { WeaponPanel } from './WeaponPanel.jsx';
 import { RareiumBar } from './RareiumBar.jsx';
 import { GameLog } from './GameLog.jsx';
 import { MatchStatus } from './MatchStatus.jsx';
-import { TurnBanner } from './TurnBanner.jsx';
-import { useTurnBanner } from './useTurnBanner.js';
+import { useTurnHighlight } from './useTurnHighlight.js';
 import { FactionMark } from './FactionMark.jsx';
 import { FACTION_NAME } from './factions.js';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
@@ -41,11 +40,8 @@ export function TicTacToeBoard({
   const gameover = ctx.gameover;
   const winnerID = gameover?.winner;
   const nameOf = (id) => matchData[id]?.name || FACTION_NAME[id];
-  const showBanner = useTurnBanner(ctx.turn, { animating, gameover });
-  const bannerText =
-    ctx.currentPlayer === playerID
-      ? 'Your turn'
-      : `${nameOf(ctx.currentPlayer)}'s turn`;
+  const turnChanged = useTurnHighlight(ctx.turn, { animating, gameover });
+  const highlightTurn = turnChanged && ctx.currentPlayer === playerID;
 
   return (
     <div className="board-container">
@@ -95,13 +91,6 @@ export function TicTacToeBoard({
             {anim?.type === 'Air Strike' && (
               <AirStrikeAnimation key={anim.event.version} plan={anim.plan} />
             )}
-            {showBanner && (
-              <TurnBanner
-                key={ctx.turn}
-                player={ctx.currentPlayer}
-                text={bannerText}
-              />
-            )}
             {gameover && (
               <WinEffect
                 winnerID={winnerID}
@@ -135,7 +124,10 @@ export function TicTacToeBoard({
         <div className="board-side">
           {!gameover && (
             <>
-              <div className="turn-indicator" role="status">
+              <div
+                className={`turn-indicator ${highlightTurn ? 'turn-indicator-pulse' : ''}`}
+                role="status"
+              >
                 <span className="turn-label">Current turn:</span>
                 <span
                   className={`turn-name ${
