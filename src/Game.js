@@ -1,12 +1,15 @@
 import { INVALID_MOVE } from 'boardgame.io/dist/cjs/core.js';
+import { strategicWeapons, BIO_DESTROY_CHANCE } from './weapons.js';
 
 export const BOARD_SIZE = 4;
 export const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
 export const NUM_PLAYERS = 2;
 export const REVOLT_CHANCE = 0.05;
-export const INVASION_SUCCESS_CHANCE = 0.2;
-export const BIO_DESTROY_CHANCE = 0.5;
+export const INVASION_SUCCESS_CHANCE = 0.5;
 export const RAREIUM_WEAPON_CHANCE_DIVISOR = 100;
+// Rareium er en sjanse i prosent, så mer enn 100 gir ingen fordel. Taket
+// hindrer også at tallet vokser uten grense mens spilleren holder et våpen.
+export const RAREIUM_MAX = 100;
 export const RECYCLE_REFUND_RATIO = 0.7;
 
 export const territories = [
@@ -28,12 +31,7 @@ export const territories = [
   'the Sunset Swamps',
 ];
 
-export const strategicWeapons = [
-  'Artillery',
-  'Air Strike',
-  'Biological Warfare',
-  'Dirty Nuke',
-];
+export { strategicWeapons, BIO_DESTROY_CHANCE };
 
 const positions = [
   // Horizontal lines
@@ -148,10 +146,101 @@ export function GetSurroundingCells(id, boardSize = BOARD_SIZE) {
   return neighbors;
 }
 
-// Loggen lagres med __P<playerID>__ som placeholder for spillernavn.
-// Klienten formaterer dette mot matchData ved render, slik at serveren
-// aldri trenger en klient-sendt navneliste (som ville vært spoofbar).
-const playerToken = (playerID) => `__P${playerID}__`;
+// Loggoppføringer er objekter. Klienten lager tekst og ikon, se gameLog.js.
+const logEntry = (G, entry) => G.log.unshift(entry);
+
+function isCellId(id) {
+  return Number.isInteger(id) && id >= 0 && id < TOTAL_CELLS;
+}
+
+// Server-side validering av målet. UI-et sender alltid gyldige mål, men
+// serveren skal ikke stole på klienten.
+function isValidWeaponTarget(weapon, input) {
+  if (weapon === 'Air Strike') {
+    return (
+      Array.isArray(input) &&
+      input.length === 3 &&
+      input.every(isCellId) &&
+      new Set(input).size === 3 &&
+      IsRow(input)
+    );
+  }
+  return isCellId(input);
+}
+
+// Hendelsen klienten spiller av som animasjon. `before` er brettet slik det
+// så ut før våpenet traff, så alle klienter kan vise det frem til treffpunktet.
+// `version` økes for hver hendelse og er det klienten reagerer på.
+// `affected` er cellene våpenet faktisk rammet, når det avhenger av tilfeldighet
+// (Biological Warfare), så alle klienter animerer samme utfall.
+function recordWeaponEvent(G, type, cells, before, affected = []) {
+  G.weaponEvent = {
+    type,
+    cells,
+    before,
+    affected,
+    version: (G.weaponEvent?.version ?? 0) + 1,
+  };
+}
+
+// Merker en celle for animasjon på klienten. `kind` sier hva som skjedde.
+function markCell(G, id, kind = null) {
+  G.blink[id] = true;
+  if (G.blinkKind) G.blinkKind[id] = kind;
+}
+
+// Nullstiller blinkene fra forrige trekk og starter en ny blink-runde.
+function resetBlink(G) {
+  G.blink.fill(false);
+  G.blinkKind?.fill(null);
+  G.blinkVersion++;
+}
+
+// Hvert våpen returnerer false hvis trekket er ugyldig. Loggføringen gjøres
+// av useStrategicWeapon.
+const WEAPON_HANDLERS = {
+  Artillery: ({ G, input }) => {
+    [input, ...GetNeighbors(input)].forEach((target) => {
+      G.cells[target] = null;
+      G.blink[target] = true;
+    });
+    G.lastCellAttacked = input;
+    return true;
+  },
+  'Air Strike': ({ G, input }) => {
+    input.forEach((id) => {
+      G.cells[id] = null;
+      G.blink[id] = true;
+    });
+    G.lastCellAttacked = input[2];
+    return true;
+  },
+  'Biological Warfare': ({ G, input, random, affected }) => {
+    GetSurroundingCells(input).forEach((target) => {
+      if (random.Number() < BIO_DESTROY_CHANCE) {
+        G.cells[target] = null;
+        G.blink[target] = true;
+        affected.push(target);
+      }
+    });
+    G.lastCellAttacked = input;
+    return true;
+  },
+  'Dirty Nuke': ({ G, input }) => {
+    if (G.destroyed[input]) return false;
+    G.cells[input] = null;
+    G.destroyed[input] = true;
+    G.blink[input] = true;
+    G.lastCellAttacked = input;
+    return true;
+  },
+};
+
+// Testtrekk som bare finnes når serveren startes med DEBUG_MOVES=1. I
+// nettleseren finnes ikke `process`, og på produksjonsserveren er variabelen
+// ikke satt, så trekket avvises der.
+const DEBUG_MOVES =
+  typeof process !== 'undefined' && process.env?.DEBUG_MOVES === '1';
 
 export const TicTacToe = {
   name: 'TicTacToe',
@@ -164,6 +253,9 @@ export const TicTacToe = {
     destroyed: Array(TOTAL_CELLS).fill(false),
     log: [],
     blink: Array(TOTAL_CELLS).fill(false),
+    // Hva som skjedde med en blinkende celle: 'claim', 'conquer', 'fail' eller
+    // 'revolt'. Null for våpentreff. Klienten velger effekt etter dette.
+    blinkKind: Array(TOTAL_CELLS).fill(null),
     // Inkrementeres ved hver blink-hendelse. Klienten bruker dette i React
     // `key` slik at en celle som blinker to ganger etter hverandre faktisk
     // får CSS-animasjonen restartet (uten tvinges remount beholder DOM den
@@ -175,6 +267,8 @@ export const TicTacToe = {
     // Rareium-nivået i det øyeblikket gjeldende våpen ble tildelt. Brukes
     // til å beregne refusjon ved recycle. Resettes når våpenet brukes opp.
     rareiumAtWeapon: Array(NUM_PLAYERS).fill(0),
+    // Siste våpenhendelse, brukt av klienten til å spille av animasjon.
+    weaponEvent: { type: null, cells: [], before: null, version: 0 },
   }),
 
   turn: {
@@ -186,7 +280,10 @@ export const TicTacToe = {
       const ownedCells = G.cells.filter(
         (cell) => cell === ctx.currentPlayer,
       ).length;
-      G.Rareium[ctx.currentPlayer] += ownedCells;
+      G.Rareium[ctx.currentPlayer] = Math.min(
+        RAREIUM_MAX,
+        G.Rareium[ctx.currentPlayer] + ownedCells,
+      );
 
       if (!G.strategicWeapon[ctx.currentPlayer]) {
         if (
@@ -208,11 +305,9 @@ export const TicTacToe = {
           random.Number() < REVOLT_CHANCE &&
           i !== G.lastCellAttacked
         ) {
+          logEntry(G, { type: 'revolt', player: G.cells[i], cell: i });
           G.cells[i] = null;
-          G.log.unshift(
-            `The people of ${territories[i]} revolt against foreign rule`,
-          );
-          G.blink[i] = true;
+          markCell(G, i, 'revolt');
           revolted = true;
         }
       }
@@ -222,30 +317,38 @@ export const TicTacToe = {
 
   moves: {
     clickCell: ({ G, playerID, random }, id) => {
-      G.blink.fill(false);
-      G.blinkVersion++;
-      const name = playerToken(playerID);
+      if (!isCellId(id)) return INVALID_MOVE;
+      resetBlink(G);
       if (G.destroyed[id]) {
         return INVALID_MOVE;
       } else if (G.cells[id] === playerID) {
         return INVALID_MOVE;
       } else if (G.cells[id] !== null) {
-        if (random.Number() < INVASION_SUCCESS_CHANCE) {
-          G.cells[id] = playerID;
-          G.log.unshift(`${name} conquers ${territories[id]}`);
-        } else {
-          G.log.unshift(
-            `${name} attempts to invade ${territories[id]}, but fails`,
-          );
-        }
-        G.blink[id] = true;
+        const conquered = random.Number() < INVASION_SUCCESS_CHANCE;
+        if (conquered) G.cells[id] = playerID;
+        const type = conquered ? 'conquer' : 'fail';
+        logEntry(G, { type, player: playerID, cell: id });
+        markCell(G, id, type);
         G.lastCellAttacked = id;
       } else {
         G.cells[id] = playerID;
-        G.log.unshift(`${name} claims ${territories[id]}`);
-        G.blink[id] = true;
+        logEntry(G, { type: 'claim', player: playerID, cell: id });
+        markCell(G, id, 'claim');
         G.lastCellAttacked = id;
       }
+    },
+    // Gir spilleren et våpen, for å teste animasjonene. Kjøres bare på
+    // serveren (client: false) og teller ikke som turens trekk (noLimit).
+    debugGiveWeapon: {
+      client: false,
+      noLimit: true,
+      move: ({ G, playerID }, weapon) => {
+        if (!DEBUG_MOVES || !strategicWeapons.includes(weapon)) {
+          return INVALID_MOVE;
+        }
+        G.strategicWeapon[playerID] = weapon;
+        G.rareiumAtWeapon[playerID] = 100;
+      },
     },
     recycleStrategicWeapon: {
       // noLimit gjør at recycle ikke teller mot turens maxMoves: 1. Spilleren
@@ -254,93 +357,66 @@ export const TicTacToe = {
       move: ({ G, playerID }) => {
         const weapon = G.strategicWeapon[playerID];
         if (!weapon) return INVALID_MOVE;
-        G.blink.fill(false);
-        G.blinkVersion++;
+        resetBlink(G);
         const refund = Math.round(
           G.rareiumAtWeapon[playerID] * RECYCLE_REFUND_RATIO,
         );
-        G.Rareium[playerID] += refund;
+        G.Rareium[playerID] = Math.min(
+          RAREIUM_MAX,
+          G.Rareium[playerID] + refund,
+        );
         G.strategicWeapon[playerID] = null;
         G.rareiumAtWeapon[playerID] = 0;
-        const name = playerToken(playerID);
-        G.log.unshift(
-          `${name} recycles ${weapon} and recovers ${refund}% Rareium`,
-        );
+        logEntry(G, { type: 'recycle', player: playerID, weapon, refund });
       },
     },
     useStrategicWeapon: ({ G, playerID, random }, input) => {
-      G.blink.fill(false);
-      G.blinkVersion++;
-      const name = playerToken(playerID);
       const weapon = G.strategicWeapon[playerID];
+      if (!weapon || !isValidWeaponTarget(weapon, input)) return INVALID_MOVE;
 
-      if (weapon === 'Artillery') {
-        const targets = [input, ...GetNeighbors(input)];
-        targets.forEach((target) => {
-          G.cells[target] = null;
-          G.blink[target] = true;
-        });
-        G.log.unshift(
-          `${name} launches an Artillery Strike at ${territories[input]} and its neighbors!`,
-        );
-        G.lastCellAttacked = input;
-        G.strategicWeapon[playerID] = null;
-      } else if (weapon === 'Air Strike') {
-        if (input.length === 3 && IsRow(input)) {
-          G.log.unshift(
-            `${name} launches an Air Strike at ${input
-              .map((id) => territories[id])
-              .join(', ')}`,
-          );
-          input.forEach((id) => {
-            G.cells[id] = null;
-            G.blink[id] = true;
-          });
-          G.lastCellAttacked = input[2];
-          G.strategicWeapon[playerID] = null;
-        } else {
-          // Forhindre at klient-state henger igjen i ugyldig tilstand etter
-          // et avvist Air Strike-trekk.
-          G.blink.fill(false);
-          return INVALID_MOVE;
-        }
-      } else if (weapon === 'Biological Warfare') {
-        const targets = GetSurroundingCells(input);
-        targets.forEach((target) => {
-          if (random.Number() < BIO_DESTROY_CHANCE) {
-            G.cells[target] = null;
-            G.blink[target] = true;
-          }
-        });
-        G.log.unshift(
-          `${name} releases a Biological Weapon at ${territories[input]} and its surroundings!`,
-        );
-        G.lastCellAttacked = input;
-        G.strategicWeapon[playerID] = null;
-      } else if (weapon === 'Dirty Nuke') {
-        if (G.destroyed[input]) {
-          G.blink.fill(false);
-          return INVALID_MOVE;
-        }
-        G.cells[input] = null;
-        G.destroyed[input] = true;
-        G.blink[input] = true;
-        G.log.unshift(
-          `${name} detonates a Dirty Nuke at ${territories[input]}, leaving it uninhabitable`,
-        );
-        G.lastCellAttacked = input;
-        G.strategicWeapon[playerID] = null;
-      }
+      const before = { cells: [...G.cells], destroyed: [...G.destroyed] };
+      resetBlink(G);
+      const affected = [];
+      const ok = WEAPON_HANDLERS[weapon]({
+        G,
+        input,
+        random,
+        affected,
+      });
+      if (!ok) return INVALID_MOVE;
+
+      G.strategicWeapon[playerID] = null;
+      const cells = Array.isArray(input) ? [...input] : [input];
+      logEntry(G, { type: weapon, player: playerID, cells });
+      recordWeaponEvent(G, weapon, cells, before, affected);
     },
   },
 
   minPlayers: NUM_PLAYERS,
   maxPlayers: NUM_PLAYERS,
 
-  endIf: ({ G, ctx }) => {
+  // Motstanderens Rareium og våpen sendes ikke til klienten. Uten dette kan
+  // en spiller lese dem i nettverkstrafikken. Uten playerID (lokal modus eller
+  // test) vises alt.
+  playerView: ({ G, playerID }) => {
+    if (playerID === null || playerID === undefined) return G;
+    const mine = (list, hidden) =>
+      list.map((value, id) =>
+        String(id) === String(playerID) ? value : hidden,
+      );
+    return {
+      ...G,
+      Rareium: mine(G.Rareium, 0),
+      rareiumAtWeapon: mine(G.rareiumAtWeapon, 0),
+      strategicWeapon: mine(G.strategicWeapon, null),
+    };
+  },
+
+  endIf: ({ G }) => {
     const winningLine = GetWinningLine(G.cells);
     if (winningLine) {
-      return { winner: ctx.currentPlayer, winningLine };
+      // Vinneren er eieren av linjen, ikke nødvendigvis den som har turen.
+      return { winner: G.cells[winningLine[0]], winningLine };
     }
     // Domination: hvis alle ikke-destroyed celler er eid av samme spiller, og
     // ingen tomme celler er igjen, vinner den spilleren. Dekker edge-casen
@@ -363,12 +439,3 @@ export const TicTacToe = {
     },
   },
 };
-
-// Substituerer __P<id>__ placeholders i en loggstreng med spillernavn fra
-// matchData. Eksportert slik at klienten kan formatere alle loggoppføringer.
-export function formatLogEntry(entry, matchData) {
-  return entry.replace(/__P(\d+)__/g, (_, id) => {
-    const player = matchData?.[id];
-    return player?.name || `Player ${id}`;
-  });
-}

@@ -1,10 +1,39 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import './Board.css';
+import { WeaponIcon } from './icons.jsx';
+
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]';
 
 const AboutPopup = ({ onClose }) => {
+  const popupRef = useRef(null);
+
+  // Fokus flyttes inn i dialogen når den åpnes og tilbake til elementet som
+  // åpnet den når den lukkes.
+  useEffect(() => {
+    const opener = document.activeElement;
+    popupRef.current?.querySelector(FOCUSABLE)?.focus();
+    return () => opener?.focus?.();
+  }, []);
+
   useEffect(() => {
     const handleKey = (event) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+      // Fokusfelle: Tab og Shift+Tab går rundt innenfor dialogen.
+      if (event.key !== 'Tab' || !popupRef.current) return;
+      const items = [...popupRef.current.querySelectorAll(FOCUSABLE)];
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
@@ -18,7 +47,11 @@ const AboutPopup = ({ onClose }) => {
       aria-labelledby="about-title"
       onClick={onClose}
     >
-      <div className="popup" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="popup"
+        ref={popupRef}
+        onClick={(event) => event.stopPropagation()}
+      >
         <button
           type="button"
           className="popup-close"
@@ -99,28 +132,36 @@ const AboutPopup = ({ onClose }) => {
           </p>
           <ul className="weapons-list">
             <li>
-              <span className="weapon-emoji">💥</span>
+              <span className="about-weapon-icon">
+                <WeaponIcon weapon="Artillery" />
+              </span>
               <span>
                 <strong>Artillery</strong>: destroys the target cell and its
                 four orthogonal neighbours.
               </span>
             </li>
             <li>
-              <span className="weapon-emoji">✈️</span>
+              <span className="about-weapon-icon">
+                <WeaponIcon weapon="Air Strike" />
+              </span>
               <span>
                 <strong>Air Strike</strong>: destroys three target cells in a
                 line (horizontal, vertical or diagonal).
               </span>
             </li>
             <li>
-              <span className="weapon-emoji">☣️</span>
+              <span className="about-weapon-icon">
+                <WeaponIcon weapon="Biological Warfare" />
+              </span>
               <span>
                 <strong>Biological Warfare</strong>: each cell in a 3x3 area
                 around the target has a 50% chance to be destroyed.
               </span>
             </li>
             <li>
-              <span className="weapon-emoji">☢️</span>
+              <span className="about-weapon-icon">
+                <WeaponIcon weapon="Dirty Nuke" />
+              </span>
               <span>
                 <strong>Dirty Nuke</strong>: permanently destroys the target
                 cell. The cell cannot be claimed for the rest of the game.

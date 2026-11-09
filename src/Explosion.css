@@ -1,0 +1,164 @@
+/* Eksplosjon (se Explosion.jsx). --d er tidspunktet den går av, i ms etter
+   at animasjonen monteres. Animasjonene spilles én gang og blir stående i
+   sluttilstand til komponenten fjernes. */
+
+.ex-scorch,
+.ex-flash,
+.ex-fire,
+.ex-ring,
+.ex-debris,
+.ex-spark,
+.ex-smoke {
+  opacity: 0;
+  animation-delay: var(--d);
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.ex-scorch {
+  animation-name: ex-scorch;
+  animation-duration: 1.4s;
+}
+.ex-flash {
+  animation-name: ex-flash;
+  animation-duration: 450ms;
+}
+.ex-fire {
+  animation-name: ex-fire;
+  animation-duration: 1s;
+}
+.ex-ring {
+  animation-name: ex-ring;
+  animation-duration: 700ms;
+}
+.ex-ring-late {
+  animation-delay: calc(var(--d) + 120ms);
+  animation-duration: 900ms;
+}
+.ex-debris {
+  animation-name: ex-debris;
+  animation-duration: 1s;
+}
+.ex-spark {
+  animation-name: ex-spark;
+  animation-duration: 600ms;
+}
+.ex-smoke {
+  animation-name: ex-smoke;
+  animation-duration: 2.2s;
+  animation-delay: calc(var(--d) + var(--x));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ex-scorch,
+  .ex-flash,
+  .ex-fire,
+  .ex-ring,
+  .ex-debris,
+  .ex-spark,
+  .ex-smoke {
+    display: none;
+  }
+}
+
+@keyframes ex-scorch {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  15% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+}
+
+@keyframes ex-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes ex-fire {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes ex-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+/* Skrot kastes ut og faller tilbake. */
+@keyframes ex-debris {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0);
+  }
+  8% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate(calc(var(--dx) * 0.9), calc(var(--dy) * 0.9 - 14px))
+      rotate(calc(var(--rot) * 0.7));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), calc(var(--dy) + 10px)) rotate(var(--rot));
+  }
+}
+
+@keyframes ex-spark {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy));
+  }
+}
+
+@keyframes ex-smoke {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3);
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sx), var(--sy)) scale(1.6);
+  }
+}

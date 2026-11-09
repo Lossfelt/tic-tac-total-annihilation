@@ -23,11 +23,8 @@ const server = Server({
     console.log(`Generated match ID: ${matchID}`);
     return matchID;
   },
-  generateCredentials: () => {
-    const credentials = nanoid();
-    console.log(`Generated credentials: ${credentials}`);
-    return credentials;
-  },
+  // Credentials er hemmeligheter og logges aldri.
+  generateCredentials: () => nanoid(),
 });
 
 const PORT = process.env.PORT || 8000;

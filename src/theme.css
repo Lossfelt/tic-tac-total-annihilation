@@ -3,8 +3,9 @@
   --color-bg-elevated: #252220;
   --color-bg-deep: #100e0b;
   --color-text: #d9c9a3;
-  --color-text-muted: #8b8170;
-  --color-text-dim: #5a5448;
+  /* Kontrast mot --color-bg-elevated: muted 5,6:1 og dim 4,7:1 (WCAG AA krever 4,5:1). */
+  --color-text-muted: #a39988;
+  --color-text-dim: #948a79;
 
   --color-rust: #dd6a35;
   --color-rust-dim: #8b3e1e;
@@ -149,7 +150,6 @@ input[type='number'] {
   border-radius: var(--radius-sm);
   padding: 0.5rem 0.75rem;
   font-size: 1rem;
-  outline: none;
   transition: border-color 0.15s ease;
 }
 
@@ -161,4 +161,23 @@ input[type='number']:focus {
 input[type='number'] {
   width: 8rem;
   text-align: center;
+}
+
+/* Synlig tastaturfokus på alle interaktive elementer. */
+:focus-visible {
+  outline: 2px solid var(--color-rust-bright);
+  outline-offset: 2px;
+}
+
+/* Brukere som har bedt om mindre bevegelse får ingen blink, puls eller glød.
+   Animasjoner kjøres ferdig umiddelbart, så sluttilstanden er den samme. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

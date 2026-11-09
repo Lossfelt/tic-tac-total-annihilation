@@ -3,9 +3,11 @@ import { TicTacToeBoard } from './Board.jsx';
 import { Client } from 'boardgame.io/dist/esm/react.js';
 import { SocketIO } from 'boardgame.io/dist/esm/multiplayer.js';
 import { LobbyClient } from 'boardgame.io/dist/esm/client.js';
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import './Board.css';
 import AboutPopup from './AboutPopup.jsx';
+import Lobby from './Lobby.jsx';
+import { loadSession, saveSession, clearSession } from './session.js';
 
 const TicTacToeClient = Client({
   game: TicTacToe,
@@ -23,35 +25,71 @@ const lobbyClient = new LobbyClient({
     `${window.location.protocol}//${window.location.hostname}:8000`,
 });
 
+// Invitasjonslenken har formen /?match=123456. Bare sifre godtas.
+const invitedMatch = (
+  new URLSearchParams(window.location.search).get('match') ?? ''
+)
+  .replace(/D/g, '')
+  .slice(0, 12);
+
 const App = () => {
-  const [name, setName] = useState('');
-  const [matchID, setMatchID] = useState('');
-  const [credentials, setCredentials] = useState('');
-  const [playerID, setPlayerID] = useState('');
+  // En reload gjenopptar matchen fra sessionStorage (se session.js).
+  const [saved] = useState(loadSession);
+  const [name, setName] = useState(saved?.name ?? '');
+  const [matchID, setMatchID] = useState(saved?.matchID ?? '');
+  const [credentials, setCredentials] = useState(saved?.credentials ?? '');
+  const [playerID, setPlayerID] = useState(saved?.playerID ?? '');
   const [joined, setJoined] = useState(false);
+  // True mens vi sjekker at den lagrede matchen fortsatt finnes.
+  const [resuming, setResuming] = useState(Boolean(saved));
   const [showAbout, setShowAbout] = useState(false);
   // Hvis ikke null: backend-kall er underveis. Brukes til å disable knapper og
   // vise en "Waiting for server"-indikator. Hovedmotivasjon: Render kan bruke
   // 30-60s på å spinne opp en kald instans, så uten dette virker UI dødt.
   const [pendingAction, setPendingAction] = useState(null);
   const [lobbyError, setLobbyError] = useState('');
-  const nameInput = useRef();
-  const matchInput = useRef();
+  const [matchError, setMatchError] = useState('');
+
+  useEffect(() => {
+    if (joined) saveSession({ name, matchID, playerID, credentials });
+    else if (!resuming) clearSession();
+  }, [joined, resuming, name, matchID, playerID, credentials]);
+
+  // Gjenopptakelse: matchen kan være borte (serveren har startet på nytt), så
+  // den sjekkes før vi viser brettet. Ellers havner spilleren på en tom skjerm.
+  useEffect(() => {
+    if (!saved) return undefined;
+    let cancelled = false;
+    const giveUp = () => {
+      setMatchID('');
+      setCredentials('');
+      setPlayerID('');
+      setLobbyError('Your previous match is no longer available.');
+    };
+    lobbyClient
+      .getMatch('TicTacToe', saved.matchID)
+      .then((match) => {
+        if (cancelled) return;
+        const me = match.players.find((p) => String(p.id) === saved.playerID);
+        if (me?.name) setJoined(true);
+        else giveUp();
+      })
+      .catch(() => {
+        if (!cancelled) giveUp();
+      })
+      .finally(() => {
+        if (!cancelled) setResuming(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [saved]);
 
   const handleAbout = () => {
     setShowAbout(!showAbout);
   };
 
-  const handleNameChange = (event) => {
-    event.preventDefault();
-    setName(nameInput.current.value);
-  };
-
-  const handleJoin = async (inputMatchID) => {
-    const id =
-      typeof inputMatchID === 'string'
-        ? inputMatchID
-        : matchInput.current.value;
+  const handleJoin = async (id) => {
     if (!matchID) {
       setMatchID(id);
     }
@@ -89,11 +127,18 @@ const App = () => {
     }
   };
 
+  // Spilleren forlater alltid lokalt, selv om serveren ikke svarer. Ellers
+  // blir man sittende fast i matchen når serveren er nede.
   const handleLeave = async () => {
-    await lobbyClient.leaveMatch('TicTacToe', matchID, {
-      playerID,
-      credentials,
-    });
+    try {
+      await lobbyClient.leaveMatch('TicTacToe', matchID, {
+        playerID,
+        credentials,
+      });
+    } catch (error) {
+      console.warn('Could not notify server about leaving:', error);
+    }
+    setMatchError('');
     setMatchID('');
     setCredentials('');
     setPlayerID('');
@@ -129,99 +174,34 @@ const App = () => {
       setMatchID(nextMatchID);
       setCredentials(next.playerCredentials);
       setPlayerID(next.playerID);
+      setMatchError('');
     } catch (error) {
       console.error('Error during play again:', error);
+      setMatchError('Could not start a new match. Please try again.');
     }
   };
 
   return (
     <div>
-      {!joined ? (
+      {resuming ? (
         <div className="lobby">
-          <div className="lobby-title">
-            <h1 className="game-title">
-              <span className="game-title-main">Tic Tac Total</span>
-              <span className="game-title-accent">Annihilation</span>
-            </h1>
-            <div className="lobby-subtitle">Post-collapse territory war</div>
+          <div className="lobby-pending" role="status" aria-live="polite">
+            <span className="lobby-pending-dot" aria-hidden="true" />
+            <span className="lobby-pending-text">
+              Reconnecting to your match
+            </span>
           </div>
-
-          <div className="factions-preview">
-            <div className="faction-card queendom">
-              <img src="/Queendom_icon.png" alt="Mexican Queendom" />
-              <span>Mexican Queendom</span>
-            </div>
-            <div className="faction-card canadia">
-              <img
-                src="/Pan-Canadia_icon.png"
-                alt="Pan-Canadia Inuit Alliance"
-              />
-              <span>Pan-Canadia Inuit Alliance</span>
-            </div>
-          </div>
-
-          {!name ? (
-            <form className="lobby-form" onSubmit={handleNameChange}>
-              <h2>Who will lead the troops?</h2>
-              <input
-                ref={nameInput}
-                type="text"
-                placeholder="Enter your name"
-                maxLength={32}
-              />
-              <button type="submit">Submit</button>
-            </form>
-          ) : (
-            <div className="lobby-actions">
-              <h2>Welcome, general {name}</h2>
-              <button onClick={handleCreate} disabled={pendingAction !== null}>
-                Create new match
-              </button>
-              <div className="lobby-divider">or join existing</div>
-              <div className="lobby-row">
-                <input
-                  ref={matchInput}
-                  type="number"
-                  placeholder="Match ID"
-                  disabled={pendingAction !== null}
-                />
-                <button
-                  onClick={() => handleJoin()}
-                  disabled={pendingAction !== null}
-                >
-                  Join
-                </button>
-              </div>
-              {pendingAction ? (
-                <div className="lobby-pending" role="status" aria-live="polite">
-                  <span className="lobby-pending-dot" aria-hidden="true" />
-                  <span className="lobby-pending-text">
-                    Waiting for server
-                    <span className="lobby-pending-ellipsis" aria-hidden="true">
-                      <span>.</span>
-                      <span>.</span>
-                      <span>.</span>
-                    </span>
-                  </span>
-                  <span className="lobby-pending-hint">
-                    First connect can take 30-60 seconds while the backend wakes
-                    up.
-                  </span>
-                </div>
-              ) : (
-                <div className="lobby-hint">
-                  Match ID is shared with your opponent so they can join the
-                  same battle.
-                </div>
-              )}
-              {lobbyError && (
-                <div className="lobby-error" role="alert">
-                  {lobbyError}
-                </div>
-              )}
-            </div>
-          )}
         </div>
+      ) : !joined ? (
+        <Lobby
+          name={name}
+          pendingAction={pendingAction}
+          lobbyError={lobbyError}
+          onSubmitName={setName}
+          onCreate={handleCreate}
+          onJoin={handleJoin}
+          initialMatchID={invitedMatch}
+        />
       ) : (
         <div className="match-shell">
           <div className="match-bar">
@@ -241,6 +221,11 @@ const App = () => {
               About
             </button>
           </div>
+          {matchError && (
+            <div className="lobby-error" role="alert">
+              {matchError}
+            </div>
+          )}
           <TicTacToeClient
             playerID={playerID}
             credentials={credentials}

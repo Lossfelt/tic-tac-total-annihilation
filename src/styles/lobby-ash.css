@@ -1,0 +1,34 @@
+/* Aske bak lobbyen. Se LobbyAsh.jsx. Ligger bak innholdet (z-index -1, som
+   .lobby::before) og fanger ingen klikk. */
+.lobby-ash {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lobby-ash-flake {
+  position: absolute;
+  top: -2vh;
+  border-radius: 1px;
+  opacity: 0;
+  animation: lobby-ash-fall var(--dur) linear var(--delay) infinite;
+}
+
+@keyframes lobby-ash-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0);
+  }
+  10% {
+    opacity: var(--peak);
+  }
+  85% {
+    opacity: var(--peak);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), 108vh) rotate(var(--spin));
+  }
+}
