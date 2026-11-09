@@ -8,6 +8,7 @@
 // bare hva brettet ber serveren om, ikke hva serveren gjør med det.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act } from 'react';
+import { TURN_BANNER_MS } from './useTurnBanner.js';
 import { render, screen, cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TicTacToeBoard } from './Board.jsx';
@@ -517,5 +518,52 @@ describe('matchstatus', () => {
     render(<TicTacToeBoard {...props} />);
 
     expect(status()).toBeNull();
+  });
+});
+
+describe('turbytte-banner', () => {
+  const withTurn = (turn, currentPlayer) =>
+    makeProps({ ctx: { turn, currentPlayer } });
+  const banner = () => screen.queryByTestId('turn-banner');
+
+  afterEach(() => vi.useRealTimers());
+
+  it('vises ikke ved første visning', () => {
+    render(<TicTacToeBoard {...withTurn(3, '0')} />);
+
+    expect(banner()).toBeNull();
+  });
+
+  it('vises når turen skifter, og forsvinner igjen', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<TicTacToeBoard {...withTurn(3, '0')} />);
+
+    rerender(<TicTacToeBoard {...withTurn(4, '1')} />);
+    expect(banner().textContent).toMatch(/Canadia's turn/);
+
+    act(() => vi.advanceTimersByTime(TURN_BANNER_MS));
+    expect(banner()).toBeNull();
+  });
+
+  it('sier "Your turn" når det er spillerens tur', () => {
+    const { rerender } = render(<TicTacToeBoard {...withTurn(3, '1')} />);
+
+    rerender(<TicTacToeBoard {...withTurn(4, '0')} />);
+
+    expect(banner().textContent).toMatch(/Your turn/);
+  });
+
+  it('vises ikke når spillet er over', () => {
+    const { rerender } = render(<TicTacToeBoard {...withTurn(3, '0')} />);
+
+    rerender(
+      <TicTacToeBoard
+        {...makeProps({
+          ctx: { turn: 4, currentPlayer: '1', gameover: { winner: '0' } },
+        })}
+      />,
+    );
+
+    expect(banner()).toBeNull();
   });
 });
