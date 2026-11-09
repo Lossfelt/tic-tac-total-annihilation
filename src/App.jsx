@@ -32,7 +32,9 @@ const App = () => {
   const [matchID, setMatchID] = useState(saved?.matchID ?? '');
   const [credentials, setCredentials] = useState(saved?.credentials ?? '');
   const [playerID, setPlayerID] = useState(saved?.playerID ?? '');
-  const [joined, setJoined] = useState(Boolean(saved));
+  const [joined, setJoined] = useState(false);
+  // True mens vi sjekker at den lagrede matchen fortsatt finnes.
+  const [resuming, setResuming] = useState(Boolean(saved));
   const [showAbout, setShowAbout] = useState(false);
   // Hvis ikke null: backend-kall er underveis. Brukes til å disable knapper og
   // vise en "Waiting for server"-indikator. Hovedmotivasjon: Render kan bruke
@@ -43,8 +45,38 @@ const App = () => {
 
   useEffect(() => {
     if (joined) saveSession({ name, matchID, playerID, credentials });
-    else clearSession();
-  }, [joined, name, matchID, playerID, credentials]);
+    else if (!resuming) clearSession();
+  }, [joined, resuming, name, matchID, playerID, credentials]);
+
+  // Gjenopptakelse: matchen kan være borte (serveren har startet på nytt), så
+  // den sjekkes før vi viser brettet. Ellers havner spilleren på en tom skjerm.
+  useEffect(() => {
+    if (!saved) return undefined;
+    let cancelled = false;
+    const giveUp = () => {
+      setMatchID('');
+      setCredentials('');
+      setPlayerID('');
+      setLobbyError('Your previous match is no longer available.');
+    };
+    lobbyClient
+      .getMatch('TicTacToe', saved.matchID)
+      .then((match) => {
+        if (cancelled) return;
+        const me = match.players.find((p) => String(p.id) === saved.playerID);
+        if (me?.name) setJoined(true);
+        else giveUp();
+      })
+      .catch(() => {
+        if (!cancelled) giveUp();
+      })
+      .finally(() => {
+        if (!cancelled) setResuming(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [saved]);
 
   const handleAbout = () => {
     setShowAbout(!showAbout);
@@ -144,7 +176,16 @@ const App = () => {
 
   return (
     <div>
-      {!joined ? (
+      {resuming ? (
+        <div className="lobby">
+          <div className="lobby-pending" role="status" aria-live="polite">
+            <span className="lobby-pending-dot" aria-hidden="true" />
+            <span className="lobby-pending-text">
+              Reconnecting to your match
+            </span>
+          </div>
+        </div>
+      ) : !joined ? (
         <Lobby
           name={name}
           pendingAction={pendingAction}
