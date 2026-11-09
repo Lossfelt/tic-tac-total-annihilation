@@ -25,6 +25,13 @@ const lobbyClient = new LobbyClient({
     `${window.location.protocol}//${window.location.hostname}:8000`,
 });
 
+// Invitasjonslenken har formen /?match=123456. Bare sifre godtas.
+const invitedMatch = (
+  new URLSearchParams(window.location.search).get('match') ?? ''
+)
+  .replace(/D/g, '')
+  .slice(0, 12);
+
 const App = () => {
   // En reload gjenopptar matchen fra sessionStorage (se session.js).
   const [saved] = useState(loadSession);
@@ -193,6 +200,7 @@ const App = () => {
           onSubmitName={setName}
           onCreate={handleCreate}
           onJoin={handleJoin}
+          initialMatchID={invitedMatch}
         />
       ) : (
         <div className="match-shell">

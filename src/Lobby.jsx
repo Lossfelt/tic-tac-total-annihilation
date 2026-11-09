@@ -9,6 +9,7 @@ export default function Lobby({
   onSubmitName,
   onCreate,
   onJoin,
+  initialMatchID = '',
 }) {
   const nameInput = useRef();
   const matchInput = useRef();
@@ -57,12 +58,15 @@ export default function Lobby({
           <button onClick={onCreate} disabled={busy}>
             Create new match
           </button>
-          <div className="lobby-divider">or join existing</div>
+          <div className="lobby-divider">
+            {initialMatchID ? 'you were invited' : 'or join existing'}
+          </div>
           <div className="lobby-row">
             <input
               ref={matchInput}
               type="number"
               placeholder="Match ID"
+              defaultValue={initialMatchID}
               disabled={busy}
             />
             <button
