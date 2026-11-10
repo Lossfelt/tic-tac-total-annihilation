@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IsRow } from './Game.js';
+import { IsRow } from './board.js';
 import { WEAPONS } from './weapons.js';
 
 // Målvalg for strategiske våpen: hvilket våpen som er aktivt, hvilke celler

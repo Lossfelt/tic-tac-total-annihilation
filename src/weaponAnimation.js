@@ -1,4 +1,4 @@
-import { GetNeighbors, GetSurroundingCells } from './Game.js';
+import { GetNeighbors, GetSurroundingCells } from './board.js';
 
 // Tidsrammer og geometri for våpenanimasjonene. Brukes både av
 // useWeaponAnimation (som styrer når brettet byttes og når klikk igjen er
