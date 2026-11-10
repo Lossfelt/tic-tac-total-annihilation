@@ -26,8 +26,12 @@ export default function Lobby({
       <LobbyAsh />
       <div className="lobby-title">
         <h1 className="game-title">
-          <span className="game-title-main">Tic Tac Total</span>
-          <span className="game-title-accent">Annihilation</span>
+          <span className="game-title-main">
+            <span className="game-title-worn">Tic Tac Total</span>
+          </span>
+          <span className="game-title-accent">
+            <span className="game-title-worn">Annihilation</span>
+          </span>
         </h1>
         <div className="lobby-subtitle">Post-collapse territory war</div>
       </div>

@@ -44,22 +44,28 @@
 
 .board-container .weapon-button.armed {
   border-color: var(--accent);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 22%, var(--color-bg-elevated)),
-    var(--color-bg-deep)
-  );
+  background:
+    var(--enamel-gloss),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 22%, var(--color-bg-elevated)),
+      var(--color-bg-deep)
+    );
 }
 
 .board-container .weapon-button.armed:hover:not(:disabled) {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 38%, var(--color-bg-elevated)),
-    var(--color-bg-deep)
-  );
+  background:
+    var(--enamel-gloss),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 38%, var(--color-bg-elevated)),
+      var(--color-bg-deep)
+    );
 }
 
 .board-container .weapon-button.active {
-  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  background:
+    var(--enamel-gloss),
+    linear-gradient(180deg, var(--accent), var(--accent-deep));
   border-color: var(--accent-bright);
 }
