@@ -9,6 +9,8 @@
 @import './styles/lobby-ash.css';
 @import './styles/match-status.css';
 @import './styles/turn-indicator.css';
+@import './styles/terrain.css';
+@import './styles/faction-accent.css';
 @import './styles/about-popup.css';
 @import './styles/responsive.css';
 

@@ -1,0 +1,168 @@
+/* Celleoverflaten: stålplater med nagler på et topografisk kart. Kartet er
+   ett bilde som dekker hele brettet (4x4 celler), og hver celle viser sitt
+   utsnitt via --col og --row fra BoardGrid, så høydekurvene henger sammen.
+   Alle lagene er gjennomsiktige over background-color, slik at blink og
+   hover (som endrer background-color) fortsatt synes.
+
+   Den globale button:hover i theme.css bruker background-shorthand, som
+   nullstiller alle lagene. Derfor settes lagene på nytt for hover, og hver
+   tilstand endrer bare variablene --layers og --plate. */
+
+.board {
+  --rivet: radial-gradient(
+    circle,
+    #8d8275 0 1px,
+    #3a342e 1.8px,
+    transparent 2.4px
+  );
+  --noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .8 0 0 0 0 .75 0 0 0 0 .65 0 0 0 .5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.13'/></svg>");
+  --topo: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400' fill='none' stroke='%23d9c9a3' stroke-opacity='.12' stroke-width='1.3'><path d='M0 40c40-20 90-10 130 15s90 25 140 0 100-20 130 0'/><path d='M0 75c50-15 95 0 135 25s85 20 135-5 95-15 130 5'/><path d='M95 170c15-40 75-50 105-20s20 75-20 85-100-15-85-65z'/><path d='M120 172c10-22 45-28 62-10s10 42-12 48-58-10-50-38z'/><path d='M142 176c6-10 22-12 30-3s4 20-6 22-28-6-24-19z'/><path d='M260 250c25-30 90-25 110 10s-15 80-60 75-75-50-50-85z'/><path d='M285 262c15-15 52-12 62 8s-10 45-36 42-42-30-26-50z'/><path d='M0 300c40 10 70 40 120 40s80-30 130-20'/><path d='M0 340c45 5 80 35 130 35s90-25 140-10 90 30 130 25'/><path d='M330 120c20-10 50 0 60 20s-10 40-35 35-40-45-25-55z'/><path d='M20 210c20-15 50-5 50 20s-25 40-45 30-25-35-5-50z'/></svg>");
+  --sheen: linear-gradient(
+    145deg,
+    rgba(255, 235, 210, 0.06),
+    rgba(0, 0, 0, 0.35) 70%
+  );
+}
+
+.cell {
+  --plate: #221e1a;
+  --layers:
+    var(--rivet), var(--rivet), var(--rivet), var(--rivet), var(--topo),
+    var(--noise), var(--sheen);
+}
+
+.cell,
+.cell:hover:not(:disabled) {
+  background-color: var(--plate);
+  background-image: var(--layers);
+  background-size:
+    10px 10px,
+    10px 10px,
+    10px 10px,
+    10px 10px,
+    calc(var(--cell-size) * 4) calc(var(--cell-size) * 4),
+    auto,
+    auto;
+  background-position:
+    2px 2px,
+    calc(100% - 2px) 2px,
+    2px calc(100% - 2px),
+    calc(100% - 2px) calc(100% - 2px),
+    calc(var(--col, 0) * var(--cell-size) * -1)
+      calc(var(--row, 0) * var(--cell-size) * -1),
+    0 0,
+    0 0;
+  background-repeat:
+    no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat;
+}
+
+.cell {
+  border: 1px solid #000;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 210, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.25),
+    0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.cell:hover:not(:disabled),
+.cell.targetable:not(.selected):hover {
+  --plate: #3a2419;
+  border-color: var(--color-rust-bright);
+}
+
+/* Okkupert: skråskravur og glød i eierens farge, med hjørnemarkører. */
+.cell-queendom {
+  --owner: var(--color-queendom);
+  --plate: #2c1a16;
+}
+
+.cell-canadia {
+  --owner: var(--color-canadia);
+  --plate: #17232a;
+}
+
+.cell-queendom,
+.cell-canadia {
+  --layers:
+    var(--rivet), var(--rivet), var(--rivet), var(--rivet),
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--owner) 14%, transparent) 0 6px,
+      transparent 6px 12px
+    ),
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--owner) 38%, transparent),
+      transparent 72%
+    ),
+    var(--sheen);
+  border-color: #000;
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--owner) 70%, #000),
+    inset 0 0 14px color-mix(in srgb, var(--owner) 45%, transparent),
+    0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.cell-claim-mark::before,
+.cell-claim-mark::after {
+  content: '';
+  position: absolute;
+  width: 18%;
+  height: 18%;
+  pointer-events: none;
+  border-color: var(--owner);
+  border-style: solid;
+}
+
+.cell-claim-mark::before {
+  left: 4%;
+  top: 4%;
+  border-width: 2px 0 0 2px;
+}
+
+.cell-claim-mark::after {
+  right: 4%;
+  bottom: 4%;
+  border-width: 0 2px 2px 0;
+}
+
+.cell-coord {
+  position: absolute;
+  left: 15%;
+  top: 7%;
+  font-family: var(--font-mono);
+  font-size: max(9px, calc(var(--cell-size) * 0.11));
+  letter-spacing: 0.08em;
+  color: var(--color-sand);
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+/* Ødelagt: svart krater med svidd kant. */
+.cell-destroyed {
+  --plate: #0b0908;
+  --layers:
+    none, none, none, none, none,
+    radial-gradient(
+      circle at 50% 55%,
+      #000 0 32%,
+      rgba(70, 30, 10, 0.55) 46%,
+      transparent 72%
+    ),
+    var(--noise);
+  border-color: #000;
+  box-shadow:
+    inset 0 0 0 3px #000,
+    inset 0 0 14px #000;
+}
+
+.cell-destroyed:hover:not(.targetable) {
+  --plate: #0b0908;
+  border-color: #000;
+}
+
+.cell-destroyed.targetable:not(.selected):hover {
+  --plate: #3a2419;
+  border-color: var(--color-rust-bright);
+}

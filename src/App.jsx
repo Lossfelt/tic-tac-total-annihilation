@@ -6,6 +6,7 @@ import { LobbyClient } from 'boardgame.io/dist/esm/client.js';
 import { useState, useEffect } from 'react';
 import './Board.css';
 import AboutPopup from './AboutPopup.jsx';
+import { SoundToggle } from './SoundToggle.jsx';
 import Lobby from './Lobby.jsx';
 import { loadSession, saveSession, clearSession } from './session.js';
 
@@ -213,13 +214,16 @@ const App = () => {
               Leave
             </button>
             <h3>Match ID: {matchID}</h3>
-            <button
-              type="button"
-              className="match-bar-button"
-              onClick={handleAbout}
-            >
-              About
-            </button>
+            <span className="match-bar-actions">
+              <SoundToggle />
+              <button
+                type="button"
+                className="match-bar-button"
+                onClick={handleAbout}
+              >
+                About
+              </button>
+            </span>
           </div>
           {matchError && (
             <div className="lobby-error" role="alert">

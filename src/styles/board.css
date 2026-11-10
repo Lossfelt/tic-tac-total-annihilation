@@ -77,17 +77,8 @@
   width: var(--cell-size);
   height: var(--cell-size);
   padding: 0;
-  background: linear-gradient(
-    180deg,
-    var(--color-bg-elevated) 0%,
-    var(--color-bg-deep) 100%
-  );
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   position: relative;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 220, 180, 0.04),
-    0 2px 4px rgba(0, 0, 0, 0.5);
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease,
@@ -95,24 +86,9 @@
     box-shadow 0.15s ease;
 }
 
-.cell:hover:not(:disabled) {
-  border-color: var(--color-rust);
-  background: rgb(var(--color-rust-rgb) / 0.08);
-}
-
 .cell:disabled {
   opacity: 1;
   cursor: default;
-}
-
-.cell-queendom {
-  background: var(--color-queendom-tint);
-  border-color: var(--color-queendom);
-}
-
-.cell-canadia {
-  background: var(--color-canadia-tint);
-  border-color: var(--color-canadia);
 }
 
 .cell-icon {
@@ -144,52 +120,15 @@
   }
 }
 
-.cell.targetable:not(.selected):hover {
-  border-color: var(--color-rust-bright);
-  background: rgba(224, 122, 79, 0.18);
-}
-
+/* Destroyed celle kan være mål for område-våpen - da skal cursor matche en
+   vanlig targetable celle istedenfor not-allowed. Utseendet ligger i
+   terrain.css. */
 .cell-destroyed {
-  background: repeating-linear-gradient(
-    135deg,
-    #1a0d08 0px,
-    #1a0d08 6px,
-    #2a1610 6px,
-    #2a1610 12px
-  );
-  border-color: #3a1c0d;
-  box-shadow:
-    inset 0 0 18px rgba(0, 0, 0, 0.85),
-    inset 0 0 0 1px rgba(80, 30, 10, 0.6);
   cursor: not-allowed;
 }
 
-.cell-destroyed:hover {
-  background: repeating-linear-gradient(
-    135deg,
-    #1a0d08 0px,
-    #1a0d08 6px,
-    #2a1610 6px,
-    #2a1610 12px
-  );
-  border-color: #3a1c0d;
-}
-
-/* Destroyed celle kan være mål for område-våpen - da skal cursor og hover
-   matche en vanlig targetable celle istedenfor not-allowed. */
 .cell-destroyed.targetable {
   cursor: pointer;
-}
-
-.cell-destroyed.targetable:not(.selected):hover {
-  border-color: var(--color-rust-bright);
-  background: repeating-linear-gradient(
-    135deg,
-    rgba(224, 122, 79, 0.18) 0px,
-    rgba(224, 122, 79, 0.18) 6px,
-    #2a1610 6px,
-    #2a1610 12px
-  );
 }
 
 .cell-destroyed-icon {
@@ -274,14 +213,3 @@
   width: 100%;
 }
 
-.sound-toggle {
-  position: fixed;
-  top: 0.7rem;
-  right: 0.7rem;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  padding: 0.4rem 0.6rem;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-strong);
-}

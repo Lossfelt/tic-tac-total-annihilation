@@ -1,0 +1,65 @@
+/* Aksentfargen følger spillerens egen faksjon: brettrammen, egen tur og
+   våpenknappen blir røde for Queendom og blå for Pan-Canadia. Tilskuere og
+   lobbyen beholder rust som før. */
+
+.board-container {
+  --accent: var(--color-rust);
+  --accent-bright: var(--color-rust-bright);
+  --accent-deep: var(--color-rust-dim);
+}
+
+.board-container.faction-0 {
+  --accent: var(--color-queendom);
+  --accent-bright: #f08a70;
+  --accent-deep: #6e2418;
+}
+
+.board-container.faction-1 {
+  --accent: var(--color-canadia);
+  --accent-bright: #8fc3e0;
+  --accent-deep: #1f4259;
+}
+
+.board-container .board {
+  background: #0d0b09;
+  border-color: color-mix(in srgb, var(--accent) 55%, #3a3530);
+  box-shadow:
+    inset 0 0 0 1px #000,
+    inset 0 0 18px #000,
+    0 0 22px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 6px 18px rgba(0, 0, 0, 0.7);
+}
+
+.board-container .turn-indicator.turn-indicator-mine {
+  border-color: var(--accent-bright);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 28%, var(--color-bg-elevated)),
+    var(--color-bg-elevated)
+  );
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--accent) 55%, transparent),
+    inset 0 0 0 1px var(--accent-bright);
+}
+
+.board-container .weapon-button.armed {
+  border-color: var(--accent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 22%, var(--color-bg-elevated)),
+    var(--color-bg-deep)
+  );
+}
+
+.board-container .weapon-button.armed:hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 38%, var(--color-bg-elevated)),
+    var(--color-bg-deep)
+  );
+}
+
+.board-container .weapon-button.active {
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  border-color: var(--accent-bright);
+}

@@ -16,7 +16,6 @@ import { useWeaponAnimation } from './useWeaponAnimation.js';
 import { useJustArmed } from './useJustArmed.js';
 import { useWeaponTargeting } from './useWeaponTargeting.js';
 import { useGameSounds } from './useGameSounds.js';
-import { SoundToggle } from './SoundToggle.jsx';
 
 export function TicTacToeBoard({
   ctx,
@@ -45,8 +44,7 @@ export function TicTacToeBoard({
   const myTurn = ctx.currentPlayer === playerID;
 
   return (
-    <div className="board-container">
-      <SoundToggle />
+    <div className={`board-container faction-${playerID}`}>
       <div className="board-content">
         <h1 className="vs-banner">
           <span className="vs-side vs-queendom">
