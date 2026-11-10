@@ -4,11 +4,15 @@
 
 .game-title-main,
 .game-title-accent {
-  --wear: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='.5' numOctaves='3' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -9 0 0 0 6.6'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>");
+  --wear: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='.5' numOctaves='3' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -10 0 0 0 8.4'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>");
   -webkit-mask-image: var(--wear);
   mask-image: var(--wear);
   -webkit-mask-size: 220px 220px;
   mask-size: 220px 220px;
+  /* Masken klipper alt utenfor boksen, også gløden. Luft rundt teksten gir
+     gløden plass uten å flytte bokstavene. */
+  padding: 0.3em 0.5em;
+  margin: -0.3em -0.5em;
 }
 
 .game-title-main {
