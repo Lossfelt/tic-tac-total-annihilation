@@ -5,7 +5,7 @@
 const KEY = 'ttta-muted';
 const VOLUME = 0.6;
 // Justering per lyd (1 = standard), for lyder som ble for sterke eller svake.
-const GAIN = { conquer: 0.6, revolt: 1.6 };
+const GAIN = { conquer: 0.6 };
 
 export const SOUNDS = [
   'place',
@@ -50,15 +50,18 @@ export function subscribeMuted(fn) {
   return () => listeners.delete(fn);
 }
 
-// Spiller en lyd én gang. Feiler stille hvis nettleseren blokkerer avspilling
+// Spiller en lyd én gang og gir tilbake Audio-elementet (eller null), så kallet
+// kan stoppe den tidlig. Feiler stille hvis nettleseren blokkerer avspilling
 // (ingen klikk ennå) eller miljøet ikke har Audio (tester).
 export function playSound(name) {
-  if (muted || typeof Audio === 'undefined') return;
+  if (muted || typeof Audio === 'undefined') return null;
   try {
     const audio = new Audio(`/sounds/${name}.mp3`);
     audio.volume = VOLUME * (GAIN[name] ?? 1);
     audio.play()?.catch(() => {});
+    return audio;
   } catch {
     // Lyd er valgfri.
+    return null;
   }
 }

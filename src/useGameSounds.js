@@ -22,9 +22,11 @@ function moveSound(blinkKind) {
 
 // Luftangrep: først flyet, så én eksplosjon per bombe, i takt med animasjonen.
 function playAirStrike(event, timers) {
-  playSound('jet');
+  const jet = playSound('jet');
   const { hits } = planAirStrike(event.cells, event.version);
   timers.current = hits.map(({ t }) => setTimeout(() => playSound('boom'), t));
+  // Flylyden avsluttes i det første bombetreffet.
+  timers.current.push(setTimeout(() => jet?.pause(), hits[0].t));
 }
 
 // Spiller lyd når noe nytt skjer. Alle verdiene starter på det de er ved
