@@ -1,0 +1,169 @@
+/* Celleoverflaten: stålplater med nagler på et topografisk kart. Kartet er
+   ett bilde som dekker hele brettet (4x4 celler), og hver celle viser sitt
+   utsnitt via --col og --row fra BoardGrid, så høydekurvene henger sammen.
+   Alle lagene er gjennomsiktige over background-color, slik at blink og
+   hover (som endrer background-color) fortsatt synes.
+
+   Den globale button:hover i theme.css bruker background-shorthand, som
+   nullstiller alle lagene. Derfor settes lagene på nytt for hover, og hver
+   tilstand endrer bare variablene --layers og --plate. */
+
+.board {
+  --rivet: radial-gradient(
+    circle,
+    #8d8275 0 1px,
+    #3a342e 1.8px,
+    transparent 2.4px
+  );
+  --noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .8 0 0 0 0 .75 0 0 0 0 .65 0 0 0 .5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.13'/></svg>");
+  --topo: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400' fill='none' stroke='%23d9c9a3' stroke-opacity='.12' stroke-width='1.3'><path d='M0 40c40-20 90-10 130 15s90 25 140 0 100-20 130 0'/><path d='M0 75c50-15 95 0 135 25s85 20 135-5 95-15 130 5'/><path d='M95 170c15-40 75-50 105-20s20 75-20 85-100-15-85-65z'/><path d='M120 172c10-22 45-28 62-10s10 42-12 48-58-10-50-38z'/><path d='M142 176c6-10 22-12 30-3s4 20-6 22-28-6-24-19z'/><path d='M260 250c25-30 90-25 110 10s-15 80-60 75-75-50-50-85z'/><path d='M285 262c15-15 52-12 62 8s-10 45-36 42-42-30-26-50z'/><path d='M0 300c40 10 70 40 120 40s80-30 130-20'/><path d='M0 340c45 5 80 35 130 35s90-25 140-10 90 30 130 25'/><path d='M330 120c20-10 50 0 60 20s-10 40-35 35-40-45-25-55z'/><path d='M20 210c20-15 50-5 50 20s-25 40-45 30-25-35-5-50z'/></svg>");
+  --sheen: linear-gradient(
+    145deg,
+    rgba(255, 235, 210, 0.06),
+    rgba(0, 0, 0, 0.35) 70%
+  );
+}
+
+.cell {
+  --plate: #221e1a;
+  --layers:
+    var(--rivet), var(--rivet), var(--rivet), var(--rivet), var(--topo),
+    var(--noise), var(--sheen);
+}
+
+.cell,
+.cell:hover:not(:disabled) {
+  background-color: var(--plate);
+  background-image: var(--layers);
+  background-size:
+    10px 10px,
+    10px 10px,
+    10px 10px,
+    10px 10px,
+    calc(var(--cell-size) * 4) calc(var(--cell-size) * 4),
+    auto,
+    auto;
+  background-position:
+    2px 2px,
+    calc(100% - 2px) 2px,
+    2px calc(100% - 2px),
+    calc(100% - 2px) calc(100% - 2px),
+    calc(var(--col, 0) * var(--cell-size) * -1)
+      calc(var(--row, 0) * var(--cell-size) * -1),
+    0 0,
+    0 0;
+  background-repeat:
+    no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat, no-repeat;
+}
+
+.cell-destroyed,
+.cell-destroyed:hover:not(:disabled) {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center;
+}
+
+.cell {
+  border: 1px solid #000;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 210, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.25),
+    0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.cell:hover:not(:disabled),
+.cell.targetable:not(.selected):hover {
+  --plate: #3a2419;
+  border-color: var(--color-rust-bright);
+}
+
+/* Okkupert: skråskravur og glød i eierens farge, med hjørnemarkører. */
+.cell-queendom {
+  --owner: var(--color-queendom);
+  --plate: #2c1a16;
+}
+
+.cell-canadia {
+  --owner: var(--color-canadia);
+  --plate: #17232a;
+}
+
+.cell-queendom,
+.cell-canadia {
+  --layers:
+    var(--rivet), var(--rivet), var(--rivet), var(--rivet),
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--owner) 14%, transparent) 0 6px,
+      transparent 6px 12px
+    ),
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--owner) 38%, transparent),
+      transparent 72%
+    ),
+    var(--sheen);
+  border-color: #000;
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--owner) 70%, #000),
+    inset 0 0 14px color-mix(in srgb, var(--owner) 45%, transparent),
+    0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.cell-claim-mark::before,
+.cell-claim-mark::after {
+  content: '';
+  position: absolute;
+  width: 18%;
+  height: 18%;
+  pointer-events: none;
+  border-color: var(--owner);
+  border-style: solid;
+}
+
+.cell-claim-mark::before {
+  left: 4%;
+  top: 4%;
+  border-width: 2px 0 0 2px;
+}
+
+.cell-claim-mark::after {
+  right: 4%;
+  bottom: 4%;
+  border-width: 0 2px 2px 0;
+}
+
+.cell-coord {
+  position: absolute;
+  left: 15%;
+  top: 7%;
+  font-family: var(--font-mono);
+  font-size: max(9px, calc(var(--cell-size) * 0.11));
+  letter-spacing: 0.08em;
+  color: var(--color-sand);
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+/* Ødelagt: ujevnt, svart sprengningskrater med takkede utløpere, svidd
+   kant og spredte fragmenter, sentrert under strålingssymbolet. */
+.cell-destroyed {
+  --plate: #151210;
+  --crater: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M78.5 50.0L80.2 55.9L99.3 62.2L78.0 58.4L79.7 63.8L95.2 73.7L76.8 65.8L75.8 72.9L69.3 78.0L64.0 82.1L66.7 94.1L60.2 81.7L54.1 83.9L46.5 78.7L38.6 80.1L31.6 79.7L22.4 90.0L29.8 76.3L23.2 73.8L20.2 65.6L15.3 58.6L18.6 51.6L-1.9 50.0L20.1 48.5L19.4 44.1L5.0 38.9L21.7 41.5L21.0 36.6L3.1 25.4L23.9 34.6L25.3 28.2L28.4 21.8L23.8 12.0L32.3 21.3L38.3 19.2L44.6 18.6L43.7 -2.3L47.9 19.8L53.5 21.3L61.1 20.8L70.4 20.5L72.3 30.2L77.2 35.7L80.5 40.8L97.4 38.3L79.7 44.2Z' fill='%23573620' fill-opacity='.85'/><g fill='none' stroke='%23a07a58' stroke-opacity='.5' stroke-width='.9' stroke-linecap='round'><path d='M79 36l7-4 3 6 8-2'/><path d='M22 70l-7 3-1 7-7 2'/><path d='M62 80l3 8-4 5 2 6'/><path d='M28 26l-5-7-8 1'/></g><path d='M75.0 50.0L76.5 55.1L93.3 60.7L74.6 57.4L76.1 62.1L89.6 70.8L73.5 63.9L72.7 70.1L66.9 74.5L62.3 78.1L64.7 88.7L59.0 77.8L53.6 79.7L46.9 75.2L40.0 76.4L33.9 76.1L25.8 85.1L32.3 73.1L26.5 70.9L23.9 63.7L19.5 57.5L22.4 51.4L4.5 50.0L23.8 48.7L23.2 44.8L10.5 40.3L25.1 42.5L24.6 38.2L8.9 28.4L27.1 36.5L28.4 30.8L31.0 25.3L27.0 16.7L34.4 24.8L39.7 23.0L45.2 22.5L44.4 4.2L48.1 23.5L53.1 24.8L59.7 24.4L67.9 24.1L69.6 32.7L73.9 37.5L76.8 42.0L91.5 39.8L76.1 44.9Z' fill='%23040302'/><g fill='%23040302'><rect x='86.2' y='50.2' width='2.2' height='2.2' transform='rotate(37 86.2 50.2)'/><rect x='48.4' y='6.6' width='2.0' height='2.0' transform='rotate(19 48.4 6.6)'/><rect x='49.9' y='91.9' width='2.5' height='2.5' transform='rotate(38 49.9 91.9)'/><rect x='46.0' y='90.5' width='1.3' height='1.3' transform='rotate(40 46.0 90.5)'/><rect x='8.4' y='65.4' width='2.5' height='2.5' transform='rotate(56 8.4 65.4)'/><rect x='27.1' y='90.9' width='1.4' height='1.4' transform='rotate(10 27.1 90.9)'/><rect x='54.9' y='12.5' width='1.0' height='1.0' transform='rotate(66 54.9 12.5)'/><rect x='66.4' y='87.1' width='1.0' height='1.0' transform='rotate(41 66.4 87.1)'/><rect x='93.4' y='45.3' width='2.4' height='2.4' transform='rotate(45 93.4 45.3)'/><rect x='19.0' y='16.4' width='1.0' height='1.0' transform='rotate(15 19.0 16.4)'/><rect x='12.4' y='60.4' width='1.8' height='1.8' transform='rotate(52 12.4 60.4)'/><rect x='11.8' y='49.9' width='1.8' height='1.8' transform='rotate(53 11.8 49.9)'/><rect x='88.2' y='49.6' width='2.4' height='2.4' transform='rotate(27 88.2 49.6)'/><rect x='12.8' y='40.5' width='1.8' height='1.8' transform='rotate(44 12.8 40.5)'/><rect x='73.1' y='89.2' width='0.8' height='0.8' transform='rotate(90 73.1 89.2)'/><rect x='6.9' y='32.7' width='1.0' height='1.0' transform='rotate(53 6.9 32.7)'/></g></svg>");
+  --layers: none, none, none, none, none, var(--crater), var(--noise);
+  border-color: #000;
+  box-shadow:
+    inset 0 0 0 3px #000,
+    inset 0 0 14px #000;
+}
+
+.cell-destroyed:hover:not(.targetable) {
+  --plate: #151210;
+  border-color: #000;
+}
+
+.cell-destroyed.targetable:not(.selected):hover {
+  --plate: #3a2419;
+  border-color: var(--color-rust-bright);
+}

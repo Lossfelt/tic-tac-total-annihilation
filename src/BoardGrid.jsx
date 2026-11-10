@@ -2,6 +2,10 @@ import { BOARD_SIZE, TOTAL_CELLS, territories } from './Game.js';
 import { FACTION_ICON, FACTION_NAME } from './factions.js';
 import { RadiationIcon } from './icons.jsx';
 
+// Kartkoordinat for en celle, A1 øverst til venstre.
+const cellCoord = (id) =>
+  'ABCD'[id % BOARD_SIZE] + (Math.floor(id / BOARD_SIZE) + 1);
+
 // Selve brettet. `shown` er brettet slik animasjonen viser det akkurat nå,
 // `weaponActive` er navnet på våpenet spilleren sikter med (eller false).
 export function BoardGrid({
@@ -48,6 +52,10 @@ export function BoardGrid({
           key={buttonKey}
           className={classes.join(' ')}
           type="button"
+          style={{
+            '--col': id % BOARD_SIZE,
+            '--row': Math.floor(id / BOARD_SIZE),
+          }}
           title={
             isDestroyed ? `${territories[id]} (destroyed)` : territories[id]
           }
@@ -65,6 +73,12 @@ export function BoardGrid({
             (!isActive && !weaponActive)
           }
         >
+          <span className="cell-coord" aria-hidden="true">
+            {cellCoord(id)}
+          </span>
+          {owner !== null && !isDestroyed && (
+            <span className="cell-claim-mark" aria-hidden="true" />
+          )}
           {isDestroyed ? (
             <span className="cell-destroyed-icon" aria-hidden="true">
               <RadiationIcon />
