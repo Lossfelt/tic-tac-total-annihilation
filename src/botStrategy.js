@@ -17,7 +17,7 @@ import {
   GetNeighbors,
   GetSurroundingCells,
 } from './board.js';
-import { INVASION_SUCCESS_CHANCE } from './Game.js';
+import { invasionChance, isImmune } from './invasionRules.js';
 import { BIO_DESTROY_CHANCE } from './weapons.js';
 
 // Hvor mye en linje er verdt etter hvor mange celler en spiller har på den.
@@ -49,7 +49,7 @@ function nearlyWon(G, who, gapOwner) {
     const c = lineCounts(G, line, who);
     if (c.dead || c.mine !== 3) continue;
     const gap = line.find((id) => G.cells[id] !== who);
-    if (G.cells[gap] === gapOwner) return { line, gap };
+    if (G.cells[gap] === gapOwner && !isImmune(G, gap)) return { line, gap };
   }
   return null;
 }
@@ -98,10 +98,10 @@ function bestCellMove(G, me, random) {
   const opponent = other(me);
   let best = null;
   for (let id = 0; id < TOTAL_CELLS; id++) {
-    if (G.destroyed[id] || G.cells[id] === me) continue;
+    if (G.destroyed[id] || G.cells[id] === me || isImmune(G, id)) continue;
     let score = cellValue(G, id, me);
     if (G.cells[id] === opponent) {
-      score = INVASION_SUCCESS_CHANCE * (score + ownerStake(G, id));
+      score = invasionChance(G, id, me) * (score + ownerStake(G, id));
     }
     score += random() * 0.5;
     if (!best || score > best.score) best = { id, score };

@@ -8,27 +8,30 @@ import {
   GetNeighbors,
   GetSurroundingCells,
 } from './board.js';
+import {
+  RULES,
+  INVASION_SUCCESS_CHANCE,
+  REVOLT_CHANCE,
+  invasionChance,
+  isImmune,
+  applyInvasion,
+  markOrigin,
+  consolidate,
+  countedCells,
+  mayRevolt,
+} from './invasionRules.js';
 
 // Brettgeometrien ligger i board.js. Den eksporteres også herfra, så tester
 // og eldre importer fortsatt virker.
 export * from './board.js';
+export { RULES, INVASION_SUCCESS_CHANCE, REVOLT_CHANCE, countedCells };
 
 export const NUM_PLAYERS = 2;
-export const REVOLT_CHANCE = 0.05;
-export const INVASION_SUCCESS_CHANCE = 0.5;
 export const RAREIUM_WEAPON_CHANCE_DIVISOR = 100;
 // Rareium er en sjanse i prosent, så mer enn 100 gir ingen fordel. Taket
 // hindrer også at tallet vokser uten grense mens spilleren holder et våpen.
 export const RAREIUM_MAX = 100;
 export const RECYCLE_REFUND_RATIO = 0.7;
-
-// Eksperiment med invasjonsregelen, styrt fra simuleringen. Spillet bruker
-// alltid 'flip'.
-//   flip:    vellykket invasjon gir angriperen cellen (dagens regel)
-//   fortify: angriperen får cellen, men den teller ikke for seier før
-//            angriperens neste tur begynner (forsvareren får én tur på seg)
-//   raze:    vellykket invasjon tømmer cellen, angriperen må ta den etterpå
-export const RULES = { invasion: 'flip' };
 
 export { strategicWeapons, BIO_DESTROY_CHANCE };
 
@@ -73,31 +76,6 @@ function recordWeaponEvent(G, type, cells, before, affected = []) {
 function markCell(G, id, kind = null) {
   G.blink[id] = true;
   if (G.blinkKind) G.blinkKind[id] = kind;
-}
-
-// Vellykket invasjon etter regelvarianten i RULES.
-function applyInvasion(G, id, playerID) {
-  if (RULES.invasion === 'raze') {
-    G.cells[id] = null;
-    return;
-  }
-  G.cells[id] = playerID;
-  if (G.fresh) G.fresh[id] = RULES.invasion === 'fortify';
-}
-
-// Når en spillers tur begynner, er spillerens ferske okkupasjoner befestet.
-// Celler som er tømt (våpen, revolt) mister også markeringen.
-function consolidate(G, playerID) {
-  if (!G.fresh) return;
-  G.fresh = G.fresh.map(
-    (fresh, i) => fresh && G.cells[i] !== null && G.cells[i] !== playerID,
-  );
-}
-
-// Cellene slik de teller for seier: ferske okkupasjoner regnes som tomme.
-export function countedCells(G) {
-  if (!G.fresh) return G.cells;
-  return G.cells.map((owner, i) => (G.fresh[i] ? null : owner));
 }
 
 // Nullstiller blinkene fra forrige trekk og starter en ny blink-runde.
@@ -182,6 +160,10 @@ export const TicTacToe = {
     weaponEvent: { type: null, cells: [], before: null, version: 0 },
     // Celler tatt ved invasjon som ennå ikke teller for seier (fortify).
     fresh: Array(TOTAL_CELLS).fill(false),
+    // Spilleren som tok cellen først (eksperiment, se invasionRules.js).
+    origin: Array(TOTAL_CELLS).fill(null),
+    // Gjenerobrede celler som ikke kan invaderes i neste tur (eksperiment).
+    immune: Array(TOTAL_CELLS).fill(false),
   }),
 
   turn: {
@@ -215,8 +197,8 @@ export const TicTacToe = {
       let revolted = false;
       for (let i = 0; i < TOTAL_CELLS; i++) {
         if (
-          G.cells[i] !== null &&
-          random.Number() < REVOLT_CHANCE &&
+          mayRevolt(G, i) &&
+          random.Number() < RULES.revoltChance &&
           i !== G.lastCellAttacked
         ) {
           logEntry(G, { type: 'revolt', player: G.cells[i], cell: i });
@@ -238,7 +220,8 @@ export const TicTacToe = {
       } else if (G.cells[id] === playerID) {
         return INVALID_MOVE;
       } else if (G.cells[id] !== null) {
-        const conquered = random.Number() < INVASION_SUCCESS_CHANCE;
+        if (isImmune(G, id)) return INVALID_MOVE;
+        const conquered = random.Number() < invasionChance(G, id, playerID);
         if (conquered) applyInvasion(G, id, playerID);
         const type = conquered ? 'conquer' : 'fail';
         logEntry(G, { type, player: playerID, cell: id });
@@ -247,6 +230,7 @@ export const TicTacToe = {
       } else {
         G.cells[id] = playerID;
         if (G.fresh) G.fresh[id] = false;
+        markOrigin(G, id, playerID);
         logEntry(G, { type: 'claim', player: playerID, cell: id });
         markCell(G, id, 'claim');
         G.lastCellAttacked = id;

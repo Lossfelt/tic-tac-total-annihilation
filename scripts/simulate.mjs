@@ -7,7 +7,13 @@
 //   recycle0/1       sjanse for å resirkulere et våpen i stedet (standard 0)
 //   invade0/1        sjanse for å angripe en fiendecelle i stedet for å ta en
 //                    ledig celle, når begge finnes (standard: helt tilfeldig)
-//   invasion         flip (standard), fortify eller raze, se RULES i Game.js
+//   invasion         flip (standard), fortify eller raze
+//   freshRetake      sjanse for å ta tilbake en fersk okkupasjon (fortify)
+//   immunity         1 = gjenerobret fersk celle er immun i neste tur
+//   originRetake     sjanse når angriperen er cellens opprinnelige eier
+//   revolt           all (standard) eller occupied
+//   revoltChance     sjanse for revolt per celle og tur (standard 0.05)
+//                    Se src/invasionRules.js og INVASJONSVARIANTER.md.
 //   bot0, bot1       1 = spill med datamotspilleren (src/botStrategy.js) i
 //                    stedet for profilen over
 //
@@ -41,7 +47,13 @@ const profile = (id) => ({
     params[`invade${id}`] === undefined ? null : Number(params[`invade${id}`]),
 });
 const PROFILES = [profile(0), profile(1)];
+const num = (key) => (params[key] === undefined ? null : Number(params[key]));
 RULES.invasion = params.invasion ?? 'flip';
+RULES.freshRetake = num('freshRetake');
+RULES.immunity = params.immunity === '1';
+RULES.originRetake = num('originRetake');
+RULES.revolt = params.revolt ?? 'all';
+RULES.revoltChance = num('revoltChance') ?? RULES.revoltChance;
 
 const MAX_TURNS = 400;
 const SNAPSHOT_TURN = 12;
@@ -143,6 +155,7 @@ const newStats = () => ({
   leaderGames: 0,
   leaderWins: 0,
   conquers: 0,
+  revolts: 0,
   invasionWins: 0,
   flipflopGames: 0,
 });
@@ -153,6 +166,7 @@ const newStats = () => ({
 function countInvasions(G, over, stats) {
   const conquers = G.log.filter((e) => e.type === 'conquer');
   stats.conquers += conquers.length;
+  stats.revolts += G.log.filter((e) => e.type === 'revolt').length;
   const perCell = {};
   for (const e of conquers) perCell[e.cell] = (perCell[e.cell] ?? 0) + 1;
   if (Object.values(perCell).some((n) => n >= 3)) stats.flipflopGames++;
@@ -234,8 +248,9 @@ console.log(
   `Leder etter ${SNAPSHOT_TURN} trekk vant: ${pct(stats.leaderWins, stats.leaderGames)} ` +
     `(${stats.leaderGames} partier med leder)`,
 );
+console.log('Regler:', JSON.stringify(RULES));
 console.log(
-  `Invasjonsregel: ${RULES.invasion}. Vellykkede invasjoner per parti: ${per(stats.conquers)}`,
+  `Vellykkede invasjoner per parti: ${per(stats.conquers)}, revolt per parti: ${per(stats.revolts)}`,
 );
 console.log(
   `Seier der siste celle i linjen ble tatt ved invasjon: ${pct(stats.invasionWins)}`,
