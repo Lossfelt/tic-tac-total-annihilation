@@ -27,8 +27,8 @@ tar ellers cellen med høyest linjeverdi.
 node scripts/simulate.mjs 1000 bot0=1 bot1=1 invasion=flip
 ```
 
-`invasion=` og måltallene for invasjon finnes foreløpig bare på grenen
-`eksperiment/invasjon` (se under). Hovedmålet er andelen seire der den
+`invasion=` og måltallene for invasjon finnes bare på grenen
+`eksperiment/invasjon`, der også dette dokumentet ligger. Hovedmålet er andelen seire der den
 siste cellen i vinnerlinjen ble tatt ved invasjon. I tillegg måler vi
 balansen mellom spillerne, lengden på partiene, antall uavgjorte, og hvor
 ofte samme celle skifter eier frem og tilbake.
@@ -135,5 +135,6 @@ regelen før tallene er til å stole på.
 - `eksperiment/invasjon`: `RULES.invasion` (flip, fortify, raze) i
   `Game.js`, `fresh`-feltet for ferske okkupasjoner, `countedCells` for
   seierssjekk, bottens svar på fersk okkupasjon (`pendingWin`), og
-  måltallene i `simulate.mjs`. Grenen er basert på AI-grenen før den ble
-  merget, så den må oppdateres mot main før videre arbeid.
+  måltallene i `simulate.mjs`. Dette dokumentet ligger på samme gren.
+  Grenen holdes oppdatert mot main, og merges først når vi har valgt en
+  regel.
