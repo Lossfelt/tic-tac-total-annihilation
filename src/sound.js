@@ -4,6 +4,8 @@
 
 const KEY = 'ttta-muted';
 const VOLUME = 0.6;
+// Justering per lyd (1 = standard), for lyder som ble for sterke.
+const GAIN = { conquer: 0.6 };
 
 export const SOUNDS = [
   'place',
@@ -53,7 +55,7 @@ export function playSound(name) {
   if (muted || typeof Audio === 'undefined') return;
   try {
     const audio = new Audio(`/sounds/${name}.mp3`);
-    audio.volume = VOLUME;
+    audio.volume = VOLUME * (GAIN[name] ?? 1);
     audio.play()?.catch(() => {});
   } catch {
     // Lyd er valgfri.
