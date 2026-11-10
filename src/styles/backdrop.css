@@ -1,0 +1,65 @@
+/* Bakgrunn i kampvisningen: et mørkt landskap bak brettet, med røyk som
+   driver sakte over. Begge lagene ligger fast bak innholdet (#root har
+   z-index 1, så z-index -1 her havner over body men under alt annet). */
+
+.match-shell {
+  --backdrop: url('/backdrop-horizon.webp');
+}
+
+.match-shell::before,
+.match-shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Bildet, med en mørk vignett slik at brettet og teksten står klart. */
+.match-shell::before {
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 50% 40%,
+      rgba(16, 14, 11, 0.55),
+      transparent 75%
+    ),
+    linear-gradient(rgba(16, 14, 11, 0.25), rgba(16, 14, 11, 0.45)),
+    var(--backdrop) center bottom / cover no-repeat,
+    var(--color-bg);
+}
+
+/* Røyk: store, myke skyer som driver sakte sidelengs. */
+.match-shell::after {
+  background:
+    radial-gradient(
+      ellipse 40% 18% at 20% 70%,
+      rgba(120, 100, 85, 0.1),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 35% 15% at 75% 55%,
+      rgba(120, 100, 85, 0.08),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 20% at 50% 85%,
+      rgba(200, 110, 60, 0.06),
+      transparent 70%
+    );
+  animation: backdrop-drift 60s ease-in-out infinite alternate;
+}
+
+@keyframes backdrop-drift {
+  from {
+    transform: translateX(-4%);
+  }
+  to {
+    transform: translateX(4%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .match-shell::after {
+    animation: none;
+  }
+}
