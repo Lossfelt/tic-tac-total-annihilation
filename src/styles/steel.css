@@ -1,0 +1,90 @@
+/* Stål og emalje for panelene rundt brettet, i samme stil som cellene:
+   børstet stålplate med nagler i hjørnene, mørk kant og lys toppkant.
+   Variablene samler hele bakgrunnen, slik at hvert panel bare trenger én
+   linje. Fargede knapper (våpen, rareium) får en blank emaljehinne. */
+
+:root {
+  --rivet: radial-gradient(
+    circle,
+    #8d8275 0 1px,
+    #3a342e 1.6px,
+    transparent 2.2px
+  );
+  --brushed: repeating-linear-gradient(
+    90deg,
+    rgba(255, 235, 210, 0.018) 0 1px,
+    transparent 1px 3px
+  );
+  --steel:
+    var(--rivet) left 3px top 3px / 8px 8px no-repeat,
+    var(--rivet) right 3px top 3px / 8px 8px no-repeat,
+    var(--rivet) left 3px bottom 3px / 8px 8px no-repeat,
+    var(--rivet) right 3px bottom 3px / 8px 8px no-repeat, var(--brushed),
+    linear-gradient(180deg, #34302b 0%, #24201c 45%, #1a1714 100%);
+  --steel-flat:
+    var(--brushed), linear-gradient(180deg, #34302b 0%, #1d1a17 100%);
+  --steel-shadow:
+    inset 0 1px 0 rgba(255, 235, 210, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 235, 210, 0.04), 0 1px 0 #000,
+    0 4px 10px rgba(0, 0, 0, 0.6);
+  --enamel-gloss: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.05) 48%,
+    transparent 52%
+  );
+}
+
+.match-bar,
+.game-log,
+.lobby-form,
+.lobby-actions {
+  background: var(--steel);
+  border: 1px solid #000;
+  box-shadow: var(--steel-shadow);
+}
+
+.match-bar {
+  padding-inline: 1rem;
+}
+
+.game-log,
+.lobby-form,
+.lobby-actions {
+  padding-inline: 1.1rem;
+}
+
+.turn-indicator,
+.weapon-button,
+.recycle-button {
+  background: var(--steel-flat);
+  border: 1px solid #000;
+  box-shadow: var(--steel-shadow);
+}
+
+/* Rareium: en nedsenket renne i stålet med en blank emaljestripe. */
+.rareium-bar {
+  background: var(--brushed), linear-gradient(180deg, #0c0a08, #1a1714);
+  border: 1px solid #000;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(255, 235, 210, 0.08);
+}
+
+.rareium-fill {
+  background:
+    var(--enamel-gloss),
+    linear-gradient(90deg, var(--color-military) 0%, var(--color-rust) 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+/* Små knapper i topplinjen og loggen: mørkt stål med fas. */
+.match-bar-button,
+.sound-toggle,
+.game-log-toggle {
+  background: linear-gradient(180deg, #2a2622, #151210);
+  border: 1px solid #000;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 210, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.6);
+}
