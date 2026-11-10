@@ -30,7 +30,7 @@ const lobbyClient = new LobbyClient({
 const invitedMatch = (
   new URLSearchParams(window.location.search).get('match') ?? ''
 )
-  .replace(/D/g, '')
+  .replace(/\D/g, '')
   .slice(0, 12);
 
 const App = () => {
