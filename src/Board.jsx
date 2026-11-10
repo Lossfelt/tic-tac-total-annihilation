@@ -15,6 +15,8 @@ import { FACTION_NAME } from './factions.js';
 import { useWeaponAnimation } from './useWeaponAnimation.js';
 import { useJustArmed } from './useJustArmed.js';
 import { useWeaponTargeting } from './useWeaponTargeting.js';
+import { useGameSounds } from './useGameSounds.js';
+import { SoundToggle } from './SoundToggle.jsx';
 
 export function TicTacToeBoard({
   ctx,
@@ -37,12 +39,14 @@ export function TicTacToeBoard({
   };
 
   const gameover = ctx.gameover;
+  useGameSounds({ G, gameover, playerID, armedCount });
   const winnerID = gameover?.winner;
   const nameOf = (id) => matchData[id]?.name || FACTION_NAME[id];
   const myTurn = ctx.currentPlayer === playerID;
 
   return (
     <div className="board-container">
+      <SoundToggle />
       <div className="board-content">
         <h1 className="vs-banner">
           <span className="vs-side vs-queendom">

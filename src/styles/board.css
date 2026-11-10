@@ -273,3 +273,15 @@
   gap: 0.75rem;
   width: 100%;
 }
+
+.sound-toggle {
+  position: fixed;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0.6rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+}
