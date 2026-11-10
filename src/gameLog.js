@@ -5,7 +5,7 @@
 //   { type: 'revolt', player, cell }   (player er forrige eier)
 //   { type: 'recycle', player, weapon, refund }
 //   { type: <våpennavn>, player, cells }
-import { territories } from './Game.js';
+import { territories } from './board.js';
 import { WEAPONS } from './weapons.js';
 
 const playerName = (id, matchData) => matchData?.[id]?.name || `Player ${id}`;

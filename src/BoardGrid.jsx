@@ -1,4 +1,4 @@
-import { BOARD_SIZE, TOTAL_CELLS, territories } from './Game.js';
+import { BOARD_SIZE, TOTAL_CELLS, territories } from './board.js';
 import { FACTION_ICON, FACTION_NAME } from './factions.js';
 import { RadiationIcon } from './icons.jsx';
 
