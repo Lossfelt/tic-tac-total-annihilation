@@ -128,6 +128,16 @@
   animation: fx-shield 700ms ease-out forwards;
 }
 
+/* Revolt kommer rett etter spillerens eget trekk, så den får en liten
+   forsinkelse (samme som lyden i useGameSounds). */
+.cell.fx-revolt {
+  --fx-revolt-delay: 700ms;
+}
+
+.cell.fx-revolt.blink {
+  animation-delay: var(--fx-revolt-delay);
+}
+
 /* Revolt: cellen er tom, så den sprekker opp og rister mens støv stiger. */
 .cell.fx-revolt::before {
   content: '';
@@ -136,7 +146,7 @@
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23d9c9a3' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 6 L44 28 L56 40 L42 58 L52 74 L46 94'/%3E%3Cpath d='M56 40 L78 46 L90 62'/%3E%3Cpath d='M42 58 L22 56 L10 70'/%3E%3Cpath d='M44 28 L26 22'/%3E%3C/svg%3E")
     center / contain no-repeat;
   pointer-events: none;
-  animation: fx-crack 1000ms ease-out forwards;
+  animation: fx-crack 1000ms ease-out var(--fx-revolt-delay) both;
 }
 
 .cell.fx-revolt::after {
@@ -152,7 +162,7 @@
     rgba(180, 150, 110, 0) 70%
   );
   pointer-events: none;
-  animation: fx-rise 1000ms ease-out forwards;
+  animation: fx-rise 1000ms ease-out var(--fx-revolt-delay) both;
 }
 
 @keyframes fx-crack {

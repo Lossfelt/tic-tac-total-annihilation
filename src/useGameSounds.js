@@ -8,15 +8,12 @@ const WEAPON_SOUND = {
   'Air Strike': 'airstrike',
 };
 
-// Lyden for et vanlig trekk. Erobring slår mislykket invasjon og revolt, som
-// slår vanlig plassering.
-const KIND_PRIORITY = ['conquer', 'fail', 'revolt', 'claim'];
-const KIND_SOUND = {
-  conquer: 'conquer',
-  fail: 'fail',
-  revolt: 'revolt',
-  claim: 'place',
-};
+// Lyden for et vanlig trekk. Erobring slår mislykket invasjon, som slår vanlig
+// plassering. Revolt skjer på slutten av samme tur og spilles for seg, litt
+// senere, så den ikke drukner i trekklyden (samme forsinkelse som i Effects.css).
+const KIND_PRIORITY = ['conquer', 'fail', 'claim'];
+const KIND_SOUND = { conquer: 'conquer', fail: 'fail', claim: 'place' };
+export const REVOLT_DELAY_MS = 700;
 
 function moveSound(blinkKind) {
   const kind = KIND_PRIORITY.find((k) => blinkKind?.includes(k));
@@ -36,6 +33,9 @@ export function useGameSounds({ G, gameover, playerID, armedCount }) {
     gameover: Boolean(gameover),
   });
 
+  const revoltTimer = useRef(null);
+  useEffect(() => () => clearTimeout(revoltTimer.current), []);
+
   useEffect(() => {
     const p = prev.current;
     if (weaponVersion !== p.weaponVersion) {
@@ -44,6 +44,12 @@ export function useGameSounds({ G, gameover, playerID, armedCount }) {
     } else if (G.blinkVersion !== p.blinkVersion) {
       const sound = moveSound(G.blinkKind);
       if (sound) playSound(sound);
+      if (G.blinkKind?.includes('revolt')) {
+        revoltTimer.current = setTimeout(
+          () => playSound('revolt'),
+          REVOLT_DELAY_MS,
+        );
+      }
     }
     p.weaponVersion = weaponVersion;
     p.blinkVersion = G.blinkVersion;

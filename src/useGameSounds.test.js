@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useGameSounds } from './useGameSounds.js';
+import { useGameSounds, REVOLT_DELAY_MS } from './useGameSounds.js';
 import { playSound } from './sound.js';
 
 vi.mock('./sound.js', () => ({ playSound: vi.fn() }));
@@ -50,6 +50,22 @@ describe('useGameSounds', () => {
     rerender(props(makeG({ blinkVersion: 1, blinkKind: kinds })));
     expect(playSound).toHaveBeenCalledTimes(1);
     expect(playSound).toHaveBeenCalledWith('conquer');
+  });
+
+  it('spiller revolt litt etter trekklyden', () => {
+    vi.useFakeTimers();
+    const { rerender } = renderHook((p) => useGameSounds(p), {
+      initialProps: props(makeG()),
+    });
+    const kinds = Array(16).fill(null);
+    kinds[1] = 'claim';
+    kinds[7] = 'revolt';
+    rerender(props(makeG({ blinkVersion: 1, blinkKind: kinds })));
+    expect(playSound).toHaveBeenCalledTimes(1);
+    expect(playSound).toHaveBeenCalledWith('place');
+    vi.advanceTimersByTime(REVOLT_DELAY_MS + 10);
+    expect(playSound).toHaveBeenLastCalledWith('revolt');
+    vi.useRealTimers();
   });
 
   it('spiller våpenlyd, ikke trekklyd, når våpen brukes', () => {
