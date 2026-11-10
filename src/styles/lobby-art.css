@@ -1,29 +1,40 @@
-/* Lobbyens tittel og faksjonskort. Tittelen er en slitt stensil: en
-   støymaske slår små hull i bokstavene, som avskallet maling. Kortene har
-   faksjonens flagg i bakgrunnen, med emblemet foran og navnet nederst. */
+/* Lobbyens tittel og faksjonskort. Tittelen er en slitt stensil: en maske
+   med tynne, skarpe riper (som skrapet maling) skjærer gjennom bokstavene.
+   Kortene har faksjonens flagg i bakgrunnen, med emblemet foran og navnet
+   nederst. */
 
-.game-title-main,
-.game-title-accent {
-  --wear: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='.16' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -60 0 0 0 45.6'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>");
+/* Masken ligger på en indre span, så skygge og glød på den ytre spanen
+   følger de ripete bokstavene i stedet for å bli ripet selv. */
+.game-title-worn {
+  display: block;
+  text-shadow: none;
+  --wear: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><defs><g id='s' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'><path d='M0.0 134.1L11.7 126.6L23.3 119.0L34.8 111.3L45.7 102.7' stroke-width='1.65'/><path d='M34.8 111.3L55.6 112.6' stroke-width='1.15'/><path d='M248.0 114.8L264.7 105.7L281.4 96.5L297.1 85.8L312.1 74.1' stroke-width='1.51'/><path d='M3.5 57.9L33.8 73.2L63.9 88.6L96.0 99.7L127.5 112.0' stroke-width='0.71'/><path d='M96.2 270.4L122.9 275.4L150.1 277.2L176.9 281.8L202.7 290.6L227.6 301.4' stroke-width='1.59'/><path d='M240.2 129.4L251.8 107.6L262.3 85.1L275.6 64.2L285.1 41.4L295.9 19.1' stroke-width='0.73'/><path d='M164.9 203.8L170.8 233.7L177.4 263.4L180.7 293.7L184.0 324.0L190.1 353.9' stroke-width='1.18'/><path d='M170.8 233.7L203.1 267.1' stroke-width='0.82'/><path d='M165.3 113.0L183.8 103.2L202.4 93.8L222.3 87.3' stroke-width='1.12'/><path d='M202.4 93.8L209.0 71.6' stroke-width='0.78'/><path d='M110.9 258.4L136.5 248.2L163.4 242.3L190.5 237.1L218.0 235.8' stroke-width='1.04'/><path d='M136.5 248.2L154.6 222.3' stroke-width='0.73'/><path d='M247.9 109.1L282.2 120.1L315.1 134.7L345.9 153.4' stroke-width='1.26'/><path d='M315.1 134.7L315.4 170.3' stroke-width='0.88'/><path d='M0.3 6.1L23.2 10.8L45.8 16.5L67.2 26.0L88.6 35.5L109.0 46.8' stroke-width='1.03'/><path d='M67.2 26.0L80.4 55.9' stroke-width='0.72'/><path d='M149.1 186.9L155.9 166.4L163.6 146.3L173.5 127.2L183.4 108.0' stroke-width='1.24'/><path d='M64.2 232.0L72.0 245.5L79.8 259.1L85.6 273.6L91.8 287.9' stroke-width='1.33'/><path d='M85.6 273.6L102.2 277.4' stroke-width='0.93'/><path d='M84.7 70.7L117.7 48.0L150.9 25.5L183.5 2.3L218.0 -18.0' stroke-width='1.46'/><path d='M183.5 2.3L218.5 -57.9' stroke-width='1.02'/></g><mask id='m'><rect width='300' height='300' fill='white'/><use href='%23s' x='-300' y='-300'/><use href='%23s' x='-300' y='0'/><use href='%23s' x='-300' y='300'/><use href='%23s' x='0' y='-300'/><use href='%23s' x='0' y='0'/><use href='%23s' x='0' y='300'/><use href='%23s' x='300' y='-300'/><use href='%23s' x='300' y='0'/><use href='%23s' x='300' y='300'/></mask></defs><rect width='300' height='300' fill='black' mask='url(%23m)'/></svg>");
   -webkit-mask-image: var(--wear);
   mask-image: var(--wear);
-  -webkit-mask-size: 220px 220px;
-  mask-size: 220px 220px;
-  /* Masken klipper alt utenfor boksen, også gløden. Luft rundt teksten gir
-     gløden plass uten å flytte bokstavene. */
-  padding: 0.3em 0.5em;
-  margin: -0.3em -0.5em;
+  -webkit-mask-size: 300px 300px;
+  mask-size: 300px 300px;
 }
 
-.game-title-main {
+.game-title-main .game-title-worn {
   background: linear-gradient(180deg, #efe2bf 0%, #cdb98d 55%, #9c8a66 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  /* text-shadow ville lagt seg over gradienten, så skyggen er et filter. */
+}
+
+/* text-shadow ville lagt seg over gradienten, så skyggen er et filter på
+   den ytre spanen. */
+.game-title-main {
   text-shadow: none;
   filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.55))
     drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+}
+
+.game-title-accent {
+  text-shadow: none;
+  filter: drop-shadow(0 0 10px rgba(221, 106, 53, 0.55))
+    drop-shadow(0 2px 0 rgba(0, 0, 0, 0.6))
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
 }
 
 .factions-preview .faction-card {
