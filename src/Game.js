@@ -22,6 +22,14 @@ export const RAREIUM_WEAPON_CHANCE_DIVISOR = 100;
 export const RAREIUM_MAX = 100;
 export const RECYCLE_REFUND_RATIO = 0.7;
 
+// Eksperiment med invasjonsregelen, styrt fra simuleringen. Spillet bruker
+// alltid 'flip'.
+//   flip:    vellykket invasjon gir angriperen cellen (dagens regel)
+//   fortify: angriperen får cellen, men den teller ikke for seier før
+//            angriperens neste tur begynner (forsvareren får én tur på seg)
+//   raze:    vellykket invasjon tømmer cellen, angriperen må ta den etterpå
+export const RULES = { invasion: 'flip' };
+
 export { strategicWeapons, BIO_DESTROY_CHANCE };
 
 // Loggoppføringer er objekter. Klienten lager tekst og ikon, se gameLog.js.
@@ -65,6 +73,31 @@ function recordWeaponEvent(G, type, cells, before, affected = []) {
 function markCell(G, id, kind = null) {
   G.blink[id] = true;
   if (G.blinkKind) G.blinkKind[id] = kind;
+}
+
+// Vellykket invasjon etter regelvarianten i RULES.
+function applyInvasion(G, id, playerID) {
+  if (RULES.invasion === 'raze') {
+    G.cells[id] = null;
+    return;
+  }
+  G.cells[id] = playerID;
+  if (G.fresh) G.fresh[id] = RULES.invasion === 'fortify';
+}
+
+// Når en spillers tur begynner, er spillerens ferske okkupasjoner befestet.
+// Celler som er tømt (våpen, revolt) mister også markeringen.
+function consolidate(G, playerID) {
+  if (!G.fresh) return;
+  G.fresh = G.fresh.map(
+    (fresh, i) => fresh && G.cells[i] !== null && G.cells[i] !== playerID,
+  );
+}
+
+// Cellene slik de teller for seier: ferske okkupasjoner regnes som tomme.
+export function countedCells(G) {
+  if (!G.fresh) return G.cells;
+  return G.cells.map((owner, i) => (G.fresh[i] ? null : owner));
 }
 
 // Nullstiller blinkene fra forrige trekk og starter en ny blink-runde.
@@ -147,6 +180,8 @@ export const TicTacToe = {
     rareiumAtWeapon: Array(NUM_PLAYERS).fill(0),
     // Siste våpenhendelse, brukt av klienten til å spille av animasjon.
     weaponEvent: { type: null, cells: [], before: null, version: 0 },
+    // Celler tatt ved invasjon som ennå ikke teller for seier (fortify).
+    fresh: Array(TOTAL_CELLS).fill(false),
   }),
 
   turn: {
@@ -154,6 +189,7 @@ export const TicTacToe = {
     maxMoves: 1,
     onBegin: ({ G, ctx, random }) => {
       G.lastCellAttacked = null;
+      consolidate(G, ctx.currentPlayer);
 
       const ownedCells = G.cells.filter(
         (cell) => cell === ctx.currentPlayer,
@@ -203,13 +239,14 @@ export const TicTacToe = {
         return INVALID_MOVE;
       } else if (G.cells[id] !== null) {
         const conquered = random.Number() < INVASION_SUCCESS_CHANCE;
-        if (conquered) G.cells[id] = playerID;
+        if (conquered) applyInvasion(G, id, playerID);
         const type = conquered ? 'conquer' : 'fail';
         logEntry(G, { type, player: playerID, cell: id });
         markCell(G, id, type);
         G.lastCellAttacked = id;
       } else {
         G.cells[id] = playerID;
+        if (G.fresh) G.fresh[id] = false;
         logEntry(G, { type: 'claim', player: playerID, cell: id });
         markCell(G, id, 'claim');
         G.lastCellAttacked = id;
@@ -291,15 +328,17 @@ export const TicTacToe = {
   },
 
   endIf: ({ G }) => {
-    const winningLine = GetWinningLine(G.cells);
+    // Ferske okkupasjoner (fortify) teller ikke ennå.
+    const cells = countedCells(G);
+    const winningLine = GetWinningLine(cells);
     if (winningLine) {
       // Vinneren er eieren av linjen, ikke nødvendigvis den som har turen.
-      return { winner: G.cells[winningLine[0]], winningLine };
+      return { winner: cells[winningLine[0]], winningLine };
     }
     // Domination: hvis alle ikke-destroyed celler er eid av samme spiller, og
     // ingen tomme celler er igjen, vinner den spilleren. Dekker edge-casen
     // der nok celler er nuket til at ingen 4-på-rad er mulig.
-    const dominator = GetDominator(G);
+    const dominator = GetDominator({ ...G, cells });
     if (dominator !== null) {
       return { winner: dominator };
     }

@@ -7,6 +7,7 @@
 //   recycle0/1       sjanse for å resirkulere et våpen i stedet (standard 0)
 //   invade0/1        sjanse for å angripe en fiendecelle i stedet for å ta en
 //                    ledig celle, når begge finnes (standard: helt tilfeldig)
+//   invasion         flip (standard), fortify eller raze, se RULES i Game.js
 //   bot0, bot1       1 = spill med datamotspilleren (src/botStrategy.js) i
 //                    stedet for profilen over
 //
@@ -18,6 +19,7 @@
 import clientPkg from 'boardgame.io/dist/cjs/client.js';
 import {
   TicTacToe,
+  RULES,
   TOTAL_CELLS,
   IsRow,
   GetNeighbors,
@@ -39,6 +41,7 @@ const profile = (id) => ({
     params[`invade${id}`] === undefined ? null : Number(params[`invade${id}`]),
 });
 const PROFILES = [profile(0), profile(1)];
+RULES.invasion = params.invasion ?? 'flip';
 
 const MAX_TURNS = 400;
 const SNAPSHOT_TURN = 12;
@@ -139,7 +142,29 @@ const newStats = () => ({
   peakHeld: [0, 0],
   leaderGames: 0,
   leaderWins: 0,
+  conquers: 0,
+  invasionWins: 0,
+  flipflopGames: 0,
 });
+
+// Invasjon fra loggen (nyeste først): hvor mange som lyktes, om samme celle
+// ble tatt tre ganger eller mer (frem og tilbake), og om seieren kom ved at
+// den siste cellen i linjen ble tatt ved invasjon.
+function countInvasions(G, over, stats) {
+  const conquers = G.log.filter((e) => e.type === 'conquer');
+  stats.conquers += conquers.length;
+  const perCell = {};
+  for (const e of conquers) perCell[e.cell] = (perCell[e.cell] ?? 0) + 1;
+  if (Object.values(perCell).some((n) => n >= 3)) stats.flipflopGames++;
+  if (!over?.winningLine) return;
+  const last = G.log.find(
+    (e) =>
+      e.player === over.winner &&
+      (e.type === 'claim' || e.type === 'conquer') &&
+      over.winningLine.includes(e.cell),
+  );
+  if (last?.type === 'conquer') stats.invasionWins++;
+}
 
 const countCells = (G, id) => G.cells.filter((c) => c === id).length;
 
@@ -167,6 +192,7 @@ function playGame(stats) {
     }
   }
   const over = client.getState().ctx.gameover;
+  countInvasions(client.getState().G, over, stats);
   if (!over) stats.draws++;
   else {
     stats.wins[Number(over.winner)]++;
@@ -207,5 +233,14 @@ console.log(
 console.log(
   `Leder etter ${SNAPSHOT_TURN} trekk vant: ${pct(stats.leaderWins, stats.leaderGames)} ` +
     `(${stats.leaderGames} partier med leder)`,
+);
+console.log(
+  `Invasjonsregel: ${RULES.invasion}. Vellykkede invasjoner per parti: ${per(stats.conquers)}`,
+);
+console.log(
+  `Seier der siste celle i linjen ble tatt ved invasjon: ${pct(stats.invasionWins)}`,
+);
+console.log(
+  `Partier der samme celle ble invadert 3+ ganger: ${pct(stats.flipflopGames)}`,
 );
 console.log('Våpen brukt (totalt):', stats.weapons);

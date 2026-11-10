@@ -54,6 +54,18 @@ function nearlyWon(G, who, gapOwner) {
   return null;
 }
 
+// En linje der `who` eier alle fire, men minst én er en fersk okkupasjon som
+// ennå ikke teller (fortify). Returnerer { line, fresh } eller null.
+function pendingWin(G, who) {
+  if (!G.fresh) return null;
+  for (const line of LINES) {
+    if (!line.every((id) => G.cells[id] === who && !G.destroyed[id])) continue;
+    const fresh = line.find((id) => G.fresh[id]);
+    if (fresh !== undefined) return { line, fresh };
+  }
+  return null;
+}
+
 // Verdien av å eie en celle: hvor mye den bygger egne linjer og hvor mye
 // den stenger motstanderens.
 function cellValue(G, id, me) {
@@ -176,9 +188,19 @@ export function chooseAction(G, me, random = Math.random) {
   const win = nearlyWon(G, me, null) ?? nearlyWon(G, me, opponent);
   if (win) return { move: 'clickCell', args: [win.gap] };
 
+  const weapon = bestWeaponMove(G, me);
+  // Motstanderen har en hel linje som venter på å bli befestet (fortify):
+  // bryt den med våpen, ellers prøv å ta tilbake den ferske cellen.
+  const pending = pendingWin(G, opponent);
+  if (pending) {
+    if (weapon && breaksLine(weapon, pending.line)) {
+      return { move: 'useStrategicWeapon', args: [weapon.input] };
+    }
+    return { move: 'clickCell', args: [pending.fresh] };
+  }
+
   // En trussel blokkeres, med mindre våpenet sikkert bryter linjen.
   const threat = nearlyWon(G, opponent, null);
-  const weapon = bestWeaponMove(G, me);
   if (threat && !(weapon && breaksLine(weapon, threat.line))) {
     return { move: 'clickCell', args: [threat.gap] };
   }
