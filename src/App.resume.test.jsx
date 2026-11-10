@@ -13,6 +13,7 @@ vi.mock('boardgame.io/dist/esm/react.js', () => {
 });
 vi.mock('boardgame.io/dist/esm/multiplayer.js', () => ({
   SocketIO: () => ({}),
+  Local: () => ({}),
 }));
 vi.mock('boardgame.io/dist/esm/client.js', () => ({
   LobbyClient: class {

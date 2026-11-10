@@ -24,7 +24,7 @@ export const territories = [
   'the Sunset Swamps',
 ];
 
-const positions = [
+export const LINES = [
   // Horizontal lines
   [0, 1, 2, 3],
   [4, 5, 6, 7],
@@ -44,7 +44,7 @@ const positions = [
 // ikke finnes noen. Brukes både til seier-sjekk og til å fremheve vinneren
 // sine celler på brettet.
 export function GetWinningLine(cells) {
-  for (const row of positions) {
+  for (const row of LINES) {
     const symbols = row.map((i) => cells[i]);
     if (symbols.every((i) => i !== null && i === symbols[0])) {
       return row;

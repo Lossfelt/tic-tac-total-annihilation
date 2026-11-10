@@ -7,6 +7,13 @@ ruiner, med strategiske våpen som låses opp via ressursen Rareium.
 Bygget på [boardgame.io](https://boardgame.io/) med React frontend og en
 egen multiplayer-server.
 
+Fra lobbyen kan man også spille mot datamaskinen ("Play vs computer"). Den
+kampen kjører helt i nettleseren via boardgame.io sin `Local`-transport, uten
+server. Strategien ligger i `src/botStrategy.js` (vinn, blokker, bruk våpen
+når det treffer klart mer av motstanderen, ellers ta cellen med høyest
+linjeverdi), og `npm run simulate -- 400 bot1=1` måler den mot de enkle
+simuleringsspillerne.
+
 ## Kjøre lokalt
 
 Krever **Node 22 eller nyere**. Kravet kommer fra utviklingsverktøyene
@@ -36,6 +43,8 @@ Andre nyttige kommandoer: `npm run build` (prod-bygg av frontend),
   målvalget for strategiske våpen og recycle-bekreftelsen. Kjører i jsdom via
   en `@vitest-environment`-docblock øverst i fila. Her er `moves` mocket, så
   testene sier hva brettet ber serveren om, ikke hva serveren gjør med det.
+- `botStrategy.test.js` dekker valgene til datamotspilleren (vinn, blokker,
+  våpenbruk og lovlige trekk) med små tekstbrett.
 - `App.smoke.test.jsx` importerer bare `App.jsx` og sjekker at det går. Filen
   setter opp boardgame.io-klienten på modulnivå, så en ødelagt import slår ut
   her i stedet for i nettleseren.

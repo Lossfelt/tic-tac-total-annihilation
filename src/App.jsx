@@ -8,6 +8,7 @@ import './Board.css';
 import AboutPopup from './AboutPopup.jsx';
 import { SoundToggle } from './SoundToggle.jsx';
 import Lobby from './Lobby.jsx';
+import ComputerMatch from './ComputerMatch.jsx';
 import { loadSession, saveSession, clearSession } from './session.js';
 
 const TicTacToeClient = Client({
@@ -50,6 +51,8 @@ const App = () => {
   const [pendingAction, setPendingAction] = useState(null);
   const [lobbyError, setLobbyError] = useState('');
   const [matchError, setMatchError] = useState('');
+  // True under en kamp mot datamaskinen (lokal, uten server).
+  const [vsComputer, setVsComputer] = useState(false);
 
   useEffect(() => {
     if (joined) saveSession({ name, matchID, playerID, credentials });
@@ -193,6 +196,12 @@ const App = () => {
             </span>
           </div>
         </div>
+      ) : vsComputer ? (
+        <ComputerMatch
+          name={name}
+          onLeave={() => setVsComputer(false)}
+          onAbout={handleAbout}
+        />
       ) : !joined ? (
         <Lobby
           name={name}
@@ -201,6 +210,7 @@ const App = () => {
           onSubmitName={setName}
           onCreate={handleCreate}
           onJoin={handleJoin}
+          onPlayComputer={() => setVsComputer(true)}
           initialMatchID={invitedMatch}
         />
       ) : (
@@ -239,7 +249,7 @@ const App = () => {
         </div>
       )}
 
-      {!joined && (
+      {!joined && !vsComputer && (
         <button className="about-button" onClick={handleAbout}>
           About
         </button>

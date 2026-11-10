@@ -10,6 +10,7 @@ export default function Lobby({
   onSubmitName,
   onCreate,
   onJoin,
+  onPlayComputer,
   initialMatchID = '',
 }) {
   const nameInput = useRef();
@@ -63,6 +64,9 @@ export default function Lobby({
           <h2>Welcome, general {name}</h2>
           <button onClick={onCreate} disabled={busy}>
             Create new match
+          </button>
+          <button onClick={onPlayComputer} disabled={busy}>
+            Play vs computer
           </button>
           <div className="lobby-divider">
             {initialMatchID ? 'you were invited' : 'or join existing'}
