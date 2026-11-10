@@ -7,6 +7,8 @@
 //   recycle0/1       sjanse for å resirkulere et våpen i stedet (standard 0)
 //   invade0/1        sjanse for å angripe en fiendecelle i stedet for å ta en
 //                    ledig celle, når begge finnes (standard: helt tilfeldig)
+//   bot0, bot1       1 = spill med datamotspilleren (src/botStrategy.js) i
+//                    stedet for profilen over
 //
 // Våpen siktes grådig (flest fiendeceller, færrest egne), med aim=random for
 // tilfeldig sikte. Cellevalget ellers er tilfeldig, så tallene sier noe om
@@ -21,6 +23,7 @@ import {
   GetNeighbors,
   GetSurroundingCells,
 } from '../src/Game.js';
+import { chooseAction } from '../src/botStrategy.js';
 
 const { Client } = clientPkg;
 const args = process.argv.slice(2);
@@ -31,6 +34,7 @@ const params = Object.fromEntries(
 const profile = (id) => ({
   use: Number(params[`use${id}`] ?? 0.5),
   recycle: Number(params[`recycle${id}`] ?? 0),
+  bot: params[`bot${id}`] === '1',
   invade:
     params[`invade${id}`] === undefined ? null : Number(params[`invade${id}`]),
 });
@@ -107,6 +111,11 @@ function takeTurn(client, stats) {
   const me = ctx.currentPlayer;
   const p = PROFILES[Number(me)];
   const weapon = G.strategicWeapon[me];
+  if (p.bot) {
+    const { move, args: moveArgs } = chooseAction(G, me);
+    client.moves[move](...moveArgs);
+    return move === 'useStrategicWeapon' ? weapon : null;
+  }
   if (weapon && Math.random() < p.recycle) {
     client.moves.recycleStrategicWeapon();
     stats.recycled[me]++;

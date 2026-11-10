@@ -22,7 +22,8 @@ export function TicTacToeBoard({
   G,
   moves,
   matchID,
-  matchData,
+  matchData: serverPlayers,
+  localPlayers,
   playerID,
   isActive,
   onPlayAgain,
@@ -40,6 +41,9 @@ export function TicTacToeBoard({
   const gameover = ctx.gameover;
   useGameSounds({ G, gameover, playerID, armedCount });
   const winnerID = gameover?.winner;
+  // I lokal modus (mot datamaskinen) finnes ingen server som sender
+  // spillernavn, så ComputerMatch gir dem som localPlayers.
+  const matchData = localPlayers ?? serverPlayers ?? [];
   const nameOf = (id) => matchData[id]?.name || FACTION_NAME[id];
   const myTurn = ctx.currentPlayer === playerID;
 
