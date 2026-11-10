@@ -4,8 +4,8 @@
 
 const KEY = 'ttta-muted';
 const VOLUME = 0.6;
-// Justering per lyd (1 = standard), for lyder som ble for sterke.
-const GAIN = { conquer: 0.6 };
+// Justering per lyd (1 = standard), for lyder som ble for sterke eller svake.
+const GAIN = { conquer: 0.6, revolt: 1.6 };
 
 export const SOUNDS = [
   'place',
@@ -16,7 +16,8 @@ export const SOUNDS = [
   'nuke',
   'bio',
   'artillery',
-  'airstrike',
+  'jet',
+  'boom',
   'win',
   'lose',
 ];

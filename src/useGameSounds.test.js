@@ -84,6 +84,26 @@ describe('useGameSounds', () => {
     expect(playSound).toHaveBeenCalledWith('nuke');
   });
 
+  it('spiller fly først og så én eksplosjon per bombe ved luftangrep', () => {
+    vi.useFakeTimers();
+    const { rerender } = renderHook((p) => useGameSounds(p), {
+      initialProps: props(makeG()),
+    });
+    rerender(
+      props(
+        makeG({
+          blinkVersion: 1,
+          weaponEvent: { type: 'Air Strike', cells: [0, 1, 2], version: 1 },
+        }),
+      ),
+    );
+    expect(playSound).toHaveBeenCalledWith('jet');
+    vi.advanceTimersByTime(5000);
+    const booms = playSound.mock.calls.filter(([n]) => n === 'boom');
+    expect(booms).toHaveLength(3);
+    vi.useRealTimers();
+  });
+
   it('spiller lyd når et våpen mottas', () => {
     const G = makeG();
     const { rerender } = renderHook((p) => useGameSounds(p), {

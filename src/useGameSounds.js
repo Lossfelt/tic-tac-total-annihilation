@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { playSound } from './sound.js';
+import { planAirStrike } from './weaponAnimation.js';
 
 const WEAPON_SOUND = {
   'Dirty Nuke': 'nuke',
   'Biological Warfare': 'bio',
   Artillery: 'artillery',
-  'Air Strike': 'airstrike',
 };
 
 // Lyden for et vanlig trekk. Erobring slår mislykket invasjon, som slår vanlig
@@ -18,6 +18,13 @@ export const REVOLT_DELAY_MS = 700;
 function moveSound(blinkKind) {
   const kind = KIND_PRIORITY.find((k) => blinkKind?.includes(k));
   return kind ? KIND_SOUND[kind] : null;
+}
+
+// Luftangrep: først flyet, så én eksplosjon per bombe, i takt med animasjonen.
+function playAirStrike(event, timers) {
+  playSound('jet');
+  const { hits } = planAirStrike(event.cells, event.version);
+  timers.current = hits.map(({ t }) => setTimeout(() => playSound('boom'), t));
 }
 
 // Spiller lyd når noe nytt skjer. Alle verdiene starter på det de er ved
@@ -34,13 +41,21 @@ export function useGameSounds({ G, gameover, playerID, armedCount }) {
   });
 
   const revoltTimer = useRef(null);
-  useEffect(() => () => clearTimeout(revoltTimer.current), []);
+  const airTimers = useRef([]);
+  useEffect(
+    () => () => {
+      clearTimeout(revoltTimer.current);
+      airTimers.current.forEach(clearTimeout);
+    },
+    [],
+  );
 
   useEffect(() => {
     const p = prev.current;
     if (weaponVersion !== p.weaponVersion) {
       const sound = WEAPON_SOUND[weaponType];
       if (sound) playSound(sound);
+      if (weaponType === 'Air Strike') playAirStrike(G.weaponEvent, airTimers);
     } else if (G.blinkVersion !== p.blinkVersion) {
       const sound = moveSound(G.blinkKind);
       if (sound) playSound(sound);
@@ -53,7 +68,7 @@ export function useGameSounds({ G, gameover, playerID, armedCount }) {
     }
     p.weaponVersion = weaponVersion;
     p.blinkVersion = G.blinkVersion;
-  }, [weaponVersion, weaponType, G.blinkVersion, G.blinkKind]);
+  }, [weaponVersion, weaponType, G.weaponEvent, G.blinkVersion, G.blinkKind]);
 
   useEffect(() => {
     if (armedCount > prev.current.armedCount) playSound('armed');
