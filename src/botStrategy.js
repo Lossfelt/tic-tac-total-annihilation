@@ -7,6 +7,7 @@
 //   2. Vinn hvis én celle mangler på en linje.
 //   3. Blokker hvis motstanderen mangler én celle på en linje.
 //   4. Ellers: ta eller invadere cellen med høyest verdi.
+// Regelvariantene for invasjon og revolt vurderes i botInvasion.js.
 // Botten resirkulerer aldri våpen. Simuleringen viste at det sjelden lønner
 // seg (se todo.md).
 
@@ -17,7 +18,13 @@ import {
   GetNeighbors,
   GetSurroundingCells,
 } from './board.js';
-import { invasionChance, isImmune } from './invasionRules.js';
+import { canInvade } from './invasionRules.js';
+import {
+  invadeTakesCell,
+  invasionScore,
+  suppressMove,
+  reinforceMove,
+} from './botInvasion.js';
 import { BIO_DESTROY_CHANCE } from './weapons.js';
 
 // Hvor mye en linje er verdt etter hvor mange celler en spiller har på den.
@@ -49,7 +56,8 @@ function nearlyWon(G, who, gapOwner) {
     const c = lineCounts(G, line, who);
     if (c.dead || c.mine !== 3) continue;
     const gap = line.find((id) => G.cells[id] !== who);
-    if (G.cells[gap] === gapOwner && !isImmune(G, gap)) return { line, gap };
+    if (G.cells[gap] !== gapOwner) continue;
+    if (gapOwner === null || invadeTakesCell(G, gap, who)) return { line, gap };
   }
   return null;
 }
@@ -98,10 +106,11 @@ function bestCellMove(G, me, random) {
   const opponent = other(me);
   let best = null;
   for (let id = 0; id < TOTAL_CELLS; id++) {
-    if (G.destroyed[id] || G.cells[id] === me || isImmune(G, id)) continue;
+    if (G.destroyed[id] || G.cells[id] === me) continue;
     let score = cellValue(G, id, me);
     if (G.cells[id] === opponent) {
-      score = invasionChance(G, id, me) * (score + ownerStake(G, id));
+      score = invasionScore(G, id, me, score + ownerStake(G, id), ownerStake);
+      if (score === null) continue;
     }
     score += random() * 0.5;
     if (!best || score > best.score) best = { id, score };
@@ -192,7 +201,7 @@ export function chooseAction(G, me, random = Math.random) {
   // Motstanderen har en hel linje som venter på å bli befestet (fortify):
   // bryt den med våpen, ellers prøv å ta tilbake den ferske cellen.
   const pending = pendingWin(G, opponent);
-  if (pending) {
+  if (pending && canInvade(G, pending.fresh, me)) {
     if (weapon && breaksLine(weapon, pending.line)) {
       return { move: 'useStrategicWeapon', args: [weapon.input] };
     }
@@ -204,6 +213,12 @@ export function chooseAction(G, me, random = Math.random) {
   if (threat && !(weapon && breaksLine(weapon, threat.line))) {
     return { move: 'clickCell', args: [threat.gap] };
   }
+  // En truet blokkering forsterkes (forankring med forsterkning).
+  const wall = reinforceMove(G, me, opponent);
+  if (wall) return wall;
+  // Uro i en viktig egen celle undertrykkes (forsinket revolt).
+  const calm = suppressMove(G, me, ownerStake);
+  if (calm) return calm;
   if (weapon) return { move: 'useStrategicWeapon', args: [weapon.input] };
   return bestCellMove(G, me, random);
 }

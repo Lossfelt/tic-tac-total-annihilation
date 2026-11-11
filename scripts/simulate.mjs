@@ -11,7 +11,14 @@
 //   freshRetake      sjanse for å ta tilbake en fersk okkupasjon (fortify)
 //   immunity         1 = gjenerobret fersk celle er immun i neste tur
 //   originRetake     sjanse når angriperen er cellens opprinnelige eier
-//   revolt           all (standard) eller occupied
+//   revolt           all (standard), occupied eller delayed (varsles og kan
+//                    undertrykkes)
+//   pincer           4 eller 8: invasjon krever minst to egne naboer
+//   strength         click, attrition eller risk: forankring (styrke 1-3)
+//   claimStrength    styrken en ny celle får (forankring, standard 1)
+//   conquestImmunity 1 = erobret celle kan ikke angripes i neste tur
+//   reinforce        1 = klikk på egen celle gir +1 styrke
+//                    Reglene med knipetang og forankring krever bot0=1 bot1=1.
 //   revoltChance     sjanse for revolt per celle og tur (standard 0.05)
 //                    Se src/invasionRules.js og INVASJONSVARIANTER.md.
 //   bot0, bot1       1 = spill med datamotspilleren (src/botStrategy.js) i
@@ -54,6 +61,11 @@ RULES.immunity = params.immunity === '1';
 RULES.originRetake = num('originRetake');
 RULES.revolt = params.revolt ?? 'all';
 RULES.revoltChance = num('revoltChance') ?? RULES.revoltChance;
+RULES.pincer = num('pincer');
+RULES.strength = params.strength ?? null;
+RULES.claimStrength = num('claimStrength') ?? 1;
+RULES.conquestImmunity = params.conquestImmunity === '1';
+RULES.reinforce = params.reinforce === '1';
 
 const MAX_TURNS = 400;
 const SNAPSHOT_TURN = 12;
@@ -120,6 +132,8 @@ function chooseCell(G, me, invade) {
   return Math.random() < invade ? pick(enemy) : pick(free);
 }
 
+const STUCK = 'låst';
+
 // Spiller ett trekk. Returnerer navnet på våpenet som ble brukt, ellers null.
 function takeTurn(client, stats) {
   const { G, ctx } = client.getState();
@@ -127,7 +141,10 @@ function takeTurn(client, stats) {
   const p = PROFILES[Number(me)];
   const weapon = G.strategicWeapon[me];
   if (p.bot) {
-    const { move, args: moveArgs } = chooseAction(G, me);
+    const choice = chooseAction(G, me);
+    // Ingen lovlige trekk (f.eks. fullt brett under knipetang): partiet låses.
+    if (!choice) return STUCK;
+    const { move, args: moveArgs } = choice;
     client.moves[move](...moveArgs);
     return move === 'useStrategicWeapon' ? weapon : null;
   }
@@ -156,9 +173,18 @@ const newStats = () => ({
   leaderWins: 0,
   conquers: 0,
   revolts: 0,
+  stuck: 0,
+  unrest: 0,
+  suppressed: 0,
+  conquerByArea: { hjørne: 0, kant: 0, midt: 0 },
   invasionWins: 0,
   flipflopGames: 0,
 });
+
+const CORNERS = [0, 3, 12, 15];
+const MIDDLE = [5, 6, 9, 10];
+const area = (id) =>
+  CORNERS.includes(id) ? 'hjørne' : MIDDLE.includes(id) ? 'midt' : 'kant';
 
 // Invasjon fra loggen (nyeste først): hvor mange som lyktes, om samme celle
 // ble tatt tre ganger eller mer (frem og tilbake), og om seieren kom ved at
@@ -166,7 +192,11 @@ const newStats = () => ({
 function countInvasions(G, over, stats) {
   const conquers = G.log.filter((e) => e.type === 'conquer');
   stats.conquers += conquers.length;
-  stats.revolts += G.log.filter((e) => e.type === 'revolt').length;
+  const count = (type) => G.log.filter((e) => e.type === type).length;
+  stats.revolts += count('revolt');
+  stats.unrest += count('unrest');
+  stats.suppressed += count('suppress');
+  for (const e of conquers) stats.conquerByArea[area(e.cell)]++;
   const perCell = {};
   for (const e of conquers) perCell[e.cell] = (perCell[e.cell] ?? 0) + 1;
   if (Object.values(perCell).some((n) => n >= 3)) stats.flipflopGames++;
@@ -190,6 +220,10 @@ function playGame(stats) {
   let held = [null, null];
   while (!client.getState().ctx.gameover && turns < MAX_TURNS) {
     const weapon = takeTurn(client, stats);
+    if (weapon === STUCK) {
+      stats.stuck++;
+      break;
+    }
     if (weapon) stats.weapons[weapon] = (stats.weapons[weapon] ?? 0) + 1;
     turns++;
     const { G } = client.getState();
@@ -229,7 +263,9 @@ console.log(`Partier: ${GAMES}, profiler:`, JSON.stringify(PROFILES));
 console.log(
   `Spiller 0 vant: ${pct(stats.wins[0])}, spiller 1 vant: ${pct(stats.wins[1])}`,
 );
-console.log(`Uavgjort etter ${MAX_TURNS} trekk: ${pct(stats.draws)}`);
+console.log(
+  `Uavgjort etter ${MAX_TURNS} trekk eller låst: ${pct(stats.draws)} (låst uten lovlige trekk: ${pct(stats.stuck)})`,
+);
 console.log(`Seier ved dominans: ${pct(stats.byDomination)}`);
 console.log(
   `Trekk per parti: median ${sorted[Math.floor(GAMES / 2)]}, ` +
@@ -252,6 +288,15 @@ console.log('Regler:', JSON.stringify(RULES));
 console.log(
   `Vellykkede invasjoner per parti: ${per(stats.conquers)}, revolt per parti: ${per(stats.revolts)}`,
 );
+const byArea = stats.conquerByArea;
+console.log(
+  `Erobringer per celle, hjørne/kant/midt: ${(byArea.hjørne / 4 / GAMES).toFixed(2)} / ${(byArea.kant / 8 / GAMES).toFixed(2)} / ${(byArea.midt / 4 / GAMES).toFixed(2)}`,
+);
+if (RULES.revolt === 'delayed') {
+  console.log(
+    `Uro per parti: ${per(stats.unrest)}, undertrykt: ${per(stats.suppressed)}`,
+  );
+}
 console.log(
   `Seier der siste celle i linjen ble tatt ved invasjon: ${pct(stats.invasionWins)}`,
 );

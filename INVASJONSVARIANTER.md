@@ -30,7 +30,7 @@ node scripts/simulate.mjs 1000 bot0=1 bot1=1 invasion=fortify freshRetake=0.75 i
 ```
 
 Parameterne er beskrevet øverst i `simulate.mjs`. Reglene ligger i
-`src/invasionRules.js` (`RULES`), og finnes bare på grenen
+`src/rules.js` (`RULES`), og finnes bare på grenen
 `eksperiment/invasjon`, der også dette dokumentet ligger.
 
 Måltall:
@@ -128,23 +128,122 @@ runde 1 kjørt på nytt som referanse.
   under D), siden hver eid celle har 5 % sjanse hver tur. Det bør vurderes
   sammen med en eventuell ny invasjonsregel.
 
+## Runde 3: knipetang, forankring og forsinket revolt
+
+Idéene kom fra en ny idérunde 11. november 2026, der målet var at
+motspilleren skal kunne se faren komme i stedet for å tape plutselig.
+Kjørt samme dag, bot mot bot, 1000 partier per variant (200 for click).
+
+- **Knipetang (K4, K8):** en fiendecelle kan bare invaderes når angriperen
+  har minst to egne naboer til den, rett ut (4) eller også diagonalt (8).
+  Sjansen er fortsatt 50 %.
+- **Forankring (S):** eide celler har styrke 1 til 3. En celle vokser med 1
+  når eierens tur begynner, hvis den ikke ble angrepet siden sist. Et treff
+  senker styrken med 1, og cellen faller ved 0. Tre angrepsformer:
+  - **click:** angrip hvilken som helst fiendecelle, treffer alltid.
+  - **attrition:** angrip fra en egen nabocelle (8 naboer), treffer alltid,
+    men den angripende cellen mister også 1.
+  - **risk:** angrip fra en egen nabocelle, sjansen er 50 % pluss 15
+    prosentpoeng per styrkeforskjell (20 til 80 %), og en bom koster den
+    angripende cellen 1. Dette er RISK-elementet og bakslaget fra forslag
+    6.
+- Justeringer som ble nødvendige underveis (se funn under):
+  - **claim2:** en ny celle starter med styrke 2 i stedet for 1.
+  - **forsterk:** klikk på egen celle gir +1 styrke. Overlapper med
+    befesting, som ellers venter.
+  - **conqImm:** en erobret celle kan ikke angripes i motstanderens neste
+    tur.
+- **Forsinket revolt (R):** opprøret varsles som uro. Eieren kan bruke sin
+  neste tur på å undertrykke det (klikke på cellen). Ellers går cellen tapt
+  på slutten av den turen.
+
+"Låst" betyr at spilleren som har turen, ikke har noe lovlig trekk (fullt
+brett og ingen fiendecelle som kan angripes). Det telles som uavgjort.
+
+| Variant | Invasjons-seier | Start / andre vinner | Uavgjort (låst) | Trekk median (90.) | Invasjoner | Revolt | Frem og tilbake | Leder vant |
+|---|---|---|---|---|---|---|---|---|
+| A flip (referanse) | 86 % | 56 / 44 % | 0 % | 15 (31) | 2,0 | 3,9 | 6 % | 68 % |
+| D fortify + retake75 + imm (referanse) | 40 % | 49 / 49 % | 2,3 % | 27 (74) | 7,7 | 12,9 | 36 % | 57 % |
+| K4 knipetang, 4 naboer | 78 % | 57 / 43 % | 0,4 % (0,4 %) | 17 (36) | 1,0 | 5,8 | 0,2 % | 67 % |
+| K8 knipetang, 8 naboer | 82 % | 60 / 40 % | 0 % | 16 (33) | 1,0 | 4,9 | 0,2 % | 67 % |
+| S1 click | 0 % | 0 / 0 % | 100 % | 400 | 399 | 0 | 100 % | |
+| S2 attrition | 97 % | 57 / 42 % | 0,4 % | 13 (47) | 7,4 | 4,5 | 35 % | 65 % |
+| S3 risk | 93 % | 62 / 38 % | 0 % | 13 (31) | 2,3 | 3,9 | 11 % | 72 % |
+| S4 attrition + claim2 | 5 % | 54 / 44 % | 2,5 % | 35 (97) | 0,3 | 22,2 | 2 % | 59 % |
+| S5 risk + claim2 | 3 % | 55 / 41 % | 3,7 % | 37 (116) | 0,5 | 24,2 | 3 % | 59 % |
+| S6 attrition + claim2 + forsterk | 0 % | 52 / 45 % | 3,2 % | 36 (105) | 0,3 | 24,1 | 2 % | 60 % |
+| S7 risk + claim2 + forsterk | 0 % | 53 / 44 % | 3,8 % | 37 (106) | 0,6 | 24,6 | 3 % | 58 % |
+| S8 risk + forsterk | 92 % | 62 / 38 % | 0,4 % | 14 (33) | 2,5 | 5,1 | 11 % | 75 % |
+| S9 click + claim2 + conqImm (200) | 7 % | 48 / 47 % | 5,5 % | 36 (235) | 0,6 | 27,1 | 3 % | 54 % |
+| R1 flip + forsinket revolt | 86 % | 58 / 42 % | 0 % | 13 (24) | 1,7 | 2,0 | 4 % | 73 % |
+| R2 D + forsinket revolt | 37 % | 49 / 50 % | 1,2 % | 22 (54) | 5,6 | 7,3 | 32 % | 57 % |
+| S4 + forsinket revolt | 1 % | 53 / 47 % | 0,3 % | 26 (55) | 0,05 | 9,6 | 0,2 % | 64 % |
+| S6 + forsinket revolt | 0 % | 56 / 44 % | 0,4 % | 27 (58) | 0,03 | 10,3 | 0,3 % | 63 % |
+
+Erobringer per celle og parti, hjørne / kant / midt: flip 0,17 / 0,09 /
+0,16, K4 0,02 / 0,08 / 0,06, K8 0,03 / 0,08 / 0,07.
+
+Under forsinket revolt ble det varslet 2,9 (R1) til 12 uroer per parti, men
+botten undertrykte bare 0,3 til 0,9 av dem.
+
+### Konklusjoner etter runde 3
+
+- **Knipetang** fjerner nesten all frem og tilbake (0,2 %) og halverer
+  antall invasjoner. Som ventet blir hjørnene festninger (erobret 6 til 8
+  ganger sjeldnere). Men den løser ikke hovedproblemet: 78 til 82 % av
+  seirene kommer fortsatt ved invasjon. Blokkeringscellen i enden av en
+  linje har nesten alltid to av angriperens celler som naboer, siden
+  linjen selv ligger ved siden av den. Knipetang gir mer strategi i
+  rekkefølgen celler tas i, men trenger et tillegg for å beskytte
+  blokkering.
+- **Forankring med styrke 1 for nye celler** gjør problemet verre (93 til
+  97 % invasjonsseire). En blokkering er alltid en ny celle, så den er
+  svakest akkurat når den trengs. **click** låser seg helt: angrep uten
+  kostnad gjør at hver erobring tas tilbake med en gang.
+- **Forankring med styrke 2 for nye celler** fjerner plutselige
+  invasjonsseire (0 til 5 %), og en celle må angripes to ganger før den
+  faller, så faren synes. Men botten slutter nesten å invadere (0,03 til
+  0,6 per parti), og partiene blir lange (median 35 til 37). Da avgjøres
+  partiene i stedet av revolt, med 22 til 27 opprør per parti.
+- **Forsinket revolt** demper revolt i alle varianter: under D fra 12,9 til
+  7,3 per parti, og sammen med forankring fra 22 til 10. Partiene blir
+  kortere, og balansen holder seg. Under dagens regel (R1) øker
+  snøballeffekten litt (lederen vinner 73 mot 68 %), fordi revolt i dag
+  er en utjevner.
+- **Beste kandidater så langt:**
+  - **R2 (okkupasjon + gjenerobring + immunitet + forsinket revolt):** 37 %
+    invasjonsseire, helt jevnt mellom spillerne, median 22 trekk, men 32 %
+    frem og tilbake.
+  - **S4 med forsinket revolt (attrition, styrke 2, forsinket revolt):**
+    1 % invasjonsseire, ingen frem og tilbake, median 26 trekk, men
+    invasjon blir nesten borte som mekanikk.
+
+### Forbehold for runde 3
+
+- Botten planlegger ikke angrep over flere turer. Under forankring med
+  styrke 2 ser den bare én tur frem og velger nesten aldri å angripe. Lave
+  invasjonstall der betyr derfor trolig at **botten** ikke invaderer, ikke
+  nødvendigvis at regelen gjør invasjon uinteressant for mennesker.
+- Botten undertrykker uro bare når cellen er del av en linje med minst to
+  egne celler. Mennesker vil trolig undertrykke oftere, så forsinket revolt
+  kan virke enda mildere i praksis.
+- Forankring trenger en visning av styrke (f.eks. 1 til 3 prikker) og en
+  forklaring. Knipetang trenger at lovlige angrepsmål vises på brettet.
+
 ## Idéer som ikke er testet
 
-Prinsipp: endre én ting om gangen og måle mot flip og D.
-
-1. **Befest en celle:** et eget trekk som gjør en celle i stand til å tåle
-   ett angrep uten å bli mistet. Gir forsvareren et aktivt valg i stedet for
-   bare å blokkere. Koster et trekk, så det er en reell avveining.
-2. **Omringing gjør angrep lettere:** sjansen for en vellykket invasjon øker
-   når cellen er omringet av angriperens celler (f.eks. per nabo), og synker
-   kanskje når den har egne naboer.
-3. **Lavere sjanse** (25 til 35 %). Enklest, men gjør bare plutselige seire
-   sjeldnere, fjerner dem ikke. Nyttig som referanse.
-4. **Revolt etter okkupasjon, men mildere:** i stedet for bare okkuperte
-   celler, la okkuperte celler ha høyere revoltsjanse enn egne (f.eks. 8 mot
-   3 %). Beholder utjevningen og gir opprinnelig eier en mening.
-5. **Justere revolt under D**, f.eks. lavere sjanse når partiene blir
-   lengre, så revolt ikke dominerer.
+- **Befesting** og **omringing** (fra runde 1) venter fortsatt. Forsterk i
+  runde 3 er en enkel form for befesting.
+- **Knipetang sammen med D:** knipetang fjerner frem og tilbake, D fjerner
+  plutselige seire. Kombinasjonen kan få det beste fra begge.
+- **Bedre bot for forankring:** la botten planlegge et angrep over to turer
+  (fortsette å angripe en svekket celle), så tallene for styrke 2 blir til
+  å stole på.
+- **Revolt som svekker:** uro senker cellens styrke (forankring) eller øker
+  sjansen for invasjon, med mindre eieren undertrykker den. Testet bare
+  som forsinket tap.
+- Fra runde 1 og 2: lavere sjanse (25 til 35 %) som referanse, revolt med
+  høyere sjanse i okkuperte celler enn i egne.
 
 Konseptuelt: begge fraksjonene invaderer og okkuperer allerede et annet
 land, så "okkupasjon" blir en okkupasjon av en okkupasjon. Navnet og
@@ -154,15 +253,20 @@ forklaringen bør derfor velges med omhu, men mekanikken er interessant.
 
 Grenen `eksperiment/invasjon`:
 
-- `src/invasionRules.js`: `RULES` med standardverdier lik dagens regler,
-  `invasionChance`, `applyInvasion`, `consolidate`, `countedCells`,
-  `markOrigin`, `mayRevolt` og `isImmune`. Testet i
-  `invasionRules.test.js`.
-- `Game.js`: feltene `fresh`, `origin` og `immune`, og bruk av reglene i
-  `clickCell`, `onBegin`, revolt og `endIf`.
-- `botStrategy.js`: riktig invasjonssjanse, ingen angrep på immune celler,
-  og svar på fersk okkupasjon (`pendingWin`).
-- `simulate.mjs`: parameterne og måltallene over.
+- `src/rules.js`: `RULES` med standardverdier lik dagens regler, og alle
+  innstillingene over.
+- `src/invasionRules.js`: invasjon (`canInvade`, `invasionChance`,
+  `attack`, `applyInvasion`, `claimCell`, `consolidate`, `countedCells`).
+- `src/strengthRules.js`: knipetang og forankring.
+- `src/revoltRules.js`: revolt, også forsinket med undertrykking.
+- `Game.js`: feltene `fresh`, `origin`, `immune`, `strength`, `attacked`
+  og `unrest`. Klikk på egen celle undertrykker uro eller forsterker.
+- `botStrategy.js` og `botInvasion.js`: botten bruker riktig sjanse og
+  lovlige mål, svarer på fersk okkupasjon, forsterker truede blokkeringer
+  og undertrykker uro i viktige celler.
+- `simulate.mjs`: parameterne er beskrevet øverst i filen.
+- Tester: `invasionRules.test.js` og `strengthRules.test.js`.
 
 Grenen holdes oppdatert mot main, og merges først når vi har valgt en regel.
-Spillet på main bruker dagens regel.
+Spillet på main bruker dagens regel. Loggen i spillet kan ikke vise de nye
+hendelsestypene (`hit`, `unrest`, `suppress`, `reinforce`) ennå.

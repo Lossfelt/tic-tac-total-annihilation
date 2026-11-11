@@ -1,34 +1,35 @@
-// Invasjon og revolt, med eksperimentelle regelvarianter som styres fra
-// simuleringen (se INVASJONSVARIANTER.md). Spillet bruker standardverdiene i
-// DEFAULT_RULES, som er dagens regler.
+// Invasjon, med eksperimentelle regelvarianter som styres fra simuleringen
+// (se INVASJONSVARIANTER.md). Innstillingene ligger i rules.js, knipetang og
+// forankring i strengthRules.js og revolt i revoltRules.js.
 
-export const INVASION_SUCCESS_CHANCE = 0.5;
-export const REVOLT_CHANCE = 0.05;
+import { RULES, INVASION_SUCCESS_CHANCE } from './rules.js';
+import {
+  shapeAllows,
+  strengthChance,
+  strengthAttack,
+  growStrength,
+} from './strengthRules.js';
 
-const DEFAULT_RULES = {
-  // flip: angriperen får cellen. fortify: cellen teller for seier først når
-  // angriperens neste tur begynner. raze: cellen tømmes.
-  invasion: 'flip',
-  // Sjanse for å ta tilbake en fersk okkupasjon (fortify). null = vanlig.
-  freshRetake: null,
-  // En fersk okkupasjon som er tatt tilbake, kan ikke invaderes i neste tur.
-  immunity: false,
-  // Sjanse når angriperen er cellens opprinnelige eier. null = vanlig.
-  originRetake: null,
-  // all: alle eide celler kan gjøre opprør. occupied: bare celler der eieren
-  // ikke er den som tok cellen først.
-  revolt: 'all',
-  revoltChance: REVOLT_CHANCE,
-};
+export {
+  RULES,
+  resetRules,
+  INVASION_SUCCESS_CHANCE,
+  REVOLT_CHANCE,
+  MAX_STRENGTH,
+} from './rules.js';
+export { mayRevolt } from './revoltRules.js';
 
-export const RULES = { ...DEFAULT_RULES };
+export const isImmune = (G, id) => Boolean(G.immune?.[id]);
 
-export function resetRules(overrides = {}) {
-  Object.assign(RULES, DEFAULT_RULES, overrides);
+// Er det lov for `attacker` å invadere cellen nå?
+export function canInvade(G, id, attacker) {
+  return !isImmune(G, id) && shapeAllows(G, id, attacker);
 }
 
-// Sjansen for at `attacker` lykkes med å invadere cellen.
+// Sjansen for at `attacker` lykkes med ett angrep på cellen.
 export function invasionChance(G, id, attacker) {
+  const strength = strengthChance(G, id, attacker);
+  if (strength !== null) return strength;
   if (RULES.originRetake !== null && G.origin?.[id] === attacker) {
     return RULES.originRetake;
   }
@@ -36,7 +37,22 @@ export function invasionChance(G, id, attacker) {
   return INVASION_SUCCESS_CHANCE;
 }
 
-export const isImmune = (G, id) => Boolean(G.immune?.[id]);
+// Ett angrep på en fiendecelle. `roll` er et tall mellom 0 og 1. Returnerer
+// 'conquer', 'hit' (bare forankring: styrken sank) eller 'fail'.
+export function attack(G, id, playerID, roll) {
+  if (RULES.strength) {
+    return clearOnChange(G, id, strengthAttack(G, id, playerID, roll));
+  }
+  if (roll >= invasionChance(G, id, playerID)) return 'fail';
+  applyInvasion(G, id, playerID);
+  return clearOnChange(G, id, 'conquer');
+}
+
+// Uro følger ikke med når cellen skifter eier.
+function clearOnChange(G, id, result) {
+  if (result === 'conquer' && G.unrest) G.unrest[id] = null;
+  return result;
+}
 
 // Vellykket invasjon. Å ta tilbake en fersk okkupasjon gjenoppretter cellen:
 // den blir ikke fersk igjen, men kan få immunitet.
@@ -52,31 +68,31 @@ export function applyInvasion(G, id, playerID) {
   if (G.immune && wasFresh && RULES.immunity) G.immune[id] = true;
 }
 
-// Første spiller som tar en tom celle, blir dens opprinnelige eier.
+// En tom celle tas. Første spiller som tar den, blir opprinnelig eier.
+export function claimCell(G, id, playerID) {
+  G.cells[id] = playerID;
+  if (G.fresh) G.fresh[id] = false;
+  if (G.strength) G.strength[id] = RULES.claimStrength;
+  if (G.unrest) G.unrest[id] = null;
+  markOrigin(G, id, playerID);
+}
+
 export function markOrigin(G, id, playerID) {
   if (G.origin && G.origin[id] === null) G.origin[id] = playerID;
 }
 
-// Når en spillers tur begynner, er spillerens ferske okkupasjoner befestet,
-// og motstanderens immunitet er brukt opp. Tømte celler mister begge.
+// Når en spillers tur begynner: ferske okkupasjoner befestes, motstanderens
+// immunitet er brukt opp, og spillerens celler vokser (forankring).
 export function consolidate(G, playerID) {
   const keep = (flag, i) =>
     flag && G.cells[i] !== null && G.cells[i] !== playerID;
   if (G.fresh) G.fresh = G.fresh.map(keep);
   if (G.immune) G.immune = G.immune.map(keep);
+  growStrength(G, playerID);
 }
 
 // Cellene slik de teller for seier: ferske okkupasjoner regnes som tomme.
 export function countedCells(G) {
   if (!G.fresh) return G.cells;
   return G.cells.map((owner, i) => (G.fresh[i] ? null : owner));
-}
-
-// Kan cellen gjøre opprør etter gjeldende regel?
-export function mayRevolt(G, id) {
-  const owner = G.cells[id];
-  if (owner === null) return false;
-  if (RULES.revolt !== 'occupied') return true;
-  const origin = G.origin?.[id];
-  return origin !== null && origin !== undefined && origin !== owner;
 }

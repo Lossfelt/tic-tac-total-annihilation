@@ -12,14 +12,14 @@ import {
   RULES,
   INVASION_SUCCESS_CHANCE,
   REVOLT_CHANCE,
-  invasionChance,
-  isImmune,
-  applyInvasion,
-  markOrigin,
+  canInvade,
+  attack,
+  claimCell,
   consolidate,
   countedCells,
-  mayRevolt,
 } from './invasionRules.js';
+import { runRevolts, hasUnrest, suppress } from './revoltRules.js';
+import { canReinforce, reinforce } from './strengthRules.js';
 
 // Brettgeometrien ligger i board.js. Den eksporteres også herfra, så tester
 // og eldre importer fortsatt virker.
@@ -76,6 +76,21 @@ function recordWeaponEvent(G, type, cells, before, affected = []) {
 function markCell(G, id, kind = null) {
   G.blink[id] = true;
   if (G.blinkKind) G.blinkKind[id] = kind;
+}
+
+// Klikk på egen celle: undertrykk uro (forsinket revolt) eller forsterk
+// cellen (forankring). Ellers ugyldig.
+function suppressRevolt(G, id, playerID) {
+  const unrest = hasUnrest(G, id);
+  if (!unrest && !canReinforce(G, id)) return INVALID_MOVE;
+  resetBlink(G);
+  if (unrest) suppress(G, id);
+  else reinforce(G, id);
+  G.lastCellAttacked = id;
+  const type = unrest ? 'suppress' : 'reinforce';
+  logEntry(G, { type, player: playerID, cell: id });
+  markCell(G, id, 'claim');
+  return undefined;
 }
 
 // Nullstiller blinkene fra forrige trekk og starter en ny blink-runde.
@@ -164,6 +179,12 @@ export const TicTacToe = {
     origin: Array(TOTAL_CELLS).fill(null),
     // Gjenerobrede celler som ikke kan invaderes i neste tur (eksperiment).
     immune: Array(TOTAL_CELLS).fill(false),
+    // Forankring (eksperiment): styrke per celle, og om cellen ble angrepet
+    // siden eierens forrige tur.
+    strength: Array(TOTAL_CELLS).fill(0),
+    attacked: Array(TOTAL_CELLS).fill(false),
+    // Forsinket revolt (eksperiment): turen uroen startet, ellers null.
+    unrest: Array(TOTAL_CELLS).fill(null),
   }),
 
   turn: {
@@ -193,48 +214,39 @@ export const TicTacToe = {
         }
       }
     },
-    onEnd: ({ G, random }) => {
-      let revolted = false;
-      for (let i = 0; i < TOTAL_CELLS; i++) {
-        if (
-          mayRevolt(G, i) &&
-          random.Number() < RULES.revoltChance &&
-          i !== G.lastCellAttacked
-        ) {
+    onEnd: ({ G, ctx, random }) => {
+      const any = runRevolts(G, ctx, random, {
+        lost: (i) => {
           logEntry(G, { type: 'revolt', player: G.cells[i], cell: i });
           G.cells[i] = null;
           markCell(G, i, 'revolt');
-          revolted = true;
-        }
-      }
-      if (revolted) G.blinkVersion++;
+        },
+        unrest: (i) =>
+          logEntry(G, { type: 'unrest', player: G.cells[i], cell: i }),
+      });
+      if (any) G.blinkVersion++;
     },
   },
 
   moves: {
     clickCell: ({ G, playerID, random }, id) => {
-      if (!isCellId(id)) return INVALID_MOVE;
+      if (!isCellId(id) || G.destroyed[id]) return INVALID_MOVE;
+      if (G.cells[id] === playerID) return suppressRevolt(G, id, playerID);
+      if (G.cells[id] !== null && !canInvade(G, id, playerID)) {
+        return INVALID_MOVE;
+      }
       resetBlink(G);
-      if (G.destroyed[id]) {
-        return INVALID_MOVE;
-      } else if (G.cells[id] === playerID) {
-        return INVALID_MOVE;
-      } else if (G.cells[id] !== null) {
-        if (isImmune(G, id)) return INVALID_MOVE;
-        const conquered = random.Number() < invasionChance(G, id, playerID);
-        if (conquered) applyInvasion(G, id, playerID);
-        const type = conquered ? 'conquer' : 'fail';
-        logEntry(G, { type, player: playerID, cell: id });
-        markCell(G, id, type);
-        G.lastCellAttacked = id;
-      } else {
-        G.cells[id] = playerID;
-        if (G.fresh) G.fresh[id] = false;
-        markOrigin(G, id, playerID);
+      G.lastCellAttacked = id;
+      if (G.cells[id] === null) {
+        claimCell(G, id, playerID);
         logEntry(G, { type: 'claim', player: playerID, cell: id });
         markCell(G, id, 'claim');
-        G.lastCellAttacked = id;
+        return undefined;
       }
+      const result = attack(G, id, playerID, random.Number());
+      logEntry(G, { type: result, player: playerID, cell: id });
+      markCell(G, id, result === 'hit' ? 'fail' : result);
+      return undefined;
     },
     // Gir spilleren et våpen, for å teste animasjonene. Kjøres bare på
     // serveren (client: false) og teller ikke som turens trekk (noLimit).
