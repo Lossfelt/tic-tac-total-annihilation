@@ -1,5 +1,8 @@
 import { useRef } from 'react';
 import LobbyAsh from './LobbyAsh.jsx';
+import { presetFromUrl } from './rulePresets.js';
+
+const PRESET = presetFromUrl();
 
 // Lobbyskjermen: tittel, fraksjoner, navneskjema og opprett/bli med. All
 // tilstand og alle backend-kall ligger i App.jsx.
@@ -62,6 +65,12 @@ export default function Lobby({
       ) : (
         <div className="lobby-actions">
           <h2>Welcome, general {name}</h2>
+          {PRESET && (
+            <div className="rule-preset">
+              <strong>Regelvariant: {PRESET.label}.</strong> Gjelder bare Play
+              vs computer.
+            </div>
+          )}
           <button onClick={onCreate} disabled={busy}>
             Create new match
           </button>

@@ -1,0 +1,74 @@
+/* Visning av regelvariantene (eksperiment, se ExperimentMarks.jsx). */
+
+/* Fersk okkupasjon: teller ikke for seier ennå. */
+.cell.cell-fresh {
+  outline: 2px dashed var(--owner, var(--color-rust-bright));
+  outline-offset: -6px;
+}
+
+.cell.cell-fresh .cell-icon {
+  opacity: 0.7;
+}
+
+/* Kan ikke angripes nå (knipetang, eller mangler angrepscelle). */
+.cell.cell-protected .cell-icon {
+  filter: grayscale(0.7) brightness(0.6);
+}
+
+.cell-shield {
+  z-index: 2;
+  position: absolute;
+  right: 8%;
+  top: 7%;
+  width: 18%;
+  fill: #cfd8dc;
+  stroke: #000;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 1px 2px #000);
+  pointer-events: none;
+}
+
+.cell-strength {
+  z-index: 2;
+  position: absolute;
+  bottom: 5%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: max(9px, calc(var(--cell-size) * 0.13));
+  letter-spacing: 0.15em;
+  color: #fff;
+  text-shadow:
+    0 0 3px #000,
+    0 1px 1px #000;
+  pointer-events: none;
+}
+
+.cell-chance {
+  z-index: 2;
+  position: absolute;
+  right: 6%;
+  top: 6%;
+  padding: 0 0.25em;
+  font-family: var(--font-mono);
+  font-size: max(9px, calc(var(--cell-size) * 0.12));
+  color: #fff;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.rule-preset {
+  max-width: 440px;
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--color-sand);
+  background: rgba(16, 14, 11, 0.85);
+  border: 1px dashed var(--color-rust);
+  border-radius: var(--radius-sm);
+}
+
+.rule-preset strong {
+  color: var(--color-rust-bright);
+}

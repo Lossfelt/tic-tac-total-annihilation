@@ -34,6 +34,14 @@ export function formatLogEntry(entry, matchData) {
       return `${who} attempts to invade ${place(entry.cell)}, but fails`;
     case 'revolt':
       return `The people of ${place(entry.cell)} revolt against foreign rule`;
+    case 'hit':
+      return `${who} attacks ${place(entry.cell)} and weakens its defenders`;
+    case 'reinforce':
+      return `${who} reinforces ${place(entry.cell)}`;
+    case 'unrest':
+      return `Unrest is brewing in ${place(entry.cell)}`;
+    case 'suppress':
+      return `${who} suppresses the unrest in ${place(entry.cell)}`;
     case 'recycle':
       return `${who} recycles ${entry.weapon} and recovers ${entry.refund}% Rareium`;
     default:
@@ -48,6 +56,10 @@ const LOG_TAGS = {
   fail: 'FAIL',
   revolt: 'REVOLT',
   recycle: 'RECYCLE',
+  hit: 'HIT',
+  reinforce: 'FORTIFY',
+  unrest: 'UNREST',
+  suppress: 'SUPPRESS',
   Artillery: 'ART',
   'Air Strike': 'AIR',
   'Biological Warfare': 'BIO',

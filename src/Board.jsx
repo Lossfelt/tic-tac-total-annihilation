@@ -78,6 +78,7 @@ export function TicTacToeBoard({
               weaponActive={targeting.active}
               targets={targeting.targets}
               isActive={isActive}
+              playerID={playerID}
               onCellClick={clickCell}
             />
             {anim?.type === 'Dirty Nuke' && (

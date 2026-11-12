@@ -1,6 +1,7 @@
 import { BOARD_SIZE, TOTAL_CELLS, territories } from './board.js';
 import { FACTION_ICON, FACTION_NAME } from './factions.js';
 import { RadiationIcon } from './icons.jsx';
+import { experimentMarks } from './ExperimentMarks.jsx';
 
 // Kartkoordinat for en celle, A1 øverst til venstre.
 const cellCoord = (id) =>
@@ -16,6 +17,7 @@ export function BoardGrid({
   weaponActive,
   targets,
   isActive,
+  playerID,
   onCellClick,
 }) {
   const winningCells = new Set(winningLine ?? []);
@@ -41,6 +43,14 @@ export function BoardGrid({
     if (targets.includes(id)) classes.push('selected');
     if (isTargetable) classes.push('targetable');
     if (winningCells.has(id)) classes.push('winning');
+    const marks = experimentMarks(
+      G,
+      id,
+      owner,
+      playerID,
+      isActive && !weaponActive && !animating,
+    );
+    classes.push(...marks.classes);
 
     const buttonKey = isBlinking
       ? `cell-${id}-blink-${G.blinkVersion}`
@@ -70,7 +80,8 @@ export function BoardGrid({
           disabled={
             animating ||
             (isDestroyed && (!weaponActive || blockedForSpecial)) ||
-            (!isActive && !weaponActive)
+            (!isActive && !weaponActive) ||
+            (marks.isProtected && !weaponActive)
           }
         >
           <span className="cell-coord" aria-hidden="true">
@@ -79,6 +90,7 @@ export function BoardGrid({
           {owner !== null && !isDestroyed && (
             <span className="cell-claim-mark" aria-hidden="true" />
           )}
+          {!isDestroyed && marks.content}
           {isDestroyed ? (
             <span className="cell-destroyed-icon" aria-hidden="true">
               <RadiationIcon />
