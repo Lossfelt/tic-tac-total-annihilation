@@ -229,7 +229,7 @@ export const TicTacToe = {
   },
 
   moves: {
-    clickCell: ({ G, playerID, random }, id) => {
+    clickCell: ({ G, ctx, playerID, random }, id) => {
       if (!isCellId(id) || G.destroyed[id]) return INVALID_MOVE;
       if (G.cells[id] === playerID) return suppressRevolt(G, id, playerID);
       if (G.cells[id] !== null && !canInvade(G, id, playerID)) {
@@ -243,7 +243,7 @@ export const TicTacToe = {
         markCell(G, id, 'claim');
         return undefined;
       }
-      const result = attack(G, id, playerID, random.Number());
+      const result = attack(G, id, playerID, random.Number(), ctx?.turn ?? 0);
       logEntry(G, { type: result, player: playerID, cell: id });
       markCell(G, id, result === 'hit' ? 'fail' : result);
       return undefined;

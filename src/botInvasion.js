@@ -45,11 +45,13 @@ function attackCost(G, id, me, p, stake) {
 }
 
 // Undertrykk uro i den viktigste egne cellen, hvis den er verdt et trekk.
+// Uro fra erobring gjelder en celle botten nettopp betalte for, så den
+// vektes opp.
 export function suppressMove(G, me, stake) {
   let best = null;
   for (let id = 0; id < G.cells.length; id++) {
     if (G.cells[id] !== me || !hasUnrest(G, id)) continue;
-    const value = stake(G, id);
+    const value = stake(G, id) + (RULES.conquestUnrest ? 3 : 0);
     if (!best || value > best.value) best = { id, value };
   }
   if (!best || best.value < SUPPRESS_THRESHOLD) return null;

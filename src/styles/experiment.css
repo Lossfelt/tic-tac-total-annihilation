@@ -72,3 +72,48 @@
 .rule-preset strong {
   color: var(--color-rust-bright);
 }
+
+/* Uro: cellen går tapt hvis eieren ikke undertrykker den (klikk på cellen). */
+.cell.cell-unrest {
+  outline: 2px solid #ffb347;
+  outline-offset: -4px;
+  animation: unrest-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes unrest-pulse {
+  50% {
+    outline-color: #ff6a2b;
+  }
+}
+
+.cell-unrest-badge,
+.cell-exposed {
+  position: absolute;
+  z-index: 2;
+  left: 8%;
+  bottom: 6%;
+  font-family: var(--font-heading);
+  line-height: 1;
+  pointer-events: auto;
+  text-shadow: 0 1px 2px #000;
+}
+
+.cell-unrest-badge {
+  padding: 0.1em 0.35em;
+  font-size: max(11px, calc(var(--cell-size) * 0.16));
+  color: #1a1814;
+  background: #ffb347;
+  border-radius: 2px;
+}
+
+.cell-exposed {
+  font-size: max(9px, calc(var(--cell-size) * 0.12));
+  color: #ffb347;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell.cell-unrest {
+    animation: none;
+  }
+}

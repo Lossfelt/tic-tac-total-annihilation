@@ -37,6 +37,13 @@ const DEFAULT_RULES = {
   // ikke tok cellen først. delayed: opprøret varsles og kan undertrykkes.
   revolt: 'all',
   revoltChance: REVOLT_CHANCE,
+  // Isolasjon: null, 4 eller 8. Bare celler uten egne naboer kan gjøre
+  // opprør.
+  revoltIsolated: null,
+  // Uro fra erobring: null, 'lose' (erobret celle går tapt hvis uroen ikke
+  // undertrykkes i erobrerens neste tur) eller 'nocount' (som lose, og
+  // cellen teller ikke for seier mens den er urolig).
+  conquestUnrest: null,
 };
 
 export const RULES = { ...DEFAULT_RULES };

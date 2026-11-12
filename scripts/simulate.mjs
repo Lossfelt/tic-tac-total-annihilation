@@ -14,6 +14,8 @@
 //   revolt           all (standard), occupied eller delayed (varsles og kan
 //                    undertrykkes)
 //   pincer           4 eller 8: invasjon krever minst to egne naboer
+//   revoltIsolated   4 eller 8: bare celler uten egne naboer kan gjøre opprør
+//   conquestUnrest   lose eller nocount: erobret celle får uro
 //   pincerFreshExempt 1 = knipetang gjelder ikke gjenerobring av fersk celle
 //   strength         click, attrition eller risk: forankring (styrke 1-3)
 //   claimStrength    styrken en ny celle får (forankring, standard 1)
@@ -63,6 +65,8 @@ RULES.originRetake = num('originRetake');
 RULES.revolt = params.revolt ?? 'all';
 RULES.revoltChance = num('revoltChance') ?? RULES.revoltChance;
 RULES.pincer = num('pincer');
+RULES.revoltIsolated = num('revoltIsolated');
+RULES.conquestUnrest = params.conquestUnrest ?? null;
 RULES.pincerFreshExempt = params.pincerFreshExempt === '1';
 RULES.strength = params.strength ?? null;
 RULES.claimStrength = num('claimStrength') ?? 1;
@@ -294,7 +298,7 @@ const byArea = stats.conquerByArea;
 console.log(
   `Erobringer per celle, hjørne/kant/midt: ${(byArea.hjørne / 4 / GAMES).toFixed(2)} / ${(byArea.kant / 8 / GAMES).toFixed(2)} / ${(byArea.midt / 4 / GAMES).toFixed(2)}`,
 );
-if (RULES.revolt === 'delayed') {
+if (RULES.revolt === 'delayed' || RULES.conquestUnrest) {
   console.log(
     `Uro per parti: ${per(stats.unrest)}, undertrykt: ${per(stats.suppressed)}`,
   );

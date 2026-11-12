@@ -18,6 +18,7 @@ export {
   MAX_STRENGTH,
 } from './rules.js';
 export { mayRevolt } from './revoltRules.js';
+import { markConquestUnrest, hasUnrest } from './revoltRules.js';
 
 export const isImmune = (G, id) => Boolean(G.immune?.[id]);
 
@@ -39,13 +40,21 @@ export function invasionChance(G, id, attacker) {
 
 // Ett angrep på en fiendecelle. `roll` er et tall mellom 0 og 1. Returnerer
 // 'conquer', 'hit' (bare forankring: styrken sank) eller 'fail'.
-export function attack(G, id, playerID, roll) {
-  if (RULES.strength) {
-    return clearOnChange(G, id, strengthAttack(G, id, playerID, roll));
+export function attack(G, id, playerID, roll, turn = 0) {
+  const result = RULES.strength
+    ? strengthAttack(G, id, playerID, roll)
+    : flipAttack(G, id, playerID, roll);
+  clearOnChange(G, id, result);
+  if (result === 'conquer' && G.cells[id] === playerID) {
+    markConquestUnrest(G, id, turn);
   }
+  return result;
+}
+
+function flipAttack(G, id, playerID, roll) {
   if (roll >= invasionChance(G, id, playerID)) return 'fail';
   applyInvasion(G, id, playerID);
-  return clearOnChange(G, id, 'conquer');
+  return 'conquer';
 }
 
 // Uro følger ikke med når cellen skifter eier.
@@ -92,7 +101,10 @@ export function consolidate(G, playerID) {
 }
 
 // Cellene slik de teller for seier: ferske okkupasjoner regnes som tomme.
+// Med conquestUnrest = 'nocount' teller heller ikke urolige celler.
 export function countedCells(G) {
-  if (!G.fresh) return G.cells;
-  return G.cells.map((owner, i) => (G.fresh[i] ? null : owner));
+  const unrestOff = RULES.conquestUnrest === 'nocount';
+  return G.cells.map((owner, i) =>
+    G.fresh?.[i] || (unrestOff && hasUnrest(G, i)) ? null : owner,
+  );
 }

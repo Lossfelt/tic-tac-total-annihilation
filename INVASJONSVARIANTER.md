@@ -289,6 +289,62 @@ knipetang å ta tilbake en fersk okkupasjon.
 - **Revolt** trenger en egen runde: i dag oppleves den ikke som gøy, og i
   de lengre variantene avgjør den mye (9 til 14 opprør per parti).
 
+## Revolt, runde 1: forsinket tap, isolasjon og ustabilt okkupert land
+
+Kjørt 12. november 2026, bot mot bot, 1000 partier per variant. Invasjon er
+som i dag (flip), så vi måler bare revolt.
+
+Hvorfor revolt ikke er gøy i dag: hver eide celle har 5 % sjanse hver tur
+til å bli tom, uten varsel og uten noe spilleren kan gjøre. Samtidig er
+revolt en utjevner: den som eier mest, mister mest.
+
+- **Forsinket tap (R):** uro varsles, og cellen går tapt etter eierens neste
+  tur hvis den ikke undertrykkes (klikk på cellen).
+- **Isolasjon (I):** bare celler uten egne naboer kan gjøre opprør, rett ut
+  (4) eller også diagonalt (8). Testet med 5 og 15 % sjanse.
+- **Okkupert land er ustabilt (U):** en celle tatt ved invasjon får uro med
+  en gang. Den går tapt etter erobrerens neste tur hvis den ikke
+  undertrykkes (**lose**). Med **nocount** teller den heller ikke for seier
+  mens den er urolig, så motstanderen får en tur til å ta den tilbake.
+
+| Variant | Invasjons-seier | Start / andre vinner | Uavgjort | Trekk median (90.) | Invasjoner | Revolt | Frem og tilbake | Leder vant |
+|---|---|---|---|---|---|---|---|---|
+| A i dag | 85 % | 58 / 42 % | 0 % | 13 (24) | 1,4 | 3,3 | 0,1 % | 73 % |
+| R forsinket tap | 85 % | 60 / 40 % | 0,1 % | 12 (20) | 1,3 | 1,9 | 0,1 % | 80 % |
+| I4 isolasjon, 5 % | 81 % | 63 / 37 % | 0 % | 12 (19) | 1,2 | 1,3 | 0 % | 83 % |
+| I8 isolasjon, 5 % | 84 % | 65 / 35 % | 0 % | 12 (18) | 1,2 | 1,0 | 0 % | 79 % |
+| I4 isolasjon, 15 % | 82 % | 59 / 41 % | 0 % | 13 (21) | 1,1 | 3,5 | 0 % | 81 % |
+| I8 isolasjon, 15 % | 83 % | 58 / 42 % | 0 % | 12 (19) | 1,1 | 2,6 | 0 % | 82 % |
+| I4 15 % + forsinket | 84 % | 59 / 41 % | 0 % | 13 (20) | 1,1 | 2,6 | 0 % | 81 % |
+| U lose | 88 % | 60 / 40 % | 0,1 % | 14 (27) | 1,5 | 3,7 | 0,1 % | 72 % |
+| U nocount | 58 % | 47 / 46 % | 7,0 % | 27 (120) | 10,1 | 18,8 | 41 % | 63 % |
+| U nocount, uten vanlig revolt | 49 % | 47 / 50 % | 2,6 % | 19 (69) | 9,2 | 4,4 | 36 % | 65 % |
+| U nocount + I4 15 % | 61 % | 56 / 44 % | 0,1 % | 18 (46) | 3,4 | 6,9 | 34 % | 66 % |
+
+### Konklusjoner etter revolt runde 1
+
+- **Revolt i dag er en utjevner fordi den rammer den som eier mest.** Alle
+  variantene som gjør revolt mer forutsigbar, svekker den rollen: lederen
+  etter 12 trekk vinner 79 til 83 % (mot 73 %), og fordelen til den som
+  starter øker. Forsinket tap halverer revolt, men gir samme effekt.
+- **Isolasjon** rammer den som har spredt seg, ikke den som leder. Med 5 %
+  blir det nesten ingen revolt. Med 15 % blir antallet som i dag, men
+  utjevningen forsvinner likevel. Den gir strategi (hold territoriet
+  samlet), men trenger en annen utjevner ved siden av.
+- **Okkupert land er ustabilt (lose)** endrer nesten ingenting, fordi en
+  seier ved invasjon skjer i samme trekk.
+- **Okkupert land er ustabilt (nocount)** virker mer som en
+  invasjonsregel enn en revoltregel. Den gir samme effekt som okkupasjon
+  (D): færre invasjonsseire (49 til 58 %) og jevn balanse, men mer frem og
+  tilbake og lengre partier. Uten vanlig revolt blir partiene kortere og
+  invasjonsseire lavere (49 %). Tematisk binder den revolt og invasjon
+  sammen.
+- Botten undertrykker uro sjelden (0,3 per parti under forsinket tap), så
+  forsinket tap kan virke mildere for mennesker enn tallene viser.
+- Neste steg kan være en utjevner som ikke er tilfeldig, for eksempel at
+  revoltsjansen øker med hvor mye du eier (overstrekk), kombinert med
+  isolasjon eller forsinket tap.
+
 ## Idéer som ikke er testet
 
 - **Befesting** og **omringing** (fra runde 1) venter fortsatt. Forsterk i
@@ -312,7 +368,10 @@ Grenen `eksperiment/invasjon`:
 - `src/invasionRules.js`: invasjon (`canInvade`, `invasionChance`,
   `attack`, `applyInvasion`, `claimCell`, `consolidate`, `countedCells`).
 - `src/strengthRules.js`: knipetang og forankring.
-- `src/revoltRules.js`: revolt, også forsinket med undertrykking.
+- `src/revoltRules.js`: revolt, også forsinket med undertrykking,
+  isolasjon og uro fra erobring.
+- `src/rulePresets.js`: lenkene for å spille variantene mot datamaskinen
+  (`?regler=...`), og `ExperimentMarks.jsx` med visningen på brettet.
 - `Game.js`: feltene `fresh`, `origin`, `immune`, `strength`, `attacked`
   og `unrest`. Klikk på egen celle undertrykker uro eller forsterker.
 - `botStrategy.js` og `botInvasion.js`: botten bruker riktig sjanse og

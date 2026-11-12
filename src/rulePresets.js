@@ -46,6 +46,31 @@ export const PRESETS = {
       pincerFreshExempt: true,
     },
   },
+  'revolt-forsinket': {
+    label: 'Revolt: forsinket tap',
+    help:
+      'Revolt varsles først som uro (oransje kant og !). Klikk på cellen i ' +
+      'din tur for å undertrykke uroen. Ellers går cellen tapt på slutten ' +
+      'av turen din. Invasjon er som i dag.',
+    rules: { revolt: 'delayed' },
+  },
+  'revolt-isolasjon': {
+    label: 'Revolt: isolasjon',
+    help:
+      'Bare celler uten egne naboer rett ut kan gjøre opprør (gul trekant). ' +
+      'Hold territoriet samlet. Sjansen for opprør i en isolert celle er ' +
+      '15 % per tur. Invasjon er som i dag.',
+    rules: { revoltIsolated: 4, revoltChance: 0.15 },
+  },
+  'revolt-okkupert': {
+    label: 'Revolt: okkupert land er ustabilt',
+    help:
+      'En celle du tar ved invasjon, får uro (oransje kant og !) og teller ' +
+      'ikke for seier før du har undertrykket uroen (klikk på cellen i din ' +
+      'neste tur). Gjør du ikke det, går den tapt. Motstanderen kan ta den ' +
+      'tilbake i mellomtiden. Vanlig revolt er som i dag.',
+    rules: { conquestUnrest: 'nocount' },
+  },
   risk: {
     label: 'Forankring 5c (RISK)',
     help:

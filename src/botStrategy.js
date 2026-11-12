@@ -18,7 +18,7 @@ import {
   GetNeighbors,
   GetSurroundingCells,
 } from './board.js';
-import { canInvade } from './invasionRules.js';
+import { canInvade, countedCells } from './invasionRules.js';
 import {
   invadeTakesCell,
   invasionScore,
@@ -64,11 +64,12 @@ function nearlyWon(G, who, gapOwner) {
 
 // En linje der `who` eier alle fire, men minst én er en fersk okkupasjon som
 // ennå ikke teller (fortify). Returnerer { line, fresh } eller null.
+// Gjelder også urolige celler når de ikke teller (conquestUnrest nocount).
 function pendingWin(G, who) {
-  if (!G.fresh) return null;
+  const counted = countedCells(G);
   for (const line of LINES) {
     if (!line.every((id) => G.cells[id] === who && !G.destroyed[id])) continue;
-    const fresh = line.find((id) => G.fresh[id]);
+    const fresh = line.find((id) => counted[id] === null);
     if (fresh !== undefined) return { line, fresh };
   }
   return null;
