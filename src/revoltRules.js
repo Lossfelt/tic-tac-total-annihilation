@@ -4,6 +4,8 @@
 //   RULES.revolt = 'occupied': bare celler der eieren ikke tok cellen først
 //   RULES.revoltIsolated = 4 eller 8: bare celler uten egne naboer (rett ut,
 //   eller også diagonalt)
+//   RULES.overreachFree: revoltsjansen øker med hvor mye eieren har
+//   (overstrekk), i stedet for fast sjanse
 // Hvordan:
 //   RULES.revolt = 'delayed': opprøret varsles først som uro. Eieren kan bruke
 //   sin neste tur på å undertrykke det (klikke på cellen). Ellers går cellen
@@ -37,6 +39,22 @@ export function mayRevolt(G, id) {
   if (RULES.revolt !== 'occupied') return true;
   const origin = G.origin?.[id];
   return origin !== null && origin !== undefined && origin !== owner;
+}
+
+// Sjansen for at én celle gjør opprør denne turen. Under overstrekk øker den
+// med hvor mange celler eieren har.
+export function revoltChanceFor(G, id) {
+  if (RULES.overreachFree === null) return RULES.revoltChance;
+  return overreachChance(G, G.cells[id]);
+}
+
+export function overreachChance(G, playerID) {
+  const count = (p) => G.cells.filter((c) => c === p).length;
+  const opponent = playerID === '0' ? '1' : '0';
+  const owned = RULES.overreachLead
+    ? count(playerID) - count(opponent)
+    : count(playerID);
+  return Math.max(0, owned - RULES.overreachFree) * RULES.overreachStep;
 }
 
 export const hasUnrest = (G, id) =>
@@ -84,7 +102,7 @@ function newUnrest(G, ctx, random, hooks) {
     if (hasUnrest(G, i) || i === G.lastCellAttacked || !mayRevolt(G, i)) {
       continue;
     }
-    if (random.Number() >= RULES.revoltChance) continue;
+    if (random.Number() >= revoltChanceFor(G, i)) continue;
     G.unrest[i] = ctx.turn;
     hooks.unrest(i);
     any = true;
@@ -96,7 +114,7 @@ function instantRevolts(G, random, hooks) {
   let any = false;
   for (let i = 0; i < G.cells.length; i++) {
     if (i === G.lastCellAttacked || !mayRevolt(G, i)) continue;
-    if (random.Number() >= RULES.revoltChance) continue;
+    if (random.Number() >= revoltChanceFor(G, i)) continue;
     hooks.lost(i);
     any = true;
   }

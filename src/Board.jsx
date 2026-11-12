@@ -8,6 +8,7 @@ import WinEffect from './WinEffect.jsx';
 import { BoardGrid } from './BoardGrid.jsx';
 import { WeaponPanel } from './WeaponPanel.jsx';
 import { RareiumBar } from './RareiumBar.jsx';
+import { RevoltRisk } from './RevoltRisk.jsx';
 import { GameLog } from './GameLog.jsx';
 import { MatchStatus } from './MatchStatus.jsx';
 import { FactionMark } from './FactionMark.jsx';
@@ -153,6 +154,7 @@ export function TicTacToeBoard({
                 targeting={targeting}
               />
               <RareiumBar rareium={G.Rareium[playerID]} />
+              <RevoltRisk G={G} playerID={playerID} />
             </div>
           )}
 

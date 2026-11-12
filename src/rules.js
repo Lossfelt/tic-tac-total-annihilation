@@ -44,6 +44,13 @@ const DEFAULT_RULES = {
   // undertrykkes i erobrerens neste tur) eller 'nocount' (som lose, og
   // cellen teller ikke for seier mens den er urolig).
   conquestUnrest: null,
+  // Overstrekk: null eller antall celler du kan eie uten risiko for revolt.
+  // Over det får hver celle overreachStep høyere sjanse per ekstra celle.
+  overreachFree: null,
+  overreachStep: 0.02,
+  // Overstrekk etter forsprang: sjansen regnes av hvor mange flere celler du
+  // har enn motstanderen, ikke av hvor mange du har.
+  overreachLead: false,
 };
 
 export const RULES = { ...DEFAULT_RULES };

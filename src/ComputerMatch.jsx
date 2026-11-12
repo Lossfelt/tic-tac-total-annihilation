@@ -8,9 +8,6 @@ import { SoundToggle } from './SoundToggle.jsx';
 import { resetRules } from './rules.js';
 import { presetFromUrl } from './rulePresets.js';
 
-// Regelvariant fra lenken (?regler=...), ellers dagens regler.
-const PRESET = presetFromUrl();
-
 // Kamp mot datamaskinen. Spillet kjører helt i nettleseren via boardgame.io
 // sin Local-transport, uten server. Spilleren er alltid 0 (Mexican
 // Queendom), og botten er 1 (Pan-Canadia).
@@ -28,6 +25,8 @@ export const COMPUTER_NAME = 'Computer';
 const newMatchID = () => `computer-${Date.now()}`;
 
 export default function ComputerMatch({ name, onLeave, onAbout }) {
+  // Regelvariant fra lenken (?regler=...), ellers dagens regler.
+  const [PRESET] = useState(presetFromUrl);
   const [matchID, setMatchID] = useState(() => {
     resetRules(PRESET?.rules);
     return newMatchID();
@@ -37,7 +36,7 @@ export default function ComputerMatch({ name, onLeave, onAbout }) {
   useEffect(() => {
     resetRules(PRESET?.rules);
     return () => resetRules();
-  }, []);
+  }, [PRESET]);
   const players = [
     { id: 0, name },
     { id: 1, name: COMPUTER_NAME },

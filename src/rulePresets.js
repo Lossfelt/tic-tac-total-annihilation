@@ -71,6 +71,15 @@ export const PRESETS = {
       'tilbake i mellomtiden. Vanlig revolt er som i dag.',
     rules: { conquestUnrest: 'nocount' },
   },
+  'revolt-overstrekk': {
+    label: 'Revolt: overstrekk',
+    help:
+      'Bare den som leder, risikerer revolt: 10 % per celle du har mer enn ' +
+      'motstanderen, for hver av dine celler hver tur. Leder du med 2, er ' +
+      'sjansen 20 % per celle. Risikoen står under Rareium. Invasjon er ' +
+      'som i dag.',
+    rules: { overreachFree: 0, overreachStep: 0.1, overreachLead: true },
+  },
   risk: {
     label: 'Forankring 5c (RISK)',
     help:
@@ -81,6 +90,14 @@ export const PRESETS = {
     rules: { strength: 'risk' },
   },
 };
+
+// Velger variant ved å skrive den i lenken uten å laste siden på nytt.
+export function selectPreset(name) {
+  const url = new URL(window.location.href);
+  if (name) url.searchParams.set('regler', name);
+  else url.searchParams.delete('regler');
+  window.history.replaceState(null, '', url);
+}
 
 export function presetFromUrl() {
   const name = new URLSearchParams(window.location.search).get('regler');

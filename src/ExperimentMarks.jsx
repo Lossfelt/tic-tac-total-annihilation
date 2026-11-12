@@ -7,9 +7,6 @@ import { canInvade, invasionChance } from './invasionRules.js';
 import { presetFromUrl } from './rulePresets.js';
 import { hasUnrest, isIsolated } from './revoltRules.js';
 
-// Sjansen vises bare når en regelvariant er valgt med lenken.
-const SHOW_CHANCE = presetFromUrl() !== null;
-
 const other = (playerID) => (playerID === '0' ? '1' : '0');
 
 // Klassene og innholdet for én celle. `myTurn` er true når spilleren kan
@@ -26,7 +23,8 @@ export function experimentMarks(G, id, owner, playerID, myTurn) {
   let chance = null;
   if (myTurn && owner !== null && owner === other(playerID)) {
     if (!canInvade(G, id, playerID)) isProtected = true;
-    else if (SHOW_CHANCE) chance = invasionChance(G, id, playerID);
+    // Sjansen vises bare når en regelvariant er valgt med lenken.
+    else if (presetFromUrl() !== null) chance = invasionChance(G, id, playerID);
   }
   if (isProtected) classes.push('cell-protected');
   const content = (

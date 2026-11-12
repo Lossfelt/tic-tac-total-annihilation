@@ -16,6 +16,9 @@
 //   pincer           4 eller 8: invasjon krever minst to egne naboer
 //   revoltIsolated   4 eller 8: bare celler uten egne naboer kan gjøre opprør
 //   conquestUnrest   lose eller nocount: erobret celle får uro
+//   overreachFree    overstrekk: antall celler uten revoltrisiko
+//   overreachStep    overstrekk: økning i sjanse per celle over (0.02)
+//   overreachLead    1 = overstrekk regnes av forsprang over motstanderen
 //   pincerFreshExempt 1 = knipetang gjelder ikke gjenerobring av fersk celle
 //   strength         click, attrition eller risk: forankring (styrke 1-3)
 //   claimStrength    styrken en ny celle får (forankring, standard 1)
@@ -67,6 +70,9 @@ RULES.revoltChance = num('revoltChance') ?? RULES.revoltChance;
 RULES.pincer = num('pincer');
 RULES.revoltIsolated = num('revoltIsolated');
 RULES.conquestUnrest = params.conquestUnrest ?? null;
+RULES.overreachFree = num('overreachFree');
+RULES.overreachStep = num('overreachStep') ?? RULES.overreachStep;
+RULES.overreachLead = params.overreachLead === '1';
 RULES.pincerFreshExempt = params.pincerFreshExempt === '1';
 RULES.strength = params.strength ?? null;
 RULES.claimStrength = num('claimStrength') ?? 1;

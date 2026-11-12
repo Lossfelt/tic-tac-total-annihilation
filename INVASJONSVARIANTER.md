@@ -345,6 +345,49 @@ revolt en utjevner: den som eier mest, mister mest.
   revoltsjansen øker med hvor mye du eier (overstrekk), kombinert med
   isolasjon eller forsinket tap.
 
+## Revolt, runde 2: overstrekk
+
+Kjørt 12. november 2026, bot mot bot, 1000 partier per variant. Invasjon
+er som i dag.
+
+Overstrekk erstatter den faste sjansen på 5 % med en sjanse som avhenger av
+hvor mye du eier. To former:
+
+- **Etter antall (O):** ingen risiko opp til et visst antall celler, deretter
+  en økning per celle over det. O5-2 betyr 5 celler fri og 2 % per celle
+  over.
+- **Etter forsprang (L):** sjansen regnes av hvor mange flere celler du har
+  enn motstanderen. Bare den som leder, risikerer revolt. L0-10 betyr 10 %
+  per celle du leder med.
+
+| Variant | Revolt | Lederen etter 12 trekk vant | Start / andre vinner | Trekk median |
+|---|---|---|---|---|
+| I dag (5 % fast) | 3,3 | 73 % | 58 / 42 % | 14 |
+| O5-2 | 0,01 | 86 % | 68 / 32 % | 12 |
+| O4-2 | 0,2 | 82 % | 70 / 30 % | 12 |
+| O6-4 | 0,0 | 88 % | 65 / 35 % | 12 |
+| O2-2 | 2,0 | 69 % | 65 / 35 % | 13 |
+| O3-3 | 1,4 | 72 % | 66 / 34 % | 12 |
+| O5-2 + forsinket | 0,0 | 85 % | 68 / 32 % | 12 |
+| O5-3 + isolasjon 4 | 0,01 | 88 % | 66 / 34 % | 12 |
+| L0-5 | 1,0 | 75 % | 62 / 38 % | 12 |
+| L1-8 | 0,3 | 77 % | 66 / 34 % | 12 |
+| **L0-10** | **2,0** | **67 %** | 59 / 41 % | 13 |
+
+### Konklusjoner etter revolt runde 2
+
+- **Overstrekk etter antall** med høy terskel gir nesten ingen revolt,
+  fordi partiene er over etter rundt 12 trekk, før noen eier mer enn 5
+  celler. Da forsvinner utjevningen, og lederen vinner 82 til 88 %. Lav
+  terskel (O2-2) utjevner, men gir en stor fordel til den som starter.
+- **Overstrekk etter forsprang (L0-10)** er den beste revoltregelen så
+  langt: færre opprør enn i dag (2,0 mot 3,3), bedre utjevning (lederen
+  vinner 67 mot 73 %), og det rammer bare den som leder. Risikoen er
+  forutsigbar og kan vises (lenken viser den under Rareium). Den kan
+  kombineres med forsinket tap for å gi varsel og valg.
+- Invasjonsproblemet er det samme med alle revoltreglene (81 til 86 %
+  invasjonsseire), så revolt og invasjon må løses hver for seg.
+
 ## Idéer som ikke er testet
 
 - **Befesting** og **omringing** (fra runde 1) venter fortsatt. Forsterk i
@@ -370,8 +413,9 @@ Grenen `eksperiment/invasjon`:
 - `src/strengthRules.js`: knipetang og forankring.
 - `src/revoltRules.js`: revolt, også forsinket med undertrykking,
   isolasjon og uro fra erobring.
-- `src/rulePresets.js`: lenkene for å spille variantene mot datamaskinen
-  (`?regler=...`), og `ExperimentMarks.jsx` med visningen på brettet.
+- `src/rulePresets.js`: variantene du kan spille mot datamaskinen. Velg
+  dem med knappene i lobbyen (`RulePicker.jsx`) eller lenken `?regler=...`.
+  `ExperimentMarks.jsx` og `RevoltRisk.jsx` viser dem på brettet.
 - `Game.js`: feltene `fresh`, `origin`, `immune`, `strength`, `attacked`
   og `unrest`. Klikk på egen celle undertrykker uro eller forsterker.
 - `botStrategy.js` og `botInvasion.js`: botten bruker riktig sjanse og

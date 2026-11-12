@@ -117,3 +117,40 @@
     animation: none;
   }
 }
+
+.rule-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 28rem;
+}
+
+.rule-picker-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.rule-option {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.rule-option.selected {
+  border-color: var(--color-rust-bright);
+  background: var(--color-rust-dim);
+  color: #fff;
+}
+
+.rule-picker-help {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.revolt-risk {
+  font-size: 0.85rem;
+}
