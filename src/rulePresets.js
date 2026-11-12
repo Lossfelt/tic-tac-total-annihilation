@@ -33,6 +33,19 @@ export const PRESETS = {
       pincerFreshExempt: true,
     },
   },
+  'knipetang4-okkupasjon': {
+    label: 'Knipetang (4 naboer) + okkupasjon',
+    help:
+      'Som knipetang + okkupasjon, men bare naboer rett ut teller (ikke ' +
+      'diagonalt). Du trenger minst to egne naboer rett ut for å invadere.',
+    rules: {
+      invasion: 'fortify',
+      freshRetake: 0.75,
+      immunity: true,
+      pincer: 4,
+      pincerFreshExempt: true,
+    },
+  },
   risk: {
     label: 'Forankring 5c (RISK)',
     help:
