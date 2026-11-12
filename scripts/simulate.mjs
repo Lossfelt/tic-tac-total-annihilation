@@ -14,6 +14,7 @@
 //   revolt           all (standard), occupied eller delayed (varsles og kan
 //                    undertrykkes)
 //   pincer           4 eller 8: invasjon krever minst to egne naboer
+//   pincerFreshExempt 1 = knipetang gjelder ikke gjenerobring av fersk celle
 //   strength         click, attrition eller risk: forankring (styrke 1-3)
 //   claimStrength    styrken en ny celle får (forankring, standard 1)
 //   conquestImmunity 1 = erobret celle kan ikke angripes i neste tur
@@ -62,6 +63,7 @@ RULES.originRetake = num('originRetake');
 RULES.revolt = params.revolt ?? 'all';
 RULES.revoltChance = num('revoltChance') ?? RULES.revoltChance;
 RULES.pincer = num('pincer');
+RULES.pincerFreshExempt = params.pincerFreshExempt === '1';
 RULES.strength = params.strength ?? null;
 RULES.claimStrength = num('claimStrength') ?? 1;
 RULES.conquestImmunity = params.conquestImmunity === '1';

@@ -18,6 +18,21 @@ export const PRESETS = {
       'til den, også diagonalt. Celler du ikke kan angripe nå, er dempet.',
     rules: { pincer: 8 },
   },
+  'knipetang-okkupasjon': {
+    label: 'Knipetang + okkupasjon',
+    help:
+      'Okkupasjon med 75 % gjenerobring og immunitet (stiplet kant og ' +
+      'skjold), og knipetang med 8 naboer: du må ha minst to egne naboer ' +
+      'for å invadere. Å ta tilbake en fersk okkupasjon krever ikke ' +
+      'knipetang.',
+    rules: {
+      invasion: 'fortify',
+      freshRetake: 0.75,
+      immunity: true,
+      pincer: 8,
+      pincerFreshExempt: true,
+    },
+  },
   risk: {
     label: 'Forankring 5c (RISK)',
     help:

@@ -20,6 +20,8 @@ const DEFAULT_RULES = {
   // Knipetang: null, 4 eller 8. Krever minst to egne naboer (rett ut eller
   // også diagonalt) for å invadere.
   pincer: null,
+  // Knipetang gjelder ikke når en fersk okkupasjon tas tilbake (fortify).
+  pincerFreshExempt: false,
   // Forankring: null, 'click', 'attrition' eller 'risk'. Celler har styrke
   // 1 til MAX_STRENGTH, se strengthRules.js.
   strength: null,

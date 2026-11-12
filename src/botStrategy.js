@@ -75,12 +75,14 @@ function pendingWin(G, who) {
 }
 
 // Verdien av å eie en celle: hvor mye den bygger egne linjer og hvor mye
-// den stenger motstanderens.
+// den stenger motstanderens. Cellen selv telles som tom, så verdien også
+// gjelder en fiendecelle botten vurderer å erobre.
 function cellValue(G, id, me) {
   let value = 0;
   for (const line of LINES) {
     if (!line.includes(id)) continue;
     const c = lineCounts(G, line, me);
+    if (G.cells[id] !== null && G.cells[id] !== me) c.theirs--;
     if (c.dead) continue;
     if (c.theirs === 0) value += BUILD_VALUE[c.mine];
     if (c.mine === 0) value += BLOCK_VALUE[c.theirs];
@@ -109,7 +111,8 @@ function bestCellMove(G, me, random) {
     if (G.destroyed[id] || G.cells[id] === me) continue;
     let score = cellValue(G, id, me);
     if (G.cells[id] === opponent) {
-      score = invasionScore(G, id, me, score + ownerStake(G, id), ownerStake);
+      const gain = score + ownerStake(G, id) / 2;
+      score = invasionScore(G, id, me, gain, ownerStake);
       if (score === null) continue;
     }
     score += random() * 0.5;

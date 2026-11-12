@@ -215,6 +215,7 @@ botten undertrykte bare 0,3 til 0,9 av dem.
     invasjonsseire, helt jevnt mellom spillerne, median 22 trekk, men 32 %
     frem og tilbake.
   - **S4 med forsinket revolt (attrition, styrke 2, forsinket revolt):**
+    (Viste seg å være et resultat av botten, se runde 4.)
     1 % invasjonsseire, ingen frem og tilbake, median 26 trekk, men
     invasjon blir nesten borte som mekanikk.
 
@@ -230,15 +231,68 @@ botten undertrykte bare 0,3 til 0,9 av dem.
 - Forankring trenger en visning av styrke (f.eks. 1 til 3 prikker) og en
   forklaring. Knipetang trenger at lovlige angrepsmål vises på brettet.
 
+## Runde 4: smartere bot, og knipetang sammen med okkupasjon
+
+Kjørt 12. november 2026, bot mot bot, 1000 partier per variant.
+
+**Smartere bot.** To endringer:
+
+- Når botten vurderer å erobre en fiendecelle, regner den nå med verdien
+  cellen får i dens egne linjer. Før så den bare hvor mye cellen betydde
+  for motstanderen, så den undervurderte erobringer som fullfører egne
+  linjer.
+- Under forankring planlegger den over flere turer: ett treff teller som en
+  del av en erobring, og en celle som allerede er truffet (og derfor ikke
+  vokser), prioriteres til den faller.
+
+Mot de enkle simuleringsspillerne vinner den fortsatt 95 %. Forskjellen
+synes i bot mot bot: under forankring angriper den nå.
+
+**Knipetang + okkupasjon (KD).** Okkupasjon med 75 % gjenerobring og
+immunitet (D), sammen med knipetang. I **x**-variantene krever det ikke
+knipetang å ta tilbake en fersk okkupasjon.
+
+| Variant | Invasjons-seier | Start / andre vinner | Uavgjort (låst) | Trekk median (90.) | Invasjoner | Revolt | Frem og tilbake | Leder vant |
+|---|---|---|---|---|---|---|---|---|
+| A flip | 85 % | 57 / 43 % | 0 % | 13 (24) | 1,3 | 3,2 | 0,1 % | 74 % |
+| D | 39 % | 50 / 49 % | 1,2 % | 23 (63) | 6,0 | 9,4 | 34 % | 58 % |
+| KD8 knipetang 8 + D | 52 % | 55 / 44 % | 0,5 % (0,4 %) | 20 (47) | 2,6 | 7,3 | 9 % | 65 % |
+| KD8x, gjenerobring unntatt | 33 % | 48 / 48 % | 4,6 % (3,4 %) | 27 (82) | 6,7 | 14,4 | 32 % | 58 % |
+| **KD4x knipetang 4 + D, gjenerobring unntatt** | **29 %** | 52 / 44 % | 4,6 % (4,6 %) | 28 (74) | 4,0 | 12,4 | 25 % | 59 % |
+| S2 attrition | 100 % | 81 / 19 % | 0 % | 9 (14) | 3,0 | 1,0 | 4 % | 93 % |
+| S3 risk (5c) | 98 % | 67 / 34 % | 0 % | 10 (17) | 1,9 | 1,7 | 0,3 % | 83 % |
+| S4 attrition + claim2 | 91 % | 61 / 38 % | 1,1 % | 17 (38) | 1,7 | 6,8 | 2 % | 68 % |
+| S5 risk + claim2 | 72 % | 54 / 44 % | 2,0 % | 23 (59) | 1,6 | 11,2 | 3 % | 64 % |
+| S4 + forsinket revolt | 92 % | 65 / 35 % | 0,1 % | 15 (30) | 1,4 | 3,0 | 0,4 % | 72 % |
+
+### Konklusjoner etter runde 4
+
+- **Forankring løser ikke problemet.** Med den smartere botten avgjøres 72
+  til 100 % av seirene ved invasjon, også med styrke 2 for nye celler. De
+  lave tallene i runde 3 kom av at den gamle botten nesten aldri angrep.
+  Forsvareren ser faren komme, men har lite å svare med. Attrition gir i
+  tillegg en stor fordel til den som starter (81 / 19 %). Dette stemmer med
+  inntrykket fra å spille 5c selv.
+- **Dagens regel med smartere bot:** fortsatt 85 % invasjonsseire, men
+  færre invasjoner (1,3 per parti), nesten ingen frem og tilbake, og
+  kortere partier. Botten avgjør raskere.
+- **Knipetang + okkupasjon** fungerer bare når gjenerobring er unntatt fra
+  knipetang. Ellers kan forsvareren ofte ikke ta tilbake cellen, og
+  invasjonsseire øker til 52 %. Med unntaket gir 4 naboer det laveste
+  tallet så langt (29 %), med jevn balanse. Kostnadene er lengre partier
+  (median 28), mer revolt (12 per parti), og at 3 til 5 % av partiene
+  låses fordi spilleren ikke har lovlige trekk.
+- Ingen variant fjerner problemet helt, og den beste (KD4x) har fortsatt
+  frem og tilbake i en firedel av partiene. Inntrykket fra å spille selv
+  er at okkupasjon er bedre enn dagens regel, men ikke helt riktig, og at
+  knipetang og 5c ikke er løsningen.
+- **Revolt** trenger en egen runde: i dag oppleves den ikke som gøy, og i
+  de lengre variantene avgjør den mye (9 til 14 opprør per parti).
+
 ## Idéer som ikke er testet
 
 - **Befesting** og **omringing** (fra runde 1) venter fortsatt. Forsterk i
   runde 3 er en enkel form for befesting.
-- **Knipetang sammen med D:** knipetang fjerner frem og tilbake, D fjerner
-  plutselige seire. Kombinasjonen kan få det beste fra begge.
-- **Bedre bot for forankring:** la botten planlegge et angrep over to turer
-  (fortsette å angripe en svekket celle), så tallene for styrke 2 blir til
-  å stole på.
 - **Revolt som svekker:** uro senker cellens styrke (forankring) eller øker
   sjansen for invasjon, med mindre eieren undertrykker den. Testet bare
   som forsinket tap.

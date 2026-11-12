@@ -23,8 +23,16 @@ export function invasionScore(G, id, me, gain, stake) {
   if (!canInvade(G, id, me)) return null;
   const p = invasionChance(G, id, me);
   if (!RULES.strength) return p * gain;
-  const progress = G.strength[id] <= 1 ? 1 : 0.6 / G.strength[id];
-  return p * gain * progress - attackCost(G, id, me, p, stake);
+  return p * gain * siegeProgress(G, id) - attackCost(G, id, me, p, stake);
+}
+
+// Hvor mye ett treff er verdt av en hel erobring under forankring. Botten
+// planlegger over flere turer: en celle som allerede er truffet siden
+// eierens forrige tur, vokser ikke igjen, så angrepet bør fortsette der.
+function siegeProgress(G, id) {
+  if (G.strength[id] <= 1) return 1;
+  const share = 1 / G.strength[id];
+  return G.attacked[id] ? Math.min(1, share * 1.6) : share;
 }
 
 // Hva angrepet kan koste den angripende cellen (attrition og risk).

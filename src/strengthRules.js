@@ -37,7 +37,8 @@ export function attackerCell(G, id, playerID) {
 
 // Oppfyller angrepet kravene til knipetang og angrepscelle?
 export function shapeAllows(G, id, playerID) {
-  if (RULES.pincer) {
+  const exempt = RULES.pincerFreshExempt && G.fresh?.[id];
+  if (RULES.pincer && !exempt) {
     const own = neighborsOf(id, RULES.pincer).filter(
       (n) => G.cells[n] === playerID,
     );
