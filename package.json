@@ -26,6 +26,9 @@
     "ws": "^8.21.3",
     "react-cookies": {
       "cookie": "^0.7.2"
+    },
+    "nodemon": {
+      "minimatch": "11.0.1"
     }
   },
   "devDependencies": {
